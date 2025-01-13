@@ -5,10 +5,10 @@
 
  There are three steps to execute the analysis for this project:
 
- 1) Preprocess Ameriflux raw data from coastal sites in the United States and prepare a dataframe to be used for the reddyproc package for further processing
- 2) Gap fill pre proceeded ameriflux dataset using reddyproc package
+ 1) Preprocess Ameriflux raw data from coastal sites in the United States and prepare a data frame to be used for the reddyproc package for further processing
+ 2) Gap-fill pre proceeded ameriflux dataset using reddyproc package
  3) Calculate GPP and Reco using the light response curve method
- 4) Calulate carbon use efficiency and water use efficiency 
+ 4) Calculate carbon use efficiency and water use efficiency 
 
 
     
