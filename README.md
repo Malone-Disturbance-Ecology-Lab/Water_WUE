@@ -18,7 +18,7 @@
 
 
 
-**fill_reddyproc.R** This code fills Ameriflux preprocessed data using the Ustar filtering method (reddyproc) for fluxes, calculates night time and daytime "gross primary productivity (GPP)," and respiration using "night time fluxes (Reichstein 2005) and "light response curve method (Lasslop, light response curve). 
+**fill_reddyproc.R** This code fills Ameriflux preprocessed data using the Ustar filtering method (reddyproc) for fluxes, calculates night time and daytime "gross primary productivity (GPP)," and respiration using "night time fluxes (Reichstein 2005) and "light response curve method (light response curve,Lasslop 2010). 
 
 
 
