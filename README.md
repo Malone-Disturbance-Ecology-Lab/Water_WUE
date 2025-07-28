@@ -69,3 +69,23 @@ Round all filled LE and NEE values to 3 decimal places
 Save the processed DataFrame to the specified output folder
 Print success or error messages for each file
 
+**8-Loop_gap_fill_gpp.R**
+Steps Performed by reddy_proc() Workflow
+Load AmeriFlux-ERA5 blended CSV files
+Convert date and time columns to POSIX format
+Initialize REddyProc with available site variables
+Estimate uStar threshold:
+Use default method
+If it fails, apply custom control parameters
+If still NA, assign fallback uStar = 0.1
+Identify and remove problematic years with invalid uStar
+Reinitialize REddyProc after year removal
+Gap-fill:
+NEE, LE using uStar filtering
+Rg, Tair, and VPD using MDS (without uStar)
+Set site latitude, longitude, and timezone using metadata
+Perform flux partitioning:
+Nighttime: Reichstein method
+Daytime: Lasslop method
+Export filled variables: NEE_f, LE_f, Tair_f, VPD_f, Rg_f, GPP_DT, Reco_DT, GPP_nt, Reco_nt
+Save output to *_fill.csv per site
