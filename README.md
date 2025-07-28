@@ -13,7 +13,10 @@
 
     
 
-**gaps_US-site.py** Python code that reads in AmeriFlux data from coastal sites in the United States works through the data preprocessing step, prepares a proper time stamp, adds columns such as day of the year (DoY), hour, and year, calculates VPD from RH if VPD is not already calculated. Replace -9999 with nans to be recognized as missing value in the Reddyproc package, and create a dataset with columns such as 'DateTime,' 'Year,' 'DoY,' 'Hour,' 'NEE,' 'LE,' 'H,' 'Rg.' 
+**1-ameri_api**  This script uses the amerifluxr R package to programmatically download BASE-BADM metadata files for selected AmeriFlux sites. The amf_download_base() function retrieves data for sites related to water use efficiency (WUE) and salinity impact studies. Metadata is saved locally to a shared network directory. All downloads comply with CCBY4.0 licensing via user agreement.
+
+Function Used: amf_download_base()
+Output: BADM .csv files saved to ameri_data directory' 
 
 
 
