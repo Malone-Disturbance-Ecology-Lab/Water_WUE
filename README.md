@@ -10,7 +10,7 @@
  3) Calculate GPP and Reco using the light response curve method
  4) Calculate carbon use efficiency and water use efficiency 
 
-
+Please see details 
     
 
 **1-ameri_api**  This script uses the amerifluxr R package to programmatically download BASE-BADM metadata files for selected AmeriFlux sites. The amf_download_base() function retrieves data for sites related to water use efficiency (WUE) and salinity impact studies. Metadata is saved locally to a shared network directory. All downloads comply with CCBY4.0 licensing via user agreement.
@@ -46,7 +46,7 @@ Converting ERA5 timestamps from UTC to the site's local time zone
 Interpolating ERA5 to match the AmeriFlux 30-minute resolution
 Merging both datasets on their aligned timestamps
 
-**6-blending_ameri_era**
+**6-blending_ameri_era.py**
 Key Steps in blending_ameri_era() and blended_save()
 Convert ERA5 variables to standard units (e.g., temperature, radiation, VPD)
 Fill missing observed Tair and Rg values using ERA5
@@ -57,3 +57,15 @@ Fill missing VPD using corrected or raw ERA5 values
 Remove unrealistic values for VPD and Rg
 Generate regression plots for original vs. ERA5 variables
 Save the blended output using a standardized filename format
+
+
+**7-long_gaps.py**
+Create the output directory if it doesn't exist
+Loop through all .csv files in the input directory
+Read each CSV and ensure Month is present
+Compute daily-hourly mean values of LE and NEE across the dataset
+For each year: Check if the May–August growing season has ≥50% valid data, If so, identify April and September gaps (≥7 days long), Fill those long gaps using mean values by DoY and Hour
+Round all filled LE and NEE values to 3 decimal places
+Save the processed DataFrame to the specified output folder
+Print success or error messages for each file
+
