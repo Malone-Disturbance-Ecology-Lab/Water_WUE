@@ -213,8 +213,18 @@ Canopy Conductance Estimation using Eddy Covariance Data
   - **FG method**: based on water flux and vapor gradient
   - **iPM method**: inverted Penman–Monteith equation
 
+**13-modis_grid.R**
 
-
+- Reads input CSV file containing site names and geographic coordinates (latitude, longitude)
+- Defines the MODIS Sinusoidal projection using PROJ string
+- For each site:
+  - Converts WGS84 coordinates to MODIS projection
+  - Buffers the MODIS point by 750 m to define the spatial extent
+  - Generates a 3×3 grid of 500 m cells within that buffer
+  - Labels the grid cells with IDs 1 to 9 in left-to-right, top-to-bottom order
+  - Reprojects the grid back to WGS84 for compatibility with common GIS tools
+  - Writes the grid as a shapefile to a temporary folder
+  - Compresses the shapefile components into a `.zip` archive named after the site
 
 
 
