@@ -19,7 +19,6 @@ Function Used: amf_download_base()
 Output: BADM .csv files saved to ameri_data directory' 
 
 **2-ameri_un_zip.py** This script defines the function unzip_ameriflux_data(zip_file_path, extracted_folder) which extracts high-frequency (HH or BASE_HH) data files from a downloaded AmeriFlux ZIP archive.
-
 The function:
 Automatically creates the target output folder if it doesn't exist.
 Scans the ZIP archive and extracts only files containing 'HH' or 'BASE_HH' in their names.
@@ -27,7 +26,15 @@ Supports extraction to network drives and prints progress for debugging.
 Use case: Prepares high-frequency flux data for analysis by extracting only relevant files from bulk AmeriFlux downloads.. 
 
 
+**3-ameri_preprocess.py** Purposeof this script is
+To process half-hourly AmeriFlux .csv files by:
+Handling variable headers and delimiters
+Parsing timestamps into usable datetime indices
+Reindexing to a continuous 30-minute timestep
+Filling gaps with NaN and replacing quality control flags (-9999, -6999)
+Creating derived meteorological and flux variables (e.g., NEE, VPD)
+Selecting and saving a standardized set of columns to a cleaned CSV
+Optionally visualizing time series of key variables
 
 
-**WUE_CUE.py** This code calculates ET from LE and calculates "net primary productivity (NPP)," "Carbon use efficiency (CUE)," and "water use efficiency (WUE) on monthly and yearly time steps."
 
