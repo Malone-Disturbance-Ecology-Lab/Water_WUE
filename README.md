@@ -28,27 +28,24 @@ Output: BADM .csv files saved to ameri_data directory'
 **2-ameri_un_zip.py** This script defines the function unzip_ameriflux_data(zip_file_path, extracted_folder) which extracts high-frequency (HH or BASE_HH) data files from a downloaded AmeriFlux ZIP archive.
 The function:
 
-### Function Features:
-
 - Automatically creates the target output folder if it doesn't exist.
 - Scans the ZIP archive and extracts only files containing `'HH'` or `'BASE_HH'` in their names.
 - Supports extraction to network drives.
 - Prints progress messages for debugging.
-
-### Use Case:
-
 - Prepares high-frequency flux data for analysis by extracting only relevant files from bulk AmeriFlux downloads.
 
 **3-ameri_preprocess.py** Purpose of this script is
 To process half-hourly AmeriFlux .csv files by:
 
-Handling variable headers and delimiters
-Parsing timestamps into usable datetime indices
-Reindexing to a continuous 30-minute timestep
-Filling gaps with NaN and replacing quality control flags (-9999, -6999)
-Creating derived meteorological and flux variables (e.g., NEE, VPD)
-Selecting and saving a standardized set of columns to a cleaned CSV
-Optionally visualizing time series of key variables
+- Processes half-hourly AmeriFlux `.csv` files.
+- Handles variable headers and delimiters.
+- Parses timestamps into usable datetime indices.
+- Reindexes to a continuous 30-minute timestep.
+- Fills gaps with NaN and replaces quality control flags (-9999, -6999).
+- Creates derived meteorological and flux variables (e.g., NEE, VPD).
+- Selects and saves a standardized set of columns to a cleaned CSV.
+- Optionally visualizes time series of key variables.
+
 
 **4-era5_api.py**
 This script defines the function fetch_cds_data(area, year_range, month_range, day_range, time_range, output_file) to programmatically download hourly ERA5 single-level reanalysis data (e.g., surface pressure, solar radiation) from the Copernicus Climate Data Store (CDS) using the cdsapi Python client.
@@ -56,59 +53,63 @@ This script defines the function fetch_cds_data(area, year_range, month_range, d
 **5-merge_ameri_era5.py**
 Purpose:
 
-To merge AmeriFlux half-hourly CSV data with ERA5 NetCDF data by:
-Reading AmeriFlux data and converting timestamps
-Loading and combining ERA5 hourly data from accumulated and instantaneous streams
-Converting ERA5 timestamps from UTC to the site's local time zone
-Interpolating ERA5 to match the AmeriFlux 30-minute resolution
-Merging both datasets on their aligned timestamps
+- Merges AmeriFlux half-hourly CSV data with ERA5 NetCDF data.
+- Reads AmeriFlux data and converts timestamps.
+- Loads and combines ERA5 hourly data from accumulated and instantaneous streams.
+- Converts ERA5 timestamps from UTC to the site's local time zone.
+- Interpolates ERA5 data to match the AmeriFlux 30-minute resolution.
+- Merges both datasets on their aligned timestamps.
 
 **6-blending_ameri_era.py**
 Key Steps in blending_ameri_era() and blended_save()
 
-Convert ERA5 variables to standard units (e.g., temperature, radiation, VPD)
-Fill missing observed Tair and Rg values using ERA5
-Apply linear regression to generate corrected ERA5 estimates
-Fill missing data based on seasonal completeness thresholds
-Recalculate VPD from available Tair and RH if needed
-Fill missing VPD using corrected or raw ERA5 values
-Remove unrealistic values for VPD and Rg
-Generate regression plots for original vs. ERA5 variables
-Save the blended output using a standardized filename format
+- Converts ERA5 variables to standard units (e.g., temperature, radiation, VPD).
+- Fills missing observed Tair and Rg values using ERA5.
+- Applies linear regression to generate corrected ERA5 estimates.
+- Fills missing data based on seasonal completeness thresholds.
+- Recalculates VPD from available Tair and RH if needed.
+- Fills missing VPD using corrected or raw ERA5 values.
+- Removes unrealistic values for VPD and Rg.
+- Generates regression plots for original vs. ERA5 variables.
+- Saves the blended output using a standardized filename format.
+
 
 
 **7-long_gaps.py**
-Create the output directory if it doesn't exist
-Loop through all .csv files in the input directory
-Read each CSV and ensure Month is present
-Compute daily-hourly mean values of LE and NEE across the dataset
-For each year: Check if the May–August growing season has ≥50% valid data, If so, identify April and September gaps (≥7 days long), Fill those long gaps using mean values by DoY and Hour
-Round all filled LE and NEE values to 3 decimal places
-Save the processed DataFrame to the specified output folder
-Print success or error messages for each file
+- Creates the output directory if it doesn't exist.
+- Loops through all `.csv` files in the input directory.
+- Reads each CSV and ensures the `Month` column is present.
+- Computes daily-hourly mean values of LE and NEE across the dataset.
+- For each year:
+  - Checks if the May–August growing season has ≥50% valid data.
+  - If so, identifies April and September gaps (≥7 days long).
+  - Fills those long gaps using mean values by DoY and Hour.
+- Rounds all filled LE and NEE values to 3 decimal places.
+- Saves the processed DataFrame to the specified output folder.
+- Prints success or error messages for each file.
+
 
 **8-Loop_gap_fill_gpp.R**
 
-Steps Performed by reddy_proc() Workflow
+- Loads AmeriFlux-ERA5 blended CSV files.
+- Converts date and time columns to POSIX format.
+- Initializes REddyProc with available site variables.
+- Estimates uStar threshold:
+  - Uses default method.
+  - If it fails, applies custom control parameters.
+  - If still NA, assigns fallback uStar = 0.1.
+- Identifies and removes problematic years with invalid uStar.
+- Reinitializes REddyProc after year removal.
+- Gap-fills:
+  - NEE and LE using uStar filtering.
+  - Rg, Tair, and VPD using MDS (without uStar).
+- Sets site latitude, longitude, and timezone using metadata.
+- Performs flux partitioning:
+  - Nighttime: Reichstein method.
+  - Daytime: Lasslop method.
+- Exports filled variables: NEE_f, LE_f, Tair_f, VPD_f, Rg_f, GPP_DT, Reco_DT, GPP_nt, Reco_nt.
+- Saves output to `*_fill.csv` per site.
 
-Load AmeriFlux-ERA5 blended CSV files
-Convert date and time columns to POSIX format
-Initialize REddyProc with available site variables
-Estimate uStar threshold:
-Use default method
-If it fails, apply custom control parameters
-If still NA, assign fallback uStar = 0.1
-Identify and remove problematic years with invalid uStar
-Reinitialize REddyProc after year removal
-Gap-fill:
-NEE, LE using uStar filtering
-Rg, Tair, and VPD using MDS (without uStar)
-Set site latitude, longitude, and timezone using metadata
-Perform flux partitioning:
-Nighttime: Reichstein method
-Daytime: Lasslop method
-Export filled variables: NEE_f, LE_f, Tair_f, VPD_f, Rg_f, GPP_DT, Reco_DT, GPP_nt, Reco_nt
-Save output to *_fill.csv per site
 
 
 **9-data_merging.py**
@@ -132,25 +133,29 @@ Final plots of WUE, GPP, and ET by site are generated using boxplots to support 
 
 **10-growing_season_phenofit.R**
 
-Step-by-Step Workflow
+- Converts units and computes ET, GPP, Reco, and NPP.
+  - Fluxes are converted from μmol/m²/s to gC/m² and mm H₂O.
+  - Net primary productivity (NPP) is calculated.
 
-This step estimates the start (SOS) and end (EOS) of the growing season for each site-year using phenology modeling based on daily GPP time series
+- Merges site metadata.
+  - Site-level attributes such as salinity, location, and biome are joined from a reference metadata file.
 
-Subset and preprocess by site
+- Integrates growing season phenology.
+  - Start (sos) and end (eos) of growing seasons per site-year are merged using PhenoFit-derived values.
+  - Falls back on nearby or average values if missing.
 
-For each site, computes daily GPP averages and assigns uniform weights for smoothing
+- Generates growing-season monthly summaries.
+  - For each site-year-month within the growing season, computes monthly totals for GPP, ET, NEE, Reco, and derived metrics:
+    - WUE = GPP / ET
+    - CUE = NEP / GPP
 
-Run phenofit to detect phenological breakpoints
+- Generates growing-season yearly summaries.
+  - Performs yearly aggregation of carbon and water fluxes.
+  - Filters for quality and stores with metadata and climate averages.
 
-Applies season_mov() to identify seasonal transitions using five smoothing models (Beck, Elmore, Gu, AG, Zhang)
+- Visualizes results.
+  - Final plots of WUE, GPP, and ET by site are generated using boxplots to support comparison and interpretation.
 
-Fits seasonal curves using curvefits()
-
-Extracts SOS and EOS using threshold (TRS) and derivative (DER) methods
-
-Average across models
-
-Computes per-year average values of SOS, EOS, and growing season length using outputs from all five models
 
 
 
