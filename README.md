@@ -14,7 +14,6 @@
     
 
 **1-ameri_api**  This script uses the amerifluxr R package to programmatically download BASE-BADM metadata files for selected AmeriFlux sites. The amf_download_base() function retrieves data for sites related to water use efficiency (WUE) and salinity impact studies. Metadata is saved locally to a shared network directory. All downloads comply with CCBY4.0 licensing via user agreement.
-
 Function Used: amf_download_base()
 Output: BADM .csv files saved to ameri_data directory' 
 
@@ -24,7 +23,6 @@ Automatically creates the target output folder if it doesn't exist.
 Scans the ZIP archive and extracts only files containing 'HH' or 'BASE_HH' in their names.
 Supports extraction to network drives and prints progress for debugging.
 Use case: Prepares high-frequency flux data for analysis by extracting only relevant files from bulk AmeriFlux downloads.. 
-
 
 **3-ameri_preprocess.py** Purpose of this script is
 To process half-hourly AmeriFlux .csv files by:
@@ -39,4 +37,23 @@ Optionally visualizing time series of key variables
 **4-era5_api.py**
 This script defines the function fetch_cds_data(area, year_range, month_range, day_range, time_range, output_file) to programmatically download hourly ERA5 single-level reanalysis data (e.g., surface pressure, solar radiation) from the Copernicus Climate Data Store (CDS) using the cdsapi Python client.
 
+**5-merge_ameri_era5.py**
+Purpose:
+To merge AmeriFlux half-hourly CSV data with ERA5 NetCDF data by:
+Reading AmeriFlux data and converting timestamps
+Loading and combining ERA5 hourly data from accumulated and instantaneous streams
+Converting ERA5 timestamps from UTC to the site's local time zone
+Interpolating ERA5 to match the AmeriFlux 30-minute resolution
+Merging both datasets on their aligned timestamps
 
+**6-blending_ameri_era**
+Key Steps in blending_ameri_era() and blended_save()
+Convert ERA5 variables to standard units (e.g., temperature, radiation, VPD)
+Fill missing observed Tair and Rg values using ERA5
+Apply linear regression to generate corrected ERA5 estimates
+Fill missing data based on seasonal completeness thresholds
+Recalculate VPD from available Tair and RH if needed
+Fill missing VPD using corrected or raw ERA5 values
+Remove unrealistic values for VPD and Rg
+Generate regression plots for original vs. ERA5 variables
+Save the blended output using a standardized filename format
