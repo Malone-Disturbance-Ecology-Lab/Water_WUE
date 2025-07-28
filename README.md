@@ -228,4 +228,36 @@ Canopy Conductance Estimation using Eddy Covariance Data
 
 
 
+**14-modis_analysis.py**
+
+- Generate MODIS-compatible 3×3 grids  
+  - Create 500 m MODIS grid polygons around each site using sinusoidal projection  
+  - Export to `.shp` and `.zip` for use in spatial extraction
+
+- Process MODIS-derived site data  
+  - Read raw MODIS CSVs per site for ET and GPP  
+  - Save separate per-site files for ET and GPP (`*_ET.csv`, `*_GPP.csv`)
+
+- Merge MODIS with phenology metrics  
+  - Combine MODIS time series with site-level average SOS/EOS from PhenoFit  
+  - Add `avg_sos` and `avg_eos` columns to each record
+
+- Filter MODIS time series by growing season  
+  - Select data between site-specific `avg_sos` and `avg_eos`  
+  - Keep years with at least 2 valid months  
+  - Merge ET and GPP for each site
+
+- Analyze long-term WUE trends  
+  - Aggregate MODIS ET and GPP to annual totals  
+  - Calculate `WUE = GPP / ET` per year  
+  - Use Theil–Sen slope and Mann–Kendall test to detect monotonic trends  
+  - Save annual WUE trend plots per site (`.png`)
+
+- Compare MODIS with AmeriFlux  
+  - Merge MODIS and AmeriFlux data for ET, GPP, and WUE  
+  - Plot scatter comparisons with:
+    - Unified legend  
+    - Grid-specific regression lines and statistics  
+    - Highlighted `grid5` styling  
+  - Save comparison plots (`.png`) for each site and variable
 
