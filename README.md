@@ -115,21 +115,29 @@ Key Steps in blending_ameri_era() and blended_save()
 **9-data_merging.py**
 
 Step-by-Step Workflow
+- Converts units and computes ET, GPP, Reco, and NPP.  
+  - Fluxes are converted from μmol/m²/s to gC/m² and mm H₂O.  
+  - Net primary productivity (NPP) is calculated.
 
-Convert units and compute ET, GPP, Reco, and NPP
-Fluxes are converted from μmol/m²/s to gC/m² and mm H₂O, and net primary productivity (NPP) is calculated.
-Merge site metadata
-Site-level attributes such as salinity, location, and biome are joined from a reference metadata file.
-Integrate growing season phenology
-Start (sos) and end (eos) of growing seasons per site-year are merged using PhenoFit-derived values, falling back on nearby or average values if missing.
-Generate growing-season monthly summaries
-For each site-year-month within the growing season, the pipeline computes monthly totals for GPP, ET, NEE, Reco, and derived metrics:
-WUE = GPP / ET
-CUE = NEP / GPP
-Generate growing-season yearly summaries
-Yearly aggregation of carbon and water fluxes is performed, filtered for quality, and stored with metadata and climate averages.
-Visualize results
-Final plots of WUE, GPP, and ET by site are generated using boxplots to support comparison and interpretation.
+- Merges site metadata.  
+  - Site-level attributes such as salinity, location, and biome are joined from a reference metadata file.
+
+- Integrates growing season phenology.  
+  - Start (sos) and end (eos) of growing seasons per site-year are merged using PhenoFit-derived values.  
+  - Falls back on nearby or average values if missing.
+
+- Generates growing-season monthly summaries.  
+  - For each site-year-month within the growing season, computes monthly totals for GPP, ET, NEE, Reco, and derived metrics:  
+    - WUE = GPP / ET  
+    - CUE = NEP / GPP
+
+- Generates growing-season yearly summaries.  
+  - Performs yearly aggregation of carbon and water fluxes.  
+  - Filters for quality and stores with metadata and climate averages.
+
+- Visualizes results.  
+  - Final plots of WUE, GPP, and ET by site are generated using boxplots to support comparison and interpretation.
+
 
 **10-growing_season_phenofit.R**
 
