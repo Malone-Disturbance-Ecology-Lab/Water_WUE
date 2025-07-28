@@ -196,6 +196,24 @@ This workflow merges continuous salinity records with AmeriFlux carbon and water
 - Individual and combined salinity vs. flux plots (`.png`) per site and metric  
 - GPP time series plots showing seasonal continuity per site
 
+  **12-canopy_conduc_gs.R**
+  
+Canopy Conductance Estimation using Eddy Covariance Data
+
+  - Read non-gapfilled, u*-filtered AmeriFlux data
+  - Assign latent heat of vaporization (`lambda`) if available
+  - Replace `PAR` with `PPFD` if needed
+
+- Filter for growing season conditions
+- Estimate energy balance closure
+
+- Compute physical and environmental variables
+
+- Calculate canopy conductance
+  - **FG method**: based on water flux and vapor gradient
+  - **iPM method**: inverted Penman–Monteith equation
+
+
 
 
 
