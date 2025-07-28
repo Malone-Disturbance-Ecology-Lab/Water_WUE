@@ -1,263 +1,60 @@
-# Water_WUE
-
- The purpose of my project is to understand, how much WUE, CUE changes within ecosystems. The specific objective of my research includes, 1) whether differences in WUE, CUE across ecosystems resemble ecosystem variability and 2) determine if WUE, CUE in coastal ecosystems denotes salinity stress. As part of this project, I downloaded data from Ameri flux website.
-
-
- There are three steps to execute the analysis for this project:
-
- 1) Preprocess Ameriflux raw data from coastal sites in the United States and prepare a data frame to be used for the reddyproc package for further processing
- 2) Gap-fill pre proceeded ameriflux dataset using reddyproc package
- 3) Calculate GPP and Reco using the light response curve method
- 4) Calculate carbon use efficiency and water use efficiency 
-
-Please see details 
-    
-
-**1-ameri_api**  
+## 🌿 Water_WUE: Ecosystem Efficiency and Salinity Stress Analysis
 
-This script uses the `amerifluxr` R package to programmatically download BASE-BADM metadata files for selected AmeriFlux sites.
-
-- Uses the `amf_download_base()` function to retrieve metadata.
-- Focuses on sites related to water use efficiency (WUE) and salinity impact studies.
-- Saves downloaded metadata locally to a shared network directory.
-- Ensures all downloads comply with CCBY4.0 licensing via user agreement.
-
-Function Used: amf_download_base()
-Output: BADM .csv files saved to ameri_data directory' 
-
-**2-ameri_un_zip.py** This script defines the function unzip_ameriflux_data(zip_file_path, extracted_folder) which extracts high-frequency (HH or BASE_HH) data files from a downloaded AmeriFlux ZIP archive.
-The function:
-
-- Automatically creates the target output folder if it doesn't exist.
-- Scans the ZIP archive and extracts only files containing `'HH'` or `'BASE_HH'` in their names.
-- Supports extraction to network drives.
-- Prints progress messages for debugging.
-- Prepares high-frequency flux data for analysis by extracting only relevant files from bulk AmeriFlux downloads.
-
-**3-ameri_preprocess.py** Purpose of this script is
-To process half-hourly AmeriFlux .csv files by:
-
-- Processes half-hourly AmeriFlux `.csv` files.
-- Handles variable headers and delimiters.
-- Parses timestamps into usable datetime indices.
-- Reindexes to a continuous 30-minute timestep.
-- Fills gaps with NaN and replaces quality control flags (-9999, -6999).
-- Creates derived meteorological and flux variables (e.g., NEE, VPD).
-- Selects and saves a standardized set of columns to a cleaned CSV.
-- Optionally visualizes time series of key variables.
+This project investigates spatial and temporal variations in Water Use Efficiency (WUE) and Carbon Use Efficiency (CUE) across U.S. AmeriFlux sites, with a focus on how salinity stress affects coastal ecosystems. The workflow integrates AmeriFlux and MODIS data, applies gap-filling and partitioning methods, and performs trend and salinity-based statistical analyses.
 
+### 🔍 Project Objectives
 
-**4-era5_api.py**
-This script defines the function fetch_cds_data(area, year_range, month_range, day_range, time_range, output_file) to programmatically download hourly ERA5 single-level reanalysis data (e.g., surface pressure, solar radiation) from the Copernicus Climate Data Store (CDS) using the cdsapi Python client.
+- Evaluate how WUE and CUE vary across ecosystems and over time  
+- Assess whether coastal ecosystem WUE and CUE indicate salinity stress  
+- Integrate remote sensing and flux tower data to analyze ecosystem function  
 
-**5-merge_ameri_era5.py**
-Purpose:
+### ⚙️ Code Modules Overview
 
-- Merges AmeriFlux half-hourly CSV data with ERA5 NetCDF data.
-- Reads AmeriFlux data and converts timestamps.
-- Loads and combines ERA5 hourly data from accumulated and instantaneous streams.
-- Converts ERA5 timestamps from UTC to the site's local time zone.
-- Interpolates ERA5 data to match the AmeriFlux 30-minute resolution.
-- Merges both datasets on their aligned timestamps.
+- `1-ameri_api.R`  
+  - Downloads BASE and BADM metadata from AmeriFlux using `amerifluxr`
 
-**6-blending_ameri_era.py**
-Key Steps in blending_ameri_era() and blended_save()
+- `2-ameri_un_zip.py`  
+  - Unzips and filters high-frequency AmeriFlux (HH) data from raw archives
 
-- Converts ERA5 variables to standard units (e.g., temperature, radiation, VPD).
-- Fills missing observed Tair and Rg values using ERA5.
-- Applies linear regression to generate corrected ERA5 estimates.
-- Fills missing data based on seasonal completeness thresholds.
-- Recalculates VPD from available Tair and RH if needed.
-- Fills missing VPD using corrected or raw ERA5 values.
-- Removes unrealistic values for VPD and Rg.
-- Generates regression plots for original vs. ERA5 variables.
-- Saves the blended output using a standardized filename format.
+- `3-ameri_preprocess.py`  
+  - Processes half-hourly AmeriFlux data: cleans, standardizes, and prepares for gap-filling
 
+- `4-era5_api.py`  
+  - Downloads ERA5 reanalysis data (e.g., radiation, temperature) using the Copernicus CDS API
 
+- `5-merge_ameri_era5.py`  
+  - Merges AmeriFlux and ERA5 datasets, aligning them to 30-min resolution
 
-**7-long_gaps.py**
-- Creates the output directory if it doesn't exist.
-- Loops through all `.csv` files in the input directory.
-- Reads each CSV and ensures the `Month` column is present.
-- Computes daily-hourly mean values of LE and NEE across the dataset.
-- For each year:
-  - Checks if the May–August growing season has ≥50% valid data.
-  - If so, identifies April and September gaps (≥7 days long).
-  - Fills those long gaps using mean values by DoY and Hour.
-- Rounds all filled LE and NEE values to 3 decimal places.
-- Saves the processed DataFrame to the specified output folder.
-- Prints success or error messages for each file.
+- `6-blending_ameri_era.py`  
+  - Fills missing meteorological data using ERA5 corrections and linear regression
 
+- `7-long_gaps.py`  
+  - Fills long seasonal gaps in LE and NEE using climatological hourly means
 
-**8-Loop_gap_fill_gpp.R**
+- `8-Loop_gap_fill_gpp.R`  
+  - Gap-fills flux data using REddyProc and performs GPP/Reco partitioning
 
-- Loads AmeriFlux-ERA5 blended CSV files.
-- Converts date and time columns to POSIX format.
-- Initializes REddyProc with available site variables.
-- Estimates uStar threshold:
-  - Uses default method.
-  - If it fails, applies custom control parameters.
-  - If still NA, assigns fallback uStar = 0.1.
-- Identifies and removes problematic years with invalid uStar.
-- Reinitializes REddyProc after year removal.
-- Gap-fills:
-  - NEE and LE using uStar filtering.
-  - Rg, Tair, and VPD using MDS (without uStar).
-- Sets site latitude, longitude, and timezone using metadata.
-- Performs flux partitioning:
-  - Nighttime: Reichstein method.
-  - Daytime: Lasslop method.
-- Exports filled variables: NEE_f, LE_f, Tair_f, VPD_f, Rg_f, GPP_DT, Reco_DT, GPP_nt, Reco_nt.
-- Saves output to `*_fill.csv` per site.
+- `9-data_merging.py`  
+  - Aggregates AmeriFlux data by season/year, computes WUE, CUE, and merges with site metadata
 
+- `10-growing_season_phenofit.R`  
+  - Integrates PhenoFit-based growing season metrics and summarizes seasonal fluxes
 
+- `11-continous_salinity_analysis.py`  
+  - Combines continuous salinity records with flux data; analyzes and visualizes salinity–WUE/GPP/CUE relationships
 
-**9-data_merging.py**
+- `12-canopy_conduc_gs.R`  
+  - Estimates canopy conductance during growing season using FG and iPM methods
 
-Step-by-Step Workflow
-- Converts units and computes ET, GPP, Reco, and NPP.  
-  - Fluxes are converted from μmol/m²/s to gC/m² and mm H₂O.  
-  - Net primary productivity (NPP) is calculated.
+- `13-modis_grid.R`  
+  - Generates 3×3 MODIS sinusoidal grids (500 m resolution) around flux tower locations
 
-- Merges site metadata.  
-  - Site-level attributes such as salinity, location, and biome are joined from a reference metadata file.
+- `14-modis_analysis.py`  
+  - Processes MODIS ET and GPP data, filters by phenological growing season, and compares MODIS vs. AmeriFlux trends
 
-- Integrates growing season phenology.  
-  - Start (sos) and end (eos) of growing seasons per site-year are merged using PhenoFit-derived values.  
-  - Falls back on nearby or average values if missing.
+### 📁 Outputs
 
-- Generates growing-season monthly summaries.  
-  - For each site-year-month within the growing season, computes monthly totals for GPP, ET, NEE, Reco, and derived metrics:  
-    - WUE = GPP / ET  
-    - CUE = NEP / GPP
-
-- Generates growing-season yearly summaries.  
-  - Performs yearly aggregation of carbon and water fluxes.  
-  - Filters for quality and stores with metadata and climate averages.
-
-- Visualizes results.  
-  - Final plots of WUE, GPP, and ET by site are generated using boxplots to support comparison and interpretation.
-
-
-**10-growing_season_phenofit.R**
-
-- Converts units and computes ET, GPP, Reco, and NPP.
-  - Fluxes are converted from μmol/m²/s to gC/m² and mm H₂O.
-  - Net primary productivity (NPP) is calculated.
-
-- Merges site metadata.
-  - Site-level attributes such as salinity, location, and biome are joined from a reference metadata file.
-
-- Integrates growing season phenology.
-  - Start (sos) and end (eos) of growing seasons per site-year are merged using PhenoFit-derived values.
-  - Falls back on nearby or average values if missing.
-
-- Generates growing-season monthly summaries.
-  - For each site-year-month within the growing season, computes monthly totals for GPP, ET, NEE, Reco, and derived metrics:
-    - WUE = GPP / ET
-    - CUE = NEP / GPP
-
-- Generates growing-season yearly summaries.
-  - Performs yearly aggregation of carbon and water fluxes.
-  - Filters for quality and stores with metadata and climate averages.
-
-- Visualizes results.
-  - Final plots of WUE, GPP, and ET by site are generated using boxplots to support comparison and interpretation.
-
-**11-continous_salinity_analysis.py**
-
-
-This workflow merges continuous salinity records with AmeriFlux carbon and water flux data, focusing on growing-season periods. It performs statistical analysis and generates publication-ready visualizations to explore salinity impacts on ecosystem function.
-
-- Merge and preprocess data  
-  - Combine continuous salinity data from multiple sites  
-  - Join site-level salinity with growing season dates (SOS/EOS) from PhenoFit  
-  - Merge growing-season monthly salinity with AmeriFlux flux data (ET, GPP, NEE, Reco, etc.)
-
-- Normalize ET and GPP within each site to a [-1, 1] scale
-
-- Handle missing or extreme values  
-  - Clip extreme CUE values  
-  - Filter out negative salinity values
-
-- Perform site-level and combined linear regressions of:  
-  - ET vs. salinity  
-  - GPP vs. salinity  
-  - WUE vs. salinity  
-  - CUE vs. salinity
-
-- Calculate and display slope, R², and p-values for each relationship
-
-- Export regression plots for individual sites and combined datasets
-
-- Plot monthly GPP trends by site, identifying gaps in temporal coverage
-
-- `ameri_salinity_gs_monthly.csv`: Merged growing-season monthly salinity and flux data  
-- Individual and combined salinity vs. flux plots (`.png`) per site and metric  
-- GPP time series plots showing seasonal continuity per site
-
-  **12-canopy_conduc_gs.R**
-  
-Canopy Conductance Estimation using Eddy Covariance Data
-
-  - Read non-gapfilled, u*-filtered AmeriFlux data
-  - Assign latent heat of vaporization (`lambda`) if available
-  - Replace `PAR` with `PPFD` if needed
-
-- Filter for growing season conditions
-- Estimate energy balance closure
-
-- Compute physical and environmental variables
-
-- Calculate canopy conductance
-  - **FG method**: based on water flux and vapor gradient
-  - **iPM method**: inverted Penman–Monteith equation
-
-**13-modis_grid.R**
-
-- Reads input CSV file containing site names and geographic coordinates (latitude, longitude)
-- Defines the MODIS Sinusoidal projection using PROJ string
-- For each site:
-  - Converts WGS84 coordinates to MODIS projection
-  - Buffers the MODIS point by 750 m to define the spatial extent
-  - Generates a 3×3 grid of 500 m cells within that buffer
-  - Labels the grid cells with IDs 1 to 9 in left-to-right, top-to-bottom order
-  - Reprojects the grid back to WGS84 for compatibility with common GIS tools
-  - Writes the grid as a shapefile to a temporary folder
-  - Compresses the shapefile components into a `.zip` archive named after the site
-
-
-
-**14-modis_analysis.py**
-
-- Generate MODIS-compatible 3×3 grids  
-  - Create 500 m MODIS grid polygons around each site using sinusoidal projection  
-  - Export to `.shp` and `.zip` for use in spatial extraction
-
-- Process MODIS-derived site data  
-  - Read raw MODIS CSVs per site for ET and GPP  
-  - Save separate per-site files for ET and GPP (`*_ET.csv`, `*_GPP.csv`)
-
-- Merge MODIS with phenology metrics  
-  - Combine MODIS time series with site-level average SOS/EOS from PhenoFit  
-  - Add `avg_sos` and `avg_eos` columns to each record
-
-- Filter MODIS time series by growing season  
-  - Select data between site-specific `avg_sos` and `avg_eos`  
-  - Keep years with at least 2 valid months  
-  - Merge ET and GPP for each site
-
-- Analyze long-term WUE trends  
-  - Aggregate MODIS ET and GPP to annual totals  
-  - Calculate `WUE = GPP / ET` per year  
-  - Use Theil–Sen slope and Mann–Kendall test to detect monotonic trends  
-  - Save annual WUE trend plots per site (`.png`)
-
-- Compare MODIS with AmeriFlux  
-  - Merge MODIS and AmeriFlux data for ET, GPP, and WUE  
-  - Plot scatter comparisons with:
-    - Unified legend  
-    - Grid-specific regression lines and statistics  
-    - Highlighted `grid5` styling  
-  - Save comparison plots (`.png`) for each site and variable
-
+- Cleaned and gap-filled flux data (`*_fill.csv`)  
+- Growing season summaries and trends (WUE, CUE, ET, GPP)  
+- Long-term trend plots and salinity regressions (`.png`)  
+- MODIS grid shapefiles and comparative MODIS–AmeriFlux scatterplots
