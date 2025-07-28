@@ -166,42 +166,36 @@ Step-by-Step Workflow
 
 **11-continous_salinity_analysis.py**
 
+
 This workflow merges continuous salinity records with AmeriFlux carbon and water flux data, focusing on growing-season periods. It performs statistical analysis and generates publication-ready visualizations to explore salinity impacts on ecosystem function.
 
-Main Steps
-Merge and preprocess data:
+- Merge and preprocess data  
+  - Combine continuous salinity data from multiple sites  
+  - Join site-level salinity with growing season dates (SOS/EOS) from PhenoFit  
+  - Merge growing-season monthly salinity with AmeriFlux flux data (ET, GPP, NEE, Reco, etc.)
 
-Combine continuous salinity data from multiple sites.
+- Normalize ET and GPP within each site to a [-1, 1] scale
 
-Join site-level salinity with growing season dates (SOS/EOS) from PhenoFit.
+- Handle missing or extreme values  
+  - Clip extreme CUE values  
+  - Filter out negative salinity values
 
-Merge growing-season monthly salinity with AmeriFlux flux data (ET, GPP, NEE, Reco, etc.).
+- Perform site-level and combined linear regressions of:  
+  - ET vs. salinity  
+  - GPP vs. salinity  
+  - WUE vs. salinity  
+  - CUE vs. salinity
 
-Data normalization and cleanup:
+- Calculate and display slope, R², and p-values for each relationship
 
-Normalize ET and GPP within each site to a [-1, 1] scale to account for magnitude differences.
+- Export regression plots for individual sites and combined datasets
 
-Handle missing or extreme values (e.g., CUE clipping, negative salinity filtering).
+- Plot monthly GPP trends by site, identifying gaps in temporal coverage
 
-Statistical analysis and plotting:
+- `ameri_salinity_gs_monthly.csv`: Merged growing-season monthly salinity and flux data  
+- Individual and combined salinity vs. flux plots (`.png`) per site and metric  
+- GPP time series plots showing seasonal continuity per site
 
-Perform site-level and combined linear regressions of:
-
-ET vs. salinity
-
-GPP vs. salinity
-
-WUE vs. salinity
-
-CUE vs. salinity
-
-Calculate and display slope, $R^2$, and p-values for each relationship.
-
-Export regression plots for individual sites and combined datasets.
-
-GPP time series visualization:
-
-Plot monthly GPP trends by site, identifying gaps in temporal coverage.
 
 
 
