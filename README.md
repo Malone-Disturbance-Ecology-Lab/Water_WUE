@@ -36,5 +36,7 @@ Creating derived meteorological and flux variables (e.g., NEE, VPD)
 Selecting and saving a standardized set of columns to a cleaned CSV
 Optionally visualizing time series of key variables
 
+**4-era5_api.py**
+This script defines the function fetch_cds_data(area, year_range, month_range, day_range, time_range, output_file) to programmatically download hourly ERA5 single-level reanalysis data (e.g., surface pressure, solar radiation) from the Copernicus Climate Data Store (CDS) using the cdsapi Python client.
 
 
