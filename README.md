@@ -18,10 +18,13 @@
 Function Used: amf_download_base()
 Output: BADM .csv files saved to ameri_data directory' 
 
+**2-ameri_un_zip.py** This script defines the function unzip_ameriflux_data(zip_file_path, extracted_folder) which extracts high-frequency (HH or BASE_HH) data files from a downloaded AmeriFlux ZIP archive.
 
-
-
-**fill_reddyproc.R** This code fills Ameriflux preprocessed data using the Ustar filtering method (reddyproc) for fluxes, calculates night time and daytime "gross primary productivity (GPP)," and respiration using "night time fluxes (Reichstein 2005) and "light response curve method (light response curve,Lasslop 2010). 
+The function:
+Automatically creates the target output folder if it doesn't exist.
+Scans the ZIP archive and extracts only files containing 'HH' or 'BASE_HH' in their names.
+Supports extraction to network drives and prints progress for debugging.
+Use case: Prepares high-frequency flux data for analysis by extracting only relevant files from bulk AmeriFlux downloads.. 
 
 
 
