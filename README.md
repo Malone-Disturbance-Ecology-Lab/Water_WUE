@@ -26,7 +26,7 @@ Supports extraction to network drives and prints progress for debugging.
 Use case: Prepares high-frequency flux data for analysis by extracting only relevant files from bulk AmeriFlux downloads.. 
 
 
-**3-ameri_preprocess.py** Purposeof this script is
+**3-ameri_preprocess.py** Purpose of this script is
 To process half-hourly AmeriFlux .csv files by:
 Handling variable headers and delimiters
 Parsing timestamps into usable datetime indices
