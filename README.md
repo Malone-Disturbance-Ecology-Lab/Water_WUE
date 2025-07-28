@@ -121,15 +121,23 @@ Final plots of WUE, GPP, and ET by site are generated using boxplots to support 
 
 Step-by-Step Workflow
 
-This step estimates the start (SOS) and end (EOS) of the growing season for each site-year using phenology modeling based on daily GPP time series.
+This step estimates the start (SOS) and end (EOS) of the growing season for each site-year using phenology modeling based on daily GPP time series
+
 Subset and preprocess by site
-For each site, computes daily GPP averages and assigns uniform weights for smoothing.
+
+For each site, computes daily GPP averages and assigns uniform weights for smoothing
+
 Run phenofit to detect phenological breakpoints
+
 Applies season_mov() to identify seasonal transitions using five smoothing models (Beck, Elmore, Gu, AG, Zhang)
+
 Fits seasonal curves using curvefits()
+
 Extracts SOS and EOS using threshold (TRS) and derivative (DER) methods
+
 Average across models
-Computes per-year average values of SOS, EOS, and growing season length using outputs from all five models.
+
+Computes per-year average values of SOS, EOS, and growing season length using outputs from all five models
 
 
 
