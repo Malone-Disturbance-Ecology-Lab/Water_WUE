@@ -75,6 +75,7 @@ Save the processed DataFrame to the specified output folder
 Print success or error messages for each file
 
 **8-Loop_gap_fill_gpp.R**
+
 Steps Performed by reddy_proc() Workflow
 
 Load AmeriFlux-ERA5 blended CSV files
@@ -98,6 +99,7 @@ Save output to *_fill.csv per site
 
 
 **9-data_merging.py**
+
 Step-by-Step Workflow
 
 Convert units and compute ET, GPP, Reco, and NPP
