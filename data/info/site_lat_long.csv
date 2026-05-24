@@ -1,0 +1,73 @@
+index,site_name,lat,long,start_date,end_date,IGBP,climate,water_class,canopy_height_m,elevation_m
+1,US-A03,70.4953,-149.8823,2014,2021,BSV,Tundra,Saline,0.10–0.50,5
+2,US-A10,71.3242,-156.6149,2011,2022,BSV,Tundra,Saline,0.10–0.50,4
+3,US-Atq,70.4696,-157.4089,1999,2006,WET,Tundra,Freshwater,0.10–0.60,15
+4,US-BFS,34.1131,-117.7118,2025,2025,OSH,"Mediterranean: mild with dry, hot summer",Upland ,0.50–1.50,410
+5,US-Brw,71.3225,-156.6092,1998,2007,WET,Tundra,Upland ,0.10–0.50,1
+6,US-BWb,39.1955,-77.4509,2022,2025,GRA,"Humid Subtropical: mild with no dry season, hot summer)",Upland ,0.10–0.50,99
+7,US-CAK,64.8618,-163.7002,2024,2025,GRA,Tundra,Upland ,0.10–0.50,35
+8,US-Ced,39.8379,-74.3791,2005,2014,CSH,"Humid Subtropical: mild with no dry season, hot summer",Upland ,0.50–2.00,58
+9,US-CGG,37.938,-121.9761,2019,2025,GRA,"Mediterranean: mild with dry, hot summer)",Upland ,0.10–0.40,119.5
+10,US-Cms,71.3202,-156.6223,1999,2005,WET,Tundra,Upland ,0.10–0.50,6
+11,US-Dix,39.9712,-74.4346,2005,2008,MF,"Humid Subtropical: mild with no dry season, hot summer",Upland ,10.00–25.00,48
+12,US-Dmg,38.0015,-121.6691,2021,2025,WET,"Mediterranean: mild with dry, hot summer",Freshwater ,1.50–3.50,1
+13,US-EDN,37.6156,-122.114,2018,2025,WET,"Mediterranean: mild with dry, hot summer",Saline,0.10–0.50,1
+14,US-EKH,36.8094,-121.7523,2022,2025,WET,"Mediterranean: mild with dry, warm summer",Saline,0.10–0.50,0.5
+15,US-EKN,36.8357,-121.7328,2023,2025,WET,"Marine West Coast: mild with no dry season, cool summer",Saline,0.10–0.50,0
+16,US-EKP,36.8558,-121.7488,2022,2025,WET,"Mediterranean: mild with dry, warm summer)",Saline,0.10–0.50,0
+17,US-Elm,25.5519,-80.7826,2008,2025,WET,"Humid Subtropical: dry winter, hot summer",Freshwater ,0.80–2.00,0.77
+18,US-Esm,25.4379,-80.5946,2008,2025,WET,"Humid Subtropical: dry winter, hot summer",Freshwater ,0.30–1.00,1.07
+19,US-EvM,25.3539,-80.381,2020,2025,WET,"Humid Subtropical: dry winter, hot summer",Brackish,1.00–10.00,0.332
+20,US-Fo1,70.085,-148.5671,2013,2025,WET,Dry Continental: cool summer,Freshwater ,0.10–0.50,28
+21,US-Fo2,70.0229,-148.6598,2022,2025,WET,Dry Continental: cool summer,Freshwater ,0.10–0.50,41
+22,US-GCE,31.4441,-81.2835,2013,2025,WET,"Humid Subtropical: mild with no dry season, hot summer",Saline,0.20–1.50,0.625
+23,US-HB1,33.3455,-79.1957,2018,2025,WET,"Humid Subtropical: mild with no dry season, hot summer",Saline,0.20–1.50,0.1
+24,US-HB2,33.3242,-79.244,2019,2025,ENF,"Humid Subtropical: mild with no dry season, hot summer",Upland,18.00–35.00,4.7
+25,US-HB3,33.3482,-79.2322,2019,2025,ENF,"Humid Subtropical: mild with no dry season, hot summer",Upland,10.00–30.00,7.3
+26,US-HB4,33.2015,-79.2975,2020,2025,WET,"Humid Subtropical: mild with no dry season, hot summer",Brackish,0.20–1.50,1
+27,US-HPY,40.7692,-74.0853,2015,2017,WET,"Humid Subtropical: mild with no dry season, hot summer",Brackish,0.50–2.50,2
+28,US-KPL,60.5382,-150.5061,2021,2025,WET,"Subarctic: severe winter, no dry season, cool summer",Freshwater,0.30–1.20,100.6
+29,US-KS1,28.4583,-80.6709,2002,2003,ENF,"Humid Subtropical: dry winter, hot summer",Upland,10.00–30.00,1
+30,US-KS2,28.6086,-80.6715,2000,2006,CSH,"Humid Subtropical: dry winter, hot summer",Upland,0.50–3.00,3
+31,US-KS3,28.7084,-80.7427,2018,2019,WET,"Humid Subtropical: mild with no dry season, hot summer",Saline,0.20–1.50,0
+32,US-KS4,28.6,-80.7207,2017,2022,WET,"Humid Subtropical: dry winter, hot summer",Saline,0.50–3.00,0.5
+33,US-LA1,29.5013,-90.4449,2012,2012,WET,"Humid Subtropical: mild with no dry season, hot summer",Brackish,0.50–2.50,0
+34,US-LA2,29.8587,-90.2869,2012,2023,WET,"Humid Subtropical: mild with no dry season, hot summer",Freshwater,0.50–2.50,0
+35,US-LA3,29.4936,-89.9153,2019,2023,WET,"Humid Subtropical: mild with no dry season, hot summer",Saline,0.50–2.50,0.2
+36,US-MCP,36.783,-121.769,2023,2025,WET,"Marine West Coast: mild with no dry season, cool summer",Freshwater,0.50–2.50,0
+37,US-MRf,44.6465,-123.5515,2006,2011,ENF,"Mediterranean: mild with dry, warm summer",Upland,20.00–35.00,263
+38,US-MRM,40.8164,-74.0435,2012,2013,WET,"Humid Subtropical: mild with no dry season, hot summer",Brackish,0.50–3.00,-1
+39,US-Myb,38.0499,-121.765,2011,2025,WET,"Mediterranean: mild with dry, hot summer",Freshwater,1.00–3.00,-4
+40,US-NC4,35.7879,-75.9038,2009,2025,WET,"Humid Subtropical: mild with no dry season, hot summer",Freshwater,15.00–30.00,1
+41,US-NGC,64.8618,-163.7002,2017,2023,GRA,Tundra,Upland,0.10–0.50,35
+42,US-ONA,27.3836,-81.9509,2016,2022,ENF,"Humid Subtropical: mild with no dry season, hot summer",Upland,12.00–22.00,25
+43,US-OPE,39.0293,-76.8457,2022,2022,CRO,"Humid Subtropical: mild with no dry season, hot summer",Upland,0.50–2.00,40
+44,US-PAS,27.3944,-81.951,2021,2022,GRA,"Humid Subtropical: mild with no dry season, hot summer",Upland,0.20–0.50,27.1
+45,US-PHM,42.7423,-70.8301,2013,2020,WET,"Humid Continental: humid with severe winter, no dry season, hot summer",Saline,0.30–1.20,1.4
+46,US-PLo,42.7496,-70.9157,2022,2023,WET,"Humid Continental: humid with severe winter, no dry season, hot summer",Brackish,0.50–2.00,1.4
+47,US-RRC,37.3344,-77.2065,2022,2025,WET,"Humid Continental: humid with severe winter, no dry season, hot summer",Freshwater,0.30–1.50,0.1
+48,US-SCg,33.7365,-117.6946,2006,2016,GRA,"Mediterranean: mild with dry, hot summer",Upland,0.10–0.50,465
+49,US-SCs,33.7343,-117.6959,2006,2016,OSH,"Mediterranean: mild with dry, hot summer",Upland,0.20–1.80,470
+50,US-Skr,25.3629,-81.0776,2004,2023,WET,"Humid Subtropical: dry winter, hot summer",Saline,15.00–25.00,0
+51,US-Slt,39.9138,-74.596,2005,2024,DBF ,"Humid Continental: humid with severe winter, no dry season, hot summer",Upland,8.00–20.00,30
+52,US-Snd,38.0366,-121.754,2007,2014,GRA,"Mediterranean: mild with dry, hot summer",Upland,2.00–3.50,-5
+53,US-Sne,38.0369,-121.7547,2016,2021,WET,"Mediterranean: mild with dry, hot summer",Freshwater,0.50–3.00,-5
+54,US-SO2,33.3738,-116.6228,1997,2006,CSH,"Mediterranean: mild with dry, hot summer",Upland,1.00–2.00,1394
+55,US-SO3,33.3771,-116.6226,1997,2006,CSH,"Mediterranean: mild with dry, hot summer",Upland,1.00–2.00,1429
+56,US-SO4,33.3845,-116.6406,2004,2006,CSH,"Mediterranean: mild with dry, hot summer",Upland,2.00–2.50,1429
+57,US-Srr,38.2006,-122.0264,2014,2017,WET,"Mediterranean: mild with dry, hot summer",Brackish,0.10–0.60,8
+58,US-StJ,39.0882,-75.4372,2014,2020,WET,"Humid Subtropical: mild with no dry season, hot summer",Saline,0.20–1.80,6.7
+59,US-StS,33.3302,-79.2492,2015,2015,MF,"Humid Subtropical: mild with no dry season, hot summer",Freshwater,10.00–30.00,3
+60,US-TaS,25.1908,-80.6391,2017,2023,WET,"Humid Subtropical: dry winter, hot summer",Saline,0.50–3.00,3
+61,US-TLR,35.9168,-76.1463,2024,2025,WET,"Humid Subtropical: mild with no dry season, hot summer",Upland,8.00–20.00,1
+62,US-Tw1,38.1074,-121.6469,2011,2023,WET,"Mediterranean: mild with dry, hot summer",Freshwater,2.00–3.00,-5
+63,US-Tw2,38.0969,-121.6365,2012,2013,CRO,"Mediterranean: mild with dry, hot summer",Upland,2.00–3.00,-5
+64,US-Tw3,38.1152,-121.6469,2013,2018,CRO,"Mediterranean: mild with dry, hot summer",Freshwater,0.50–1.00,-4
+65,US-Tw4,38.1027,-121.6413,2013,2024,WET,"Mediterranean: mild with dry, hot summer",Freshwater,2.00–3.00,-5
+66,US-Tw5,38.1072,-121.6426,2018,2020,WET,"Mediterranean: mild with dry, hot summer",Freshwater,2.00–3.00,-5
+67,US-Twt,38.1087,-121.6531,2009,2017,CRO,"Mediterranean: mild with dry, hot summer",Upland,2.00–3.00,-7
+68,US-Upa,70.2815,-148.8848,1994,1994,WET,Dry Continental: cool summe,Freshwater,0.10–0.50,5
+69,US-Wpp,44.1369,-123.1824,2015,2015,DBF,"Mediterranean: mild with dry, warm summer",Upland,15.00–30.00,111
+70,US-xBA,71.2824,-156.6194,2017,2025,WET,Tundra,Freshwater,0.10–0.50,6
+71,US-xSB,29.6893,-81.9934,2018,2025,ENF,"Humid Subtropical: mild with no dry season, hot summer",Upland,12.00–25.00,45
+72,US-xSE,38.8901,-76.56,2017,2025,DBF,"Humid Subtropical: mild with no dry season, hot summer",Upland,20.00–35.00,15
