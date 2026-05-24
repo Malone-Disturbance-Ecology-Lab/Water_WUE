@@ -4,7 +4,7 @@ This project investigates spatial and temporal variability in ecosystem Water Us
 
 ### 🔍 Project Objectives
 
-- Quantify long-term variability in WUE, WUEₜ, ET partitioning, and ecosystem function across coastal ecosystems  
+- Quantify long-term variability in WUE, WUE_T, ET partitioning, and ecosystem function across coastal ecosystems  
 - Evaluate ecosystem responses to short- and long-term hydroclimatic drought using multi-timescale SPEI  
 - Assess how salinity gradients and coastal environmental conditions modify carbon–water coupling  
 - Integrate AmeriFlux, ERA5, MODIS, phenology, and drought datasets into a unified analysis framework  
