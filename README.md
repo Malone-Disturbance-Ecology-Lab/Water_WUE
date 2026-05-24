@@ -1,13 +1,18 @@
 ## 🌿 Water_WUE: Coastal Ecosystem Water Use Efficiency and Drought Analysis
 
-This project investigates spatial and temporal variability in ecosystem Water Use Efficiency (WUE), transpiration-based WUE (WUEₜ), and evapotranspiration partitioning across U.S. coastal ecosystems using AmeriFlux observations, remote sensing products, and hydroclimatic drought indices. The workflow integrates flux tower, ERA5, MODIS, phenology, salinity, and SPEI datasets to evaluate how prolonged drought, precipitation variability, and salinity gradients influence ecosystem carbon–water coupling.
+This project investigates spatial and temporal variability in ecosystem Water Use Efficiency (WUE), transpiration-based WUE (WUE_T), and evapotranspiration partitioning across U.S. coastal ecosystems using AmeriFlux observations, remote sensing products, and hydroclimatic drought indices. The workflow integrates flux tower, ERA5, MODIS, phenology, salinity, and SPEI datasets to evaluate how prolonged drought, precipitation variability, and salinity gradients influence ecosystem carbon–water coupling.
 
 ### 🔍 Project Objectives
 
-- Quantify long-term variability in WUE, WUE_T, ET partitioning, and ecosystem function across coastal ecosystems  
-- Evaluate ecosystem responses to short- and long-term hydroclimatic drought using multi-timescale SPEI  
-- Assess how salinity gradients and coastal environmental conditions modify carbon–water coupling  
-- Integrate AmeriFlux, ERA5, MODIS, phenology, and drought datasets into a unified analysis framework  
+- **Q1:** Quantify differences in WUE_ET, WUEₜ, and evapotranspiration partitioning across U.S. coastal ecosystems under near-normal hydroclimatic conditions  
+
+- **Q2:** Evaluate how short- and long-term hydroclimatic anomalies alter WUE_ET and WUEₜ responses across coastal ecosystems using multi-timescale SPEI  
+
+- **Q3:** Assess site-level WUEₜ sensitivity to persistent multi-year moisture anomalies and determine whether sensitivity patterns differ among ecosystem types, climate–biome groups, salinity gradients, and coastal regions  
+
+- **Q4:** Determine how persistent multi-year drought influences the probability, spatial persistence, and regional patterns of WUEₜ decline across U.S. coastal regions  
+
+- Integrate AmeriFlux observations, ET partitioning, ERA5 climate reanalysis, MODIS vegetation products, and SPEI datasets within a unified coastal carbon–water analysis framework  
 
 ### ⚙️ Code Modules Overview
 
