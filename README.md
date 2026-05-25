@@ -4,11 +4,11 @@ This project investigates spatial and temporal variability in ecosystem Water Us
 
 ### 🔍 Project Objectives
 
-- **Q1:** Quantify differences in WUE_ET, WUEₜ, and evapotranspiration partitioning across U.S. coastal ecosystems under near-normal hydroclimatic conditions  
+- **Q1:** Quantify differences in WUE_ET, WUE_T, and evapotranspiration partitioning across U.S. coastal ecosystems under near-normal hydroclimatic conditions  
 
 - **Q2:** Evaluate how short- and long-term hydroclimatic anomalies alter WUE_ET and WUE_T responses across coastal ecosystems using multi-timescale SPEI  
 
-- **Q3:** Assess site-level WUEₜ sensitivity to persistent multi-year moisture anomalies and determine whether sensitivity patterns differ among ecosystem types, climate–biome groups, salinity gradients, and coastal regions  
+- **Q3:** Assess site-level WUE_T sensitivity to persistent multi-year moisture anomalies and determine whether sensitivity patterns differ among ecosystem types, climate–biome groups, salinity gradients, and coastal regions  
 
 - **Q4:** Determine how persistent multi-year drought influences the probability, spatial persistence, and regional patterns of WUEₜ decline across U.S. coastal regions  
 
