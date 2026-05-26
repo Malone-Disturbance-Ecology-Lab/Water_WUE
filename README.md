@@ -1,4 +1,4 @@
-# 🌿 Changes in Water-Use Efficiency Signal Critical Declines Across U.S. Coastal Zones
+# Changes in Water-Use Efficiency Signal Critical Declines Across U.S. Coastal Zones
 
 ## Project Overview
 
@@ -16,16 +16,9 @@ This repository contains workflows, processed datasets, statistical analyses, an
 | **Q4** | Determine how persistent multi-year hydroclimatic anomalies influence probability, spatial persistence, and regional patterns of WUE<sub>T</sub> decline across U.S. coastal regions. |
 
 ---
-
-# 📁 Repository
-
-Repository URL:
-
-:contentReference[oaicite:0]{index=0}
-
 ---
 
-# 📂 Final Datasets (Quick Access)
+#  Final Datasets (Quick Access)
 
 ## Main Datasets
 
@@ -50,7 +43,7 @@ data_products/
 
 ---
 
-# 📂 Data Directory Structure
+#  Data Directory Structure
 
 All raw, intermediate, and processed datasets are organized on the Malone Lab server:
 
@@ -143,7 +136,7 @@ data_products/
 
 ---
 
-# ⚙️ Workflow Overview
+#  Workflow Overview
 
 ```text
 AmeriFlux + ERA5 Integration
@@ -161,7 +154,7 @@ Breakpoint + Regional Aggregation Analysis
 
 ---
 
-# 🌎 Q1–Q4 Manuscript Analysis Workflows
+#  Q1–Q4 Manuscript Analysis Workflows
 
 Main manuscript-analysis scripts in the GitHub repository are organized in:
 
@@ -246,7 +239,7 @@ M:\Research\WUE_CUE\spatial_SPEI\logistic_model\pre_figure_analysis\
 
 ---
 
-# ⚙️ Core Processing Workflow
+#  Core Processing Workflow
 
 | Step | Script | Purpose |
 |---|---|---|
@@ -266,7 +259,7 @@ M:\Research\WUE_CUE\spatial_SPEI\logistic_model\pre_figure_analysis\
 
 ---
 
-# 📁 Repository Structure
+#  Repository Structure
 
 ```text
 Water_WUE/
@@ -286,7 +279,7 @@ Water_WUE/
 
 ---
 
-# 📦 Primary Outputs
+#  Primary Outputs
 
 - ET partitioning products
 - merged WUE datasets
@@ -299,7 +292,7 @@ Water_WUE/
 
 ---
 
-# 👤 Contact
+#  Contact
 
 Ammara Talib  
 Yale University  
