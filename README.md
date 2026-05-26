@@ -66,9 +66,9 @@ Processed using:
 
 ---
 
-## Final merged datasets before outlier removal
+## Final merged and cleaned datasets
 
-Generated using:
+Merged datasets are generated using:
 
 ```text
 19-merge_ameri_WUE_indices.py
@@ -78,58 +78,45 @@ Main input directories:
 
 ```text
 M:\Research\WUE_CUE\ameri_data\ET_partitioning\
-```
-
-```text
 M:\Research\WUE_CUE\drivers\ameri_drivers\PET_drought\drought\
-```
-
-```text
 M:\Research\WUE_CUE\data_products\info\
 ```
 
-Merged datasets are saved in:
+Output directory:
 
 ```text
 M:\Research\WUE_CUE\data_products\
 ```
 
-Key files:
+Merged datasets:
 
 ```text
 WUE_CUE_monthly_merged_indices.csv
 WUE_CUE_yearly_merged_indices.csv
 ```
 
-GitHub copies of merged datasets are also available in:
-
-```text
-data/
-```
----
-
-## Final cleaned datasets after outlier removal
-
-Generated using:
+Final cleaned datasets are generated using:
 
 ```text
 20-WUE_cleaning_plot.py
 ```
 
-Final cleaned outputs:
+Cleaned datasets:
 
 ```text
 WUE_CUE_monthly_merged_indices_clean.csv
 WUE_CUE_yearly_merged_indices_clean.csv
 ```
 
-These are the primary datasets used for Q1–Q4 manuscript analyses.
-
-GitHub copies of cleaned datasets are available in:
+GitHub copies of merged and cleaned datasets are available in:
 
 ```text
 data/
 ```
+
+Repository:
+
+:contentReference[oaicite:1]{index=1}
 
 ---
 
