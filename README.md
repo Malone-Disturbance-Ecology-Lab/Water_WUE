@@ -6,7 +6,7 @@ This repository contains workflows, processed datasets, statistical analyses, an
 
 ---
 
-# 🔍 Research Objectives
+#  Research Objectives
 
 | Question | Objective |
 |---|---|
