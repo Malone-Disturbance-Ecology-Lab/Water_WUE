@@ -1,8 +1,8 @@
 # 🌿 Changes in Water-Use Efficiency Signal Critical Declines Across U.S. Coastal Zones
 
-This project investigates spatial and temporal variability in ecosystem Water Use Efficiency (WUE), transpiration-based WUE<sub>T</sub>, and evapotranspiration partitioning across U.S. coastal ecosystems using AmeriFlux observations, remote sensing products, and hydroclimatic indices.
+This project investigates effect of hydroclimatic extremes on ecosystem Water Use Efficiency (WUE), transpiration-based WUE<sub>T</sub>, and evapotranspiration partitioning across U.S. coastal ecosystems using AmeriFlux observations, remote sensing products, and hydroclimatic indices.
 
-The workflow integrates flux tower observations, ERA5 climate reanalysis, MODIS products, ET partitioning, phenology, salinity, and SPEI datasets to evaluate how hydroclimatic variability alters ecosystem carbon–water coupling across coastal regions.
+The workflow integrates flux tower observations, ERA5 climate reanalysis, MODIS products, ET partitioning, phenology, and SPEI datasets to evaluate how hydroclimatic extremes alters ecosystem carbon–water coupling across coastal regions.
 
 ---
 
@@ -106,12 +106,6 @@ GitHub copies of merged datasets are also available in:
 ```text
 data/
 ```
-
-Repository:
-
-
-:contentReference[oaicite:1]{index=1}
-
 ---
 
 ## Final cleaned datasets after outlier removal
