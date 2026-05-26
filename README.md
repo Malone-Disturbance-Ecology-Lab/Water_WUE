@@ -128,13 +128,6 @@ WUE_CUE_yearly_merged_indices.csv
 WUE_CUE_monthly_merged_indices_clean.csv
 WUE_CUE_yearly_merged_indices_clean.csv
 ```
-
-GitHub dataset directory:
-
-```text
-data_products/
-```
-
 ---
 
 #  Workflow Overview
