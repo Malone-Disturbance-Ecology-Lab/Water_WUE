@@ -39,6 +39,7 @@ GitHub directory:
 
 ```text
 data_products/
+https://github.com/Malone-Disturbance-Ecology-Lab/Water_WUE/data
 ```
 
 ---
