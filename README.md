@@ -17,16 +17,36 @@ This repository contains workflows, processed datasets, statistical analyses, an
 
 ---
 
+# 📁 Repository
+
+Repository URL:
+
+:contentReference[oaicite:0]{index=0}
+
 ---
 
 # 📂 Final Datasets (Quick Access)
 
-| Dataset | Description | Server Path | GitHub Path |
-|---|---|---|---|
-| `WUE_CUE_monthly_merged_indices_clean.csv` | Final cleaned monthly ecosystem dataset | `\\corellia.environment.yale.edu\MaloneLab\Research\WUE_CUE\data_products\` | `data_products/` |
-| `WUE_CUE_yearly_merged_indices_clean.csv` | Final cleaned yearly ecosystem dataset | `\\corellia.environment.yale.edu\MaloneLab\Research\WUE_CUE\data_products\` | `data_products/` |
-| `WUE_CUE_monthly_merged_indices.csv` | Monthly merged dataset before filtering | `\\corellia.environment.yale.edu\MaloneLab\Research\WUE_CUE\data_products\` | `data_products/` |
-| `WUE_CUE_yearly_merged_indices.csv` | Yearly merged dataset before filtering | `\\corellia.environment.yale.edu\MaloneLab\Research\WUE_CUE\data_products\` | `data_products/` |
+## Main Datasets
+
+| Dataset | Purpose |
+|---|---|
+| `WUE_CUE_monthly_merged_indices.csv` | Monthly merged dataset before filtering |
+| `WUE_CUE_yearly_merged_indices.csv` | Yearly merged dataset before filtering |
+| `WUE_CUE_monthly_merged_indices_clean.csv` | Final cleaned monthly dataset |
+| `WUE_CUE_yearly_merged_indices_clean.csv` | Final cleaned yearly dataset |
+
+Server directory:
+
+```text
+M:\Research\WUE_CUE\data_products\
+```
+
+GitHub directory:
+
+```text
+data_products/
+```
 
 ---
 
@@ -38,40 +58,88 @@ All raw, intermediate, and processed datasets are organized on the Malone Lab se
 M:\Research\WUE_CUE\
 ```
 
+---
+
 ## AmeriFlux Data
 
-| Item | Path / Script |
-|---|---|
-| Raw AmeriFlux ZIP archives | `M:\Research\WUE_CUE\ameri_data\` |
-| ZIP extraction workflow | `2-ameri_un_zip.py` |
-| Extracted half-hourly files | `M:\Research\WUE_CUE\ameri_data\ameri_gaps\` |
+Raw AmeriFlux ZIP archives:
+
+```text
+M:\Research\WUE_CUE\ameri_data\
+```
+
+ZIP extraction workflow:
+
+```text
+2-ameri_un_zip.py
+```
+
+Extracted half-hourly AmeriFlux files:
+
+```text
+M:\Research\WUE_CUE\ameri_data\ameri_gaps\
+```
 
 ---
 
 ## ERA5 Climate Data
 
-| Item | Path / Script |
-|---|---|
-| ERA5 processed datasets | `M:\Research\WUE_CUE\era5_point_data\` |
-| ERA5 processing workflow | `4-Era5_point_data.py` |
+ERA5 processed datasets:
+
+```text
+M:\Research\WUE_CUE\era5_point_data\
+```
+
+ERA5 processing workflow:
+
+```text
+4-Era5_point_data.py
+```
 
 ---
 
 ## Final Merged and Cleaned Datasets
 
-| Item | Path / Script |
-|---|---|
-| Merge workflow | `19-merge_ameri_WUE_indices.py` |
-| Main ET partitioning input | `M:\Research\WUE_CUE\ameri_data\ET_partitioning\` |
-| SPEI drought input | `M:\Research\WUE_CUE\drivers\ameri_drivers\PET_drought\drought\` |
-| Site metadata input | `M:\Research\WUE_CUE\data_products\info\` |
-| Output directory | `M:\Research\WUE_CUE\data_products\` |
-| Monthly merged dataset | `WUE_CUE_monthly_merged_indices.csv` |
-| Yearly merged dataset | `WUE_CUE_yearly_merged_indices.csv` |
-| Final cleaning workflow | `20-WUE_cleaning_plot.py` |
-| Monthly cleaned dataset | `WUE_CUE_monthly_merged_indices_clean.csv` |
-| Yearly cleaned dataset | `WUE_CUE_yearly_merged_indices_clean.csv` |
-| GitHub dataset directory | `data_products/` |
+Merge workflow:
+
+```text
+19-merge_ameri_WUE_indices.py
+```
+
+Final cleaning workflow:
+
+```text
+20-WUE_cleaning_plot.py
+```
+
+Main input directories:
+
+```text
+M:\Research\WUE_CUE\ameri_data\ET_partitioning\
+M:\Research\WUE_CUE\drivers\ameri_drivers\PET_drought\drought\
+M:\Research\WUE_CUE\data_products\info\
+```
+
+Output directory:
+
+```text
+M:\Research\WUE_CUE\data_products\
+```
+
+Output datasets:
+
+```text
+WUE_CUE_monthly_merged_indices.csv
+WUE_CUE_yearly_merged_indices.csv
+WUE_CUE_monthly_merged_indices_clean.csv
+WUE_CUE_yearly_merged_indices_clean.csv
+```
+
+GitHub dataset directory:
+
+```text
+data_products/
+```
 
 ---
 
@@ -108,7 +176,7 @@ function/WUE_paper_figures/draft_5_spei/may_figures/
 | `Q3/` | Long-term SPEI-48 sensitivity analyses |
 | `Q4/` | Spatial probability and regional analyses |
 
-Primary manuscript datasets are located in:
+Primary manuscript datasets:
 
 ```text
 M:\Research\WUE_CUE\data_products\
@@ -118,36 +186,69 @@ M:\Research\WUE_CUE\data_products\
 
 # 🌍 Spatial Modeling Workflow (Q4)
 
-Spatial-modeling scripts in the GitHub repository are located in:
+Spatial-modeling scripts in the GitHub repository:
 
 ```text
 function/WUE_paper_figures/draft_5_spei/may_figures/Q4/spatial_model/
 ```
 
+---
+
 ## Spatial Probability Projection
 
-| Item | Description |
-|---|---|
-| `5-spatial_prob_model.py` | Builds spatial probability models for WUE<sub>T</sub> response classification using gridded SPEI datasets |
-| Main outputs | `WUE_predictions_linearlogistic_YYYYMM.nc` |
-| Additional outputs | Monthly and yearly summary tables |
+Script:
+
+```text
+5-spatial_prob_model.py
+```
+
+Purpose:
+Builds spatial probability models for WUE<sub>T</sub> response classification using gridded SPEI datasets.
+
+Main outputs:
+
+```text
+WUE_predictions_linearlogistic_YYYYMM.nc
+spatial_predictions_monthly_linearlogistic.csv
+spatial_predictions_yearly_linearlogistic.csv
+```
 
 ---
 
 ## Temporal Aggregation and Breakpoint Analysis
 
-| Item | Description |
-|---|---|
-| `6-spatial_prob_model_output_analysis.py` | Processes NetCDF outputs into breakpoint analyses, regional summaries, and manuscript figure products |
-| Spatial analysis directory | `M:\Research\WUE_CUE\spatial_SPEI\` |
-| NetCDF outputs | `M:\Research\WUE_CUE\spatial_SPEI\logistic_model\netcdf_outputs\` |
-| Breakpoint outputs | `M:\Research\WUE_CUE\spatial_SPEI\logistic_model\pre_figure_analysis\` |
+Script:
+
+```text
+6-spatial_prob_model_output_analysis.py
+```
+
+Purpose:
+Processes NetCDF outputs into breakpoint analyses, regional summaries, and manuscript figure products.
+
+Spatial analysis directory:
+
+```text
+M:\Research\WUE_CUE\spatial_SPEI\
+```
+
+NetCDF outputs:
+
+```text
+M:\Research\WUE_CUE\spatial_SPEI\logistic_model\netcdf_outputs\
+```
+
+Breakpoint and aggregation products:
+
+```text
+M:\Research\WUE_CUE\spatial_SPEI\logistic_model\pre_figure_analysis\
+```
 
 ---
 
 # ⚙️ Core Processing Workflow
 
-| Step | Script | Main Purpose |
+| Step | Script | Purpose |
 |---|---|---|
 | 1 | `1-ameri_api.R` | Download AmeriFlux metadata |
 | 2 | `2-ameri_un_zip.py` | Extract AmeriFlux ZIP archives |
