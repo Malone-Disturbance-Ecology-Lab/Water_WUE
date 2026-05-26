@@ -1,22 +1,56 @@
+---
+title: "Changes in Water-Use Efficiency Signal Critical Declines Across U.S. Coastal Zones"
+author: "Ammara Talib"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
 # 🌿 Changes in Water-Use Efficiency Signal Critical Declines Across U.S. Coastal Zones
 
-This project investigates effect of hydroclimatic extremes on ecosystem Water Use Efficiency (WUE), transpiration-based WUE<sub>T</sub>, and evapotranspiration partitioning across U.S. coastal ecosystems using AmeriFlux observations, remote sensing products, and hydroclimatic indices.
+## Project Overview
 
-The workflow integrates flux tower observations, ERA5 climate reanalysis, MODIS products, ET partitioning, phenology, and SPEI datasets to evaluate how hydroclimatic extremes alters ecosystem carbon–water coupling across coastal regions.
+This repository contains workflows, processed datasets, statistical analyses, and spatial modeling products used to investigate long-term changes in ecosystem water-use efficiency across U.S. coastal ecosystems using AmeriFlux observations, ERA5 climate reanalysis, ET partitioning, SPEI hydroclimatic indices, and spatial probability modeling.
 
 ---
 
-# 🔍 Project Objectives
+# 🔍 Research Objectives
 
-- **Q1:** Quantify differences in WUE<sub>ET</sub>, WUE<sub>T</sub>, and evapotranspiration partitioning across U.S. coastal ecosystems under near-normal hydroclimatic conditions  
+### Q1 — Baseline Ecosystem Function
 
-- **Q2:** Evaluate how short- and long-term hydroclimatic anomalies alter WUE<sub>ET</sub> and WUE<sub>T</sub> responses across coastal ecosystems using multi-timescale SPEI gradients  
+Quantify differences in WUE<sub>ET</sub>, WUE<sub>T</sub>, and evapotranspiration partitioning across U.S. coastal ecosystems under near-normal hydroclimatic conditions.
 
-- **Q3:** Assess site-level WUE<sub>T</sub> sensitivity to persistent multi-year moisture anomalies and determine whether sensitivity patterns differ among ecosystem types, climate–biome groups, salinity gradients, and coastal regions  
+### Q2 — Multi-Timescale Hydroclimatic Responses
 
-- **Q4:** Determine how persistent multi-year hydroclimatic anomalies influence the probability, spatial persistence, and regional patterns of WUE<sub>T</sub> decline across U.S. coastal regions  
+Evaluate how short- and long-term hydroclimatic anomalies alter WUE<sub>ET</sub>, WUE<sub>T</sub>, and ET partitioning behavior using multi-timescale SPEI gradients.
 
-- Integrate AmeriFlux observations, ET partitioning, ERA5 climate reanalysis, MODIS vegetation products, and SPEI datasets within a unified coastal carbon–water analysis framework  
+### Q3 — Long-Term Sensitivity Analysis
+
+Assess site-level WUE<sub>T</sub> sensitivity to persistent multi-year moisture anomalies across ecosystem types, climate–biome groups, salinity gradients, and coastal regions.
+
+### Q4 — Spatial Probability Modeling
+
+Determine how persistent multi-year hydroclimatic anomalies influence probability, spatial persistence, and regional patterns of WUE<sub>T</sub> decline across U.S. coastal regions.
+
+---
+
+# 📁 Repository
+
+Repository URL:
+
+:contentReference[oaicite:0]{index=0}
+
+---
+
+# 📂 Final Datasets (Quick Access)
+
+| Dataset | Description | Server Path | GitHub Path |
+|---|---|---|---|
+| `WUE_CUE_monthly_merged_indices_clean.csv` | Final cleaned monthly ecosystem dataset | `\\corellia.environment.yale.edu\MaloneLab\Research\WUE_CUE\data_products\` | `data_products/` |
+| `WUE_CUE_yearly_merged_indices_clean.csv` | Final cleaned yearly ecosystem dataset | `\\corellia.environment.yale.edu\MaloneLab\Research\WUE_CUE\data_products\` | `data_products/` |
+| `WUE_CUE_monthly_merged_indices.csv` | Monthly merged dataset before filtering | `\\corellia.environment.yale.edu\MaloneLab\Research\WUE_CUE\data_products\` | `data_products/` |
+| `WUE_CUE_yearly_merged_indices.csv` | Yearly merged dataset before filtering | `\\corellia.environment.yale.edu\MaloneLab\Research\WUE_CUE\data_products\` | `data_products/` |
 
 ---
 
@@ -28,9 +62,9 @@ All raw, intermediate, and processed datasets are organized on the Malone Lab se
 M:\Research\WUE_CUE\
 ```
 
----
+### AmeriFlux Data
 
-## Raw AmeriFlux ZIP archives
+Raw AmeriFlux ZIP archives are located in:
 
 ```text
 M:\Research\WUE_CUE\ameri_data\
@@ -48,9 +82,7 @@ Extracted half-hourly AmeriFlux files are generated in:
 M:\Research\WUE_CUE\ameri_data\ameri_gaps\
 ```
 
----
-
-## ERA5 meteorological forcing data
+### ERA5 Climate Data
 
 ERA5 processed datasets are located in:
 
@@ -64,9 +96,7 @@ Processed using:
 4-Era5_point_data.py
 ```
 
----
-
-## Final merged and cleaned datasets
+### Final Merged and Cleaned Datasets
 
 Merged datasets are generated using:
 
@@ -74,7 +104,7 @@ Merged datasets are generated using:
 19-merge_ameri_WUE_indices.py
 ```
 
-Main input directories:
+using inputs from:
 
 ```text
 M:\Research\WUE_CUE\ameri_data\ET_partitioning\
@@ -82,13 +112,13 @@ M:\Research\WUE_CUE\drivers\ameri_drivers\PET_drought\drought\
 M:\Research\WUE_CUE\data_products\info\
 ```
 
-Output directory:
+Output datasets are saved in:
 
 ```text
 M:\Research\WUE_CUE\data_products\
 ```
 
-Merged datasets:
+Merged outputs:
 
 ```text
 WUE_CUE_monthly_merged_indices.csv
@@ -101,7 +131,7 @@ Final cleaned datasets are generated using:
 20-WUE_cleaning_plot.py
 ```
 
-Cleaned datasets:
+Cleaned outputs:
 
 ```text
 WUE_CUE_monthly_merged_indices_clean.csv
@@ -111,20 +141,30 @@ WUE_CUE_yearly_merged_indices_clean.csv
 GitHub copies of merged and cleaned datasets are available in:
 
 ```text
-data/
+data_products/
 ```
 
 ---
 
-# 📊 Q1–Q4 Manuscript Analysis Workflows
-
-Reviewers interested only in manuscript analyses and figure-generation workflows do not need to rerun the full preprocessing pipeline.
-
-Primary cleaned datasets used throughout the manuscript are located in:
+# ⚙️ Workflow Overview
 
 ```text
-M:\Research\WUE_CUE\data_products\
+AmeriFlux + ERA5 Integration
+            ↓
+ET Partitioning + WUE Metrics
+            ↓
+Quality Control + Outlier Filtering
+            ↓
+SPEI Sensitivity Analysis
+            ↓
+Spatial Probability Modeling
+            ↓
+Breakpoint + Regional Aggregation Analysis
 ```
+
+---
+
+# 🌎 Q1–Q4 Manuscript Analysis Workflows
 
 Main downstream analysis scripts in the GitHub repository are organized in:
 
@@ -143,85 +183,150 @@ Q4/
 
 These folders contain manuscript-specific statistical analyses, sensitivity analyses, regional analyses, and figure-generation workflows.
 
+Primary cleaned datasets used throughout manuscript analyses are located in:
+
+```text
+M:\Research\WUE_CUE\data_products\
+```
+
 ---
 
-# 🌎 Q4 Spatial Modeling and Regional Analysis
+# 🌍 Spatial Modeling Workflow (Q4)
 
-Q4 spatial-modeling scripts in the GitHub repository are located in:
+Spatial-modeling scripts in the GitHub repository are located in:
 
 ```text
 function/WUE_paper_figures/draft_5_spei/may_figures/Q4/spatial_model/
 ```
 
-Key scripts:
+### Spatial Probability Projection
 
 ```text
 5-spatial_prob_model.py
 ```
 
-Builds spatial probability models for WUE<sub>T</sub> response classification across coastal regions.
+Builds spatial probability models for WUE<sub>T</sub> response classification across coastal regions using gridded SPEI datasets.
+
+Outputs include:
+
+```text
+WUE_predictions_linearlogistic_YYYYMM.nc
+spatial_predictions_monthly_linearlogistic.csv
+spatial_predictions_yearly_linearlogistic.csv
+```
+
+### Temporal Aggregation and Breakpoint Analysis
 
 ```text
 6-spatial_prob_model_output_analysis.py
 ```
 
-Processes NetCDF probability outputs, breakpoint analyses, and regional spatial products used in Q4 manuscript figures.
+Processes NetCDF probability outputs into breakpoint analyses, regional summaries, and manuscript figure inputs.
 
-Primary spatial-analysis datasets are located in:
+Spatial analysis datasets are located in:
 
 ```text
 M:\Research\WUE_CUE\spatial_SPEI\
 ```
 
-Important NetCDF model outputs:
+Important NetCDF outputs:
 
 ```text
 M:\Research\WUE_CUE\spatial_SPEI\logistic_model\netcdf_outputs\
 ```
 
-Spatial outputs and breakpoint-analysis products used for Q4 figures are generated in:
+Breakpoint and aggregation products:
 
 ```text
 M:\Research\WUE_CUE\spatial_SPEI\logistic_model\pre_figure_analysis\
 ```
 
-GitHub scripts for spatial analyses are available in:
+---
+
+# ⚙️ Core Processing Workflow
+
+| Step | Script | Main Purpose |
+|---|---|---|
+| 1 | `1-ameri_api.R` | Download AmeriFlux metadata |
+| 2 | `2-ameri_un_zip.py` | Extract AmeriFlux ZIP archives |
+| 3 | `3-ameri_preprocess.py` | Preprocess flux observations |
+| 4 | `4-Era5_point_data.py` | ERA5 data processing |
+| 5 | `5-merge_ameri_era5.py` | Merge AmeriFlux and ERA5 datasets |
+| 6 | `6-blending_ameri_era.py` | Meteorological gap-filling |
+| 7 | `7-long_gaps.py` | Correct long observational gaps |
+| 8 | `8a-Loop_gap_fill_gpp.R` | REddyProc gap-filling and partitioning |
+| 9 | `10-data_merging.py` | Compute WUE metrics |
+| 10 | `16-ET_partioning_may_2026.py` | ET partitioning workflows |
+| 11 | `18-drought_indices_api.py` | Process SPEI indices |
+| 12 | `19-merge_ameri_WUE_indices.py` | Generate merged datasets |
+| 13 | `20-WUE_cleaning_plot.py` | Generate final cleaned datasets |
+
+---
+
+# 📁 Repository Structure
 
 ```text
-function/WUE_paper_figures/draft_5_spei/may_figures/Q4/spatial_model/
+Water_WUE/
+│
+├── data_products/
+├── function/
+│   ├── WUE_paper_figures/
+│   ├── climate_biome/
+│   ├── methods/
+│   └── spatial_model/
+│
+├── spatial_SPEI/
+├── figures/
+├── diagnostics/
+└── results/
 ```
 
 ---
 
-# ⚙️ Processing Workflow
+# 📦 Primary Outputs
 
-| Step | Script | Main Purpose |
-|---|---|---|
-| 1 | `1-ameri_api.R` | Download AmeriFlux metadata and site information |
-| 2 | `2-ameri_un_zip.py` | Extract AmeriFlux half-hourly ZIP archives |
-| 3 | `3-ameri_preprocess.py` | Preprocess and standardize flux observations |
-| 4 | `4-Era5_point_data.py` | ERA5 data processing |
-| 5 | `5-merge_ameri_era5.py` | Merge AmeriFlux and ERA5 datasets |
-| 6 | `6-blending_ameri_era.py` | Meteorological gap-filling and blending |
-| 7 | `7-long_gaps.py` | Correct long observational gaps |
-| 8 | `8a-Loop_gap_fill_gpp.R` | REddyProc gap-filling and flux partitioning |
-| 9 | `10-data_merging.py` | Aggregate datasets and compute WUE metrics |
-| 10 | `16-ET_partioning_may_2026.py` | ET partitioning workflows |
-| 11 | `18-drought_indices_api.py` | Download and process SPEI indices |
-| 12 | `19-merge_ameri_WUE_indices.py` | Generate merged datasets before outlier removal |
-| 13 | `20-WUE_cleaning_plot.py` | Generate final cleaned datasets for analyses |
+The repository produces:
+- ET partitioning products
+- merged WUE datasets
+- cleaned ecosystem datasets
+- SPEI sensitivity analyses
+- NetCDF spatial probability products
+- breakpoint analyses
+- regional aggregation products
+- publication-ready figures
 
 ---
 
-# 📁 Outputs
+# 🖥️ Software and Dependencies
 
-Primary outputs include:
-- gap-filled AmeriFlux datasets
-- ET partitioning products
-- WUE and WUE<sub>T</sub> datasets
-- SPEI hydroclimatic datasets
-- NetCDF spatial probability products
-- regional spatial analyses
-- publication-ready figures
+## Python Packages
 
-> Large AmeriFlux and ERA5 datasets are stored on the Malone Lab server and are not fully tracked in the GitHub repository because of file size limitations.
+```python
+pandas
+numpy
+xarray
+scipy
+matplotlib
+joblib
+scikit-learn
+timezonefinder
+pytz
+```
+
+---
+
+# 📝 Notes
+
+- Spatial analyses evaluate modeled hydroclimatic-response probability rather than direct ecosystem-state transitions.
+- Conditional filtering preserves low-sample coastal ecosystems during outlier filtering.
+- Large AmeriFlux and ERA5 datasets are stored on the Malone Lab server and are not fully tracked in the GitHub repository because of file size limitations.
+
+---
+
+# 👤 Contact
+
+Ammara Talib  
+Yale University  
+Malone Lab  
+
+---
