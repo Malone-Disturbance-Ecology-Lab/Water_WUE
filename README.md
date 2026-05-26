@@ -114,10 +114,6 @@ GitHub copies of merged and cleaned datasets are available in:
 data/
 ```
 
-Repository:
-
-:contentReference[oaicite:1]{index=1}
-
 ---
 
 # 📊 Q1–Q4 Manuscript Analysis Workflows
