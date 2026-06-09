@@ -1,0 +1,4 @@
+"difference_type","term","npar","AIC","LRT","Pr(Chi)"
+"WUE_ET_minus_WUE_E","<none>",NA,7249.85264750415,NA,NA
+"WUE_ET_minus_WUE_E","month_f",10,7245.79867761418,15.9460301100244,0.10118780811526
+"WUE_ET_minus_WUE_E","Trans_ratio_z:water_class",2,7274.06972974779,28.2170822436365,7.45999339733906e-07

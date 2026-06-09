@@ -1,0 +1,453 @@
+Ecological_Impacts.R — Q3-aligned EDI run summary
+Input: /Users/sm3466/Library/CloudStorage/Dropbox-YSE/Sparkle Malone/Research/WUE/Water_WUE/data/WUE_CUE_monthly_merged_indices_clean.csv 
+Output: /Users/sm3466/Library/CloudStorage/Dropbox-YSE/Sparkle Malone/Research/WUE/Water_WUE/Malone_Workflow/results/Ecological_Impacts 
+
+=== Q3-aligned purpose ===
+Primary ecological impact score is predicted upland WUE_T percent change from near-normal SPEI.
+Near-normal SPEI is defined as -1 <= SPEI <= 1 within each coastline and SPEI timescale.
+The model matches the final Q3 coast-threshold GAM logic.
+
+=== Model formula ===
+WUE_T ~ SPEI_timescale * coast_region + water_class + month_f + 
+    s(SPEI_value, by = spei_coast, k = 6) + s(site_name, bs = "re")
+
+=== Model information ===
+                model      AIC      BIC    logLik deviance_explained
+2 coast_threshold_gam 55347.65 56361.12 -27538.35          0.5842805
+  adjusted_r_squared
+2          0.5802603
+
+=== Coast-threshold GAM summary ===
+
+Family: gaussian 
+Link function: identity 
+
+Formula:
+WUE_T ~ SPEI_timescale * coast_region + water_class + month_f + 
+    s(SPEI_value, by = spei_coast, k = 6) + s(site_name, bs = "re")
+
+Parametric coefficients:
+                                                 Estimate Std. Error t value
+(Intercept)                                      4.379845   0.712359   6.148
+SPEI_timescaleSPEI_3                            -0.007470   0.088389  -0.085
+SPEI_timescaleSPEI_6                            -0.006646   0.088351  -0.075
+SPEI_timescaleSPEI_12                           -0.003548   0.088300  -0.040
+SPEI_timescaleSPEI_24                           -0.007643   0.088350  -0.087
+SPEI_timescaleSPEI_36                           -0.007692   0.088276  -0.087
+SPEI_timescaleSPEI_48                           -0.013375   0.088420  -0.151
+coast_regionPacific Coast                        0.803191   0.867101   0.926
+coast_regionGulf Coast                           3.440114   1.424203   2.415
+coast_regionAK Coast                             2.460566   1.001797   2.456
+water_classFreshwater                           -1.287292   0.875352  -1.471
+water_classSaline                               -1.160090   0.922011  -1.258
+month_f2                                         0.817171   0.297900   2.743
+month_f3                                         0.146326   0.284203   0.515
+month_f4                                         0.073946   0.281873   0.262
+month_f5                                         0.275670   0.281608   0.979
+month_f6                                        -0.305083   0.282029  -1.082
+month_f7                                         0.032742   0.283091   0.116
+month_f8                                         0.286879   0.283423   1.012
+month_f9                                         0.152254   0.284608   0.535
+month_f10                                        0.526100   0.289291   1.819
+month_f11                                        0.318143   0.850369   0.374
+SPEI_timescaleSPEI_3:coast_regionPacific Coast   0.011871   0.148500   0.080
+SPEI_timescaleSPEI_6:coast_regionPacific Coast   0.009213   0.148581   0.062
+SPEI_timescaleSPEI_12:coast_regionPacific Coast  0.014357   0.148352   0.097
+SPEI_timescaleSPEI_24:coast_regionPacific Coast  0.020917   0.148615   0.141
+SPEI_timescaleSPEI_36:coast_regionPacific Coast  0.018509   0.148337   0.125
+SPEI_timescaleSPEI_48:coast_regionPacific Coast  0.024172   0.148423   0.163
+SPEI_timescaleSPEI_3:coast_regionGulf Coast      0.363266   0.300632   1.208
+SPEI_timescaleSPEI_6:coast_regionGulf Coast      0.208570   0.293677   0.710
+SPEI_timescaleSPEI_12:coast_regionGulf Coast     0.131461   0.290398   0.453
+SPEI_timescaleSPEI_24:coast_regionGulf Coast     0.133444   0.289359   0.461
+SPEI_timescaleSPEI_36:coast_regionGulf Coast     0.036329   0.282500   0.129
+SPEI_timescaleSPEI_48:coast_regionGulf Coast     0.027251   0.282433   0.096
+SPEI_timescaleSPEI_3:coast_regionAK Coast       -0.069371   0.227345  -0.305
+SPEI_timescaleSPEI_6:coast_regionAK Coast       -0.052659   0.226586  -0.232
+SPEI_timescaleSPEI_12:coast_regionAK Coast      -0.125385   0.235120  -0.533
+SPEI_timescaleSPEI_24:coast_regionAK Coast      -0.175541   0.249153  -0.705
+SPEI_timescaleSPEI_36:coast_regionAK Coast      -0.189020   0.243904  -0.775
+SPEI_timescaleSPEI_48:coast_regionAK Coast      -0.121169   0.238529  -0.508
+                                                Pr(>|t|)    
+(Intercept)                                     8.06e-10 ***
+SPEI_timescaleSPEI_3                             0.93265    
+SPEI_timescaleSPEI_6                             0.94004    
+SPEI_timescaleSPEI_12                            0.96795    
+SPEI_timescaleSPEI_24                            0.93107    
+SPEI_timescaleSPEI_36                            0.93056    
+SPEI_timescaleSPEI_48                            0.87977    
+coast_regionPacific Coast                        0.35431    
+coast_regionGulf Coast                           0.01573 *  
+coast_regionAK Coast                             0.01406 *  
+water_classFreshwater                            0.14142    
+water_classSaline                                0.20834    
+month_f2                                         0.00609 ** 
+month_f3                                         0.60666    
+month_f4                                         0.79307    
+month_f5                                         0.32764    
+month_f6                                         0.27939    
+month_f7                                         0.90793    
+month_f8                                         0.31146    
+month_f9                                         0.59269    
+month_f10                                        0.06900 .  
+month_f11                                        0.70832    
+SPEI_timescaleSPEI_3:coast_regionPacific Coast   0.93629    
+SPEI_timescaleSPEI_6:coast_regionPacific Coast   0.95056    
+SPEI_timescaleSPEI_12:coast_regionPacific Coast  0.92290    
+SPEI_timescaleSPEI_24:coast_regionPacific Coast  0.88807    
+SPEI_timescaleSPEI_36:coast_regionPacific Coast  0.90070    
+SPEI_timescaleSPEI_48:coast_regionPacific Coast  0.87063    
+SPEI_timescaleSPEI_3:coast_regionGulf Coast      0.22694    
+SPEI_timescaleSPEI_6:coast_regionGulf Coast      0.47759    
+SPEI_timescaleSPEI_12:coast_regionGulf Coast     0.65078    
+SPEI_timescaleSPEI_24:coast_regionGulf Coast     0.64468    
+SPEI_timescaleSPEI_36:coast_regionGulf Coast     0.89768    
+SPEI_timescaleSPEI_48:coast_regionGulf Coast     0.92314    
+SPEI_timescaleSPEI_3:coast_regionAK Coast        0.76027    
+SPEI_timescaleSPEI_6:coast_regionAK Coast        0.81623    
+SPEI_timescaleSPEI_12:coast_regionAK Coast       0.59385    
+SPEI_timescaleSPEI_24:coast_regionAK Coast       0.48110    
+SPEI_timescaleSPEI_36:coast_regionAK Coast       0.43837    
+SPEI_timescaleSPEI_48:coast_regionAK Coast       0.61147    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+                                                      edf Ref.df       F
+s(SPEI_value):spei_coastSPEI_1__Atlantic Coast   0.011313      5   0.001
+s(SPEI_value):spei_coastSPEI_3__Atlantic Coast   1.019855      5   0.763
+s(SPEI_value):spei_coastSPEI_6__Atlantic Coast   0.614289      5   0.512
+s(SPEI_value):spei_coastSPEI_12__Atlantic Coast  0.480797      5   0.168
+s(SPEI_value):spei_coastSPEI_24__Atlantic Coast  0.677485      5   0.641
+s(SPEI_value):spei_coastSPEI_36__Atlantic Coast  0.802643      5   1.351
+s(SPEI_value):spei_coastSPEI_48__Atlantic Coast  1.432669      5   5.943
+s(SPEI_value):spei_coastSPEI_1__Pacific Coast    1.775540      5   2.880
+s(SPEI_value):spei_coastSPEI_3__Pacific Coast    0.863402      5   0.490
+s(SPEI_value):spei_coastSPEI_6__Pacific Coast    1.091360      5   1.227
+s(SPEI_value):spei_coastSPEI_12__Pacific Coast   0.009764      5   0.001
+s(SPEI_value):spei_coastSPEI_24__Pacific Coast   0.249047      5   0.092
+s(SPEI_value):spei_coastSPEI_36__Pacific Coast   0.005994      5   0.000
+s(SPEI_value):spei_coastSPEI_48__Pacific Coast   0.007440      5   0.000
+s(SPEI_value):spei_coastSPEI_1__Gulf Coast       0.901388      5   1.971
+s(SPEI_value):spei_coastSPEI_3__Gulf Coast       4.342106      5  29.442
+s(SPEI_value):spei_coastSPEI_6__Gulf Coast       2.242274      5   5.849
+s(SPEI_value):spei_coastSPEI_12__Gulf Coast      2.550436      5   9.575
+s(SPEI_value):spei_coastSPEI_24__Gulf Coast      1.959973      5   4.804
+s(SPEI_value):spei_coastSPEI_36__Gulf Coast      0.881603      5   1.851
+s(SPEI_value):spei_coastSPEI_48__Gulf Coast      0.011133      5   0.000
+s(SPEI_value):spei_coastSPEI_1__AK Coast         0.015857      5   0.002
+s(SPEI_value):spei_coastSPEI_3__AK Coast         1.899916      5   3.431
+s(SPEI_value):spei_coastSPEI_6__AK Coast         1.375580      5   2.518
+s(SPEI_value):spei_coastSPEI_12__AK Coast        0.780819      5   1.006
+s(SPEI_value):spei_coastSPEI_24__AK Coast        1.257702      5   1.008
+s(SPEI_value):spei_coastSPEI_36__AK Coast        0.821523      5   1.372
+s(SPEI_value):spei_coastSPEI_48__AK Coast        0.733285      5   1.083
+s(site_name)                                    57.680586     58 219.021
+                                                 p-value    
+s(SPEI_value):spei_coastSPEI_1__Atlantic Coast   0.45517    
+s(SPEI_value):spei_coastSPEI_3__Atlantic Coast   0.07651 .  
+s(SPEI_value):spei_coastSPEI_6__Atlantic Coast   0.10883    
+s(SPEI_value):spei_coastSPEI_12__Atlantic Coast  0.23421    
+s(SPEI_value):spei_coastSPEI_24__Atlantic Coast  0.07939 .  
+s(SPEI_value):spei_coastSPEI_36__Atlantic Coast  0.02698 *  
+s(SPEI_value):spei_coastSPEI_48__Atlantic Coast  0.00478 ** 
+s(SPEI_value):spei_coastSPEI_1__Pacific Coast    0.00666 ** 
+s(SPEI_value):spei_coastSPEI_3__Pacific Coast    0.11698    
+s(SPEI_value):spei_coastSPEI_6__Pacific Coast    0.07090 .  
+s(SPEI_value):spei_coastSPEI_12__Pacific Coast   0.56241    
+s(SPEI_value):spei_coastSPEI_24__Pacific Coast   0.24965    
+s(SPEI_value):spei_coastSPEI_36__Pacific Coast   0.76291    
+s(SPEI_value):spei_coastSPEI_48__Pacific Coast   0.98897    
+s(SPEI_value):spei_coastSPEI_1__Gulf Coast       0.00197 ** 
+s(SPEI_value):spei_coastSPEI_3__Gulf Coast       < 2e-16 ***
+s(SPEI_value):spei_coastSPEI_6__Gulf Coast      3.86e-06 ***
+s(SPEI_value):spei_coastSPEI_12__Gulf Coast      < 2e-16 ***
+s(SPEI_value):spei_coastSPEI_24__Gulf Coast     4.87e-05 ***
+s(SPEI_value):spei_coastSPEI_36__Gulf Coast      0.00469 ** 
+s(SPEI_value):spei_coastSPEI_48__Gulf Coast      0.80788    
+s(SPEI_value):spei_coastSPEI_1__AK Coast         0.43546    
+s(SPEI_value):spei_coastSPEI_3__AK Coast         0.00494 ** 
+s(SPEI_value):spei_coastSPEI_6__AK Coast         0.00827 ** 
+s(SPEI_value):spei_coastSPEI_12__AK Coast        0.03192 *  
+s(SPEI_value):spei_coastSPEI_24__AK Coast        0.09343 .  
+s(SPEI_value):spei_coastSPEI_36__AK Coast        0.02027 *  
+s(SPEI_value):spei_coastSPEI_48__AK Coast        0.04691 *  
+s(site_name)                                     < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =   0.58   Deviance explained = 58.4%
+-ML =  27803  Scale est. = 3.9546    n = 13104
+
+=== Smooth terms ===
+                                       smooth_term          edf Ref.df
+1   s(SPEI_value):spei_coastSPEI_1__Atlantic Coast  0.011313379      5
+2   s(SPEI_value):spei_coastSPEI_3__Atlantic Coast  1.019855172      5
+3   s(SPEI_value):spei_coastSPEI_6__Atlantic Coast  0.614289311      5
+4  s(SPEI_value):spei_coastSPEI_12__Atlantic Coast  0.480797376      5
+5  s(SPEI_value):spei_coastSPEI_24__Atlantic Coast  0.677485429      5
+6  s(SPEI_value):spei_coastSPEI_36__Atlantic Coast  0.802643266      5
+7  s(SPEI_value):spei_coastSPEI_48__Atlantic Coast  1.432668613      5
+8    s(SPEI_value):spei_coastSPEI_1__Pacific Coast  1.775540243      5
+9    s(SPEI_value):spei_coastSPEI_3__Pacific Coast  0.863401867      5
+10   s(SPEI_value):spei_coastSPEI_6__Pacific Coast  1.091360410      5
+11  s(SPEI_value):spei_coastSPEI_12__Pacific Coast  0.009764406      5
+12  s(SPEI_value):spei_coastSPEI_24__Pacific Coast  0.249047219      5
+13  s(SPEI_value):spei_coastSPEI_36__Pacific Coast  0.005994424      5
+14  s(SPEI_value):spei_coastSPEI_48__Pacific Coast  0.007439764      5
+15      s(SPEI_value):spei_coastSPEI_1__Gulf Coast  0.901388499      5
+16      s(SPEI_value):spei_coastSPEI_3__Gulf Coast  4.342105979      5
+17      s(SPEI_value):spei_coastSPEI_6__Gulf Coast  2.242273544      5
+18     s(SPEI_value):spei_coastSPEI_12__Gulf Coast  2.550436117      5
+19     s(SPEI_value):spei_coastSPEI_24__Gulf Coast  1.959972793      5
+20     s(SPEI_value):spei_coastSPEI_36__Gulf Coast  0.881602551      5
+21     s(SPEI_value):spei_coastSPEI_48__Gulf Coast  0.011133144      5
+22        s(SPEI_value):spei_coastSPEI_1__AK Coast  0.015856763      5
+23        s(SPEI_value):spei_coastSPEI_3__AK Coast  1.899916451      5
+24        s(SPEI_value):spei_coastSPEI_6__AK Coast  1.375579793      5
+25       s(SPEI_value):spei_coastSPEI_12__AK Coast  0.780819169      5
+26       s(SPEI_value):spei_coastSPEI_24__AK Coast  1.257702247      5
+27       s(SPEI_value):spei_coastSPEI_36__AK Coast  0.821522865      5
+28       s(SPEI_value):spei_coastSPEI_48__AK Coast  0.733285021      5
+29                                    s(site_name) 57.680586151     58
+              F      p.value
+1  1.397090e-03 4.551723e-01
+2  7.626169e-01 7.651398e-02
+3  5.124050e-01 1.088298e-01
+4  1.675608e-01 2.342074e-01
+5  6.405774e-01 7.938816e-02
+6  1.350678e+00 2.698389e-02
+7  5.942616e+00 4.779178e-03
+8  2.880181e+00 6.663085e-03
+9  4.904895e-01 1.169817e-01
+10 1.226707e+00 7.089920e-02
+11 9.069661e-04 5.624134e-01
+12 9.207936e-02 2.496488e-01
+13 2.290556e-04 7.629148e-01
+14 2.066712e-05 9.889651e-01
+15 1.971069e+00 1.968456e-03
+16 2.944250e+01 0.000000e+00
+17 5.848509e+00 3.857198e-06
+18 9.574763e+00 0.000000e+00
+19 4.803574e+00 4.872281e-05
+20 1.851020e+00 4.691956e-03
+21 2.577256e-04 8.078810e-01
+22 2.206509e-03 4.354575e-01
+23 3.430923e+00 4.936133e-03
+24 2.518477e+00 8.268704e-03
+25 1.005558e+00 3.192325e-02
+26 1.008353e+00 9.343468e-02
+27 1.371898e+00 2.026537e-02
+28 1.082569e+00 4.690830e-02
+29 2.190205e+02 0.000000e+00
+
+=== Upland coast-specific 5/10/20% SPEI thresholds ===
+   SPEI_timescale   coast_region water_class threshold_pct impact_direction
+1          SPEI_1  Pacific Coast      Upland           10%         increase
+2          SPEI_1  Pacific Coast      Upland            5%         increase
+3          SPEI_1     Gulf Coast      Upland           10%         increase
+4          SPEI_1     Gulf Coast      Upland            5%         increase
+5          SPEI_1     Gulf Coast      Upland           10%         decrease
+6          SPEI_1     Gulf Coast      Upland            5%         decrease
+7          SPEI_3     Gulf Coast      Upland           10%         decrease
+8          SPEI_3     Gulf Coast      Upland           20%         decrease
+9          SPEI_3     Gulf Coast      Upland            5%         decrease
+10         SPEI_3     Gulf Coast      Upland           10%         increase
+11         SPEI_3     Gulf Coast      Upland           20%         increase
+12         SPEI_3     Gulf Coast      Upland            5%         increase
+13         SPEI_3     Gulf Coast      Upland            5%         decrease
+14         SPEI_3     Gulf Coast      Upland           10%         increase
+15         SPEI_3     Gulf Coast      Upland           20%         increase
+16         SPEI_3     Gulf Coast      Upland            5%         increase
+17         SPEI_3       AK Coast      Upland           10%         increase
+18         SPEI_3       AK Coast      Upland            5%         increase
+19         SPEI_6  Pacific Coast      Upland            5%         increase
+20         SPEI_6     Gulf Coast      Upland           10%         increase
+21         SPEI_6     Gulf Coast      Upland           20%         increase
+22         SPEI_6     Gulf Coast      Upland            5%         increase
+23         SPEI_6     Gulf Coast      Upland           10%         decrease
+24         SPEI_6     Gulf Coast      Upland            5%         decrease
+25         SPEI_6       AK Coast      Upland           10%         increase
+26         SPEI_6       AK Coast      Upland            5%         increase
+27        SPEI_12     Gulf Coast      Upland           10%         increase
+28        SPEI_12     Gulf Coast      Upland           20%         increase
+29        SPEI_12     Gulf Coast      Upland            5%         increase
+30        SPEI_12     Gulf Coast      Upland           10%         decrease
+31        SPEI_12     Gulf Coast      Upland            5%         decrease
+32        SPEI_12       AK Coast      Upland            5%         decrease
+33        SPEI_12       AK Coast      Upland            5%         increase
+34        SPEI_24     Gulf Coast      Upland           10%         increase
+35        SPEI_24     Gulf Coast      Upland           20%         increase
+36        SPEI_24     Gulf Coast      Upland            5%         increase
+37        SPEI_24     Gulf Coast      Upland           10%         decrease
+38        SPEI_24     Gulf Coast      Upland            5%         decrease
+39        SPEI_24       AK Coast      Upland           10%         decrease
+40        SPEI_24       AK Coast      Upland            5%         decrease
+41        SPEI_24       AK Coast      Upland            5%         increase
+42        SPEI_36 Atlantic Coast      Upland            5%         increase
+43        SPEI_36     Gulf Coast      Upland           10%         increase
+44        SPEI_36     Gulf Coast      Upland            5%         increase
+45        SPEI_36     Gulf Coast      Upland           10%         decrease
+46        SPEI_36     Gulf Coast      Upland            5%         decrease
+47        SPEI_36       AK Coast      Upland           10%         decrease
+48        SPEI_36       AK Coast      Upland            5%         decrease
+49        SPEI_36       AK Coast      Upland            5%         increase
+50        SPEI_48 Atlantic Coast      Upland            5%         decrease
+51        SPEI_48       AK Coast      Upland            5%         decrease
+52        SPEI_48       AK Coast      Upland            5%         increase
+   anomaly_side SPEI_threshold pct_change_threshold SPEI_threshold_lower
+1           dry      -1.782607                   10            -1.782607
+2           dry      -1.029340                    5            -1.029340
+3           dry      -1.337495                   10            -1.337495
+4           dry      -1.029340                    5            -1.029340
+5           wet       1.333179                  -10             1.025024
+6           wet       1.025024                   -5             1.025024
+7           dry      -2.056523                  -10            -2.056523
+8           dry      -2.125002                  -20            -2.125002
+9           dry      -2.022283                   -5            -2.022283
+10          dry      -1.029340                   10            -1.029340
+11          dry      -1.029340                   20            -1.097819
+12          dry      -1.029340                    5            -1.029340
+13          wet       1.025024                   -5             1.025024
+14          wet       1.504376                   10             1.025024
+15          wet       1.812531                   20             1.025024
+16          wet       1.367418                    5             1.025024
+17          wet       1.504376                   10             1.025024
+18          wet       1.025024                    5             1.025024
+19          dry      -1.885326                    5            -1.885326
+20          dry      -1.029340                   10            -1.029340
+21          dry      -1.029340                   20            -1.029340
+22          dry      -1.029340                    5            -1.029340
+23          wet       1.025024                  -10             1.025024
+24          wet       1.025024                   -5             1.025024
+25          wet       1.675573                   10             1.025024
+26          wet       1.025024                    5             1.025024
+27          dry      -1.029340                   10            -1.029340
+28          dry      -1.029340                   20            -1.029340
+29          dry      -1.029340                    5            -1.029340
+30          wet       1.025024                  -10             1.025024
+31          wet       1.025024                   -5             1.025024
+32          dry      -1.132059                   -5            -1.132059
+33          wet       1.127743                    5             1.025024
+34          dry      -1.029340                   10            -1.029340
+35          dry      -1.474453                   20            -1.474453
+36          dry      -1.029340                    5            -1.029340
+37          wet       1.264700                  -10             1.025024
+38          wet       1.025024                   -5             1.025024
+39          dry      -1.645650                  -10            -1.645650
+40          dry      -1.029340                   -5            -1.029340
+41          wet       1.093503                    5             1.025024
+42          dry      -1.988044                    5            -1.988044
+43          dry      -1.474453                   10            -1.474453
+44          dry      -1.029340                    5            -1.029340
+45          wet       1.470137                  -10             1.025024
+46          wet       1.025024                   -5             1.025024
+47          dry      -2.022283                  -10            -2.022283
+48          dry      -1.029340                   -5            -1.029340
+49          wet       1.025024                    5             1.025024
+50          wet       1.196221                   -5             1.025024
+51          dry      -1.440213                   -5            -1.440213
+52          wet       1.435897                    5             1.025024
+   SPEI_threshold_upper
+1             -1.029340
+2             -1.029340
+3             -1.029340
+4             -1.029340
+5              1.333179
+6              1.025024
+7             -1.748368
+8             -1.851086
+9             -1.714129
+10            -1.029340
+11            -1.029340
+12            -1.029340
+13             1.025024
+14             1.504376
+15             1.812531
+16             1.367418
+17             1.504376
+18             1.025024
+19            -1.029340
+20            -1.029340
+21            -1.029340
+22            -1.029340
+23             1.025024
+24             1.025024
+25             1.675573
+26             1.025024
+27            -1.029340
+28            -1.029340
+29            -1.029340
+30             1.025024
+31             1.025024
+32            -1.029340
+33             1.127743
+34            -1.029340
+35            -1.029340
+36            -1.029340
+37             1.264700
+38             1.025024
+39            -1.029340
+40            -1.029340
+41             1.093503
+42            -1.029340
+43            -1.029340
+44            -1.029340
+45             1.470137
+46             1.025024
+47            -1.029340
+48            -1.029340
+49             1.025024
+50             1.196221
+51            -1.029340
+52             1.435897
+
+=== SPEI-3 monthly upland EDI class counts by coastline ===
+                
+                 No meaningful change (<5%) Watch (5-10%) Stress (10-20%)
+  Atlantic Coast                        259           161              42
+  Pacific Coast                         108            39               7
+  Gulf Coast                             12            13              34
+  AK Coast                               37            24               2
+                
+                 Impact (>=20%)
+  Atlantic Coast              0
+  Pacific Coast               0
+  Gulf Coast                 51
+  AK Coast                    4
+
+=== SPEI-3 monthly upland EDI direction counts by coastline ===
+                
+                 WUE_T decrease No meaningful change WUE_T increase
+  Atlantic Coast             68                  259            135
+  Pacific Coast              15                  108             31
+  Gulf Coast                 61                   12             37
+  AK Coast                   14                   37             16
+
+=== SPEI-3 prediction-interval support by coastline ===
+                
+                 PI supports decrease PI overlaps no-change
+  Atlantic Coast                    0                   462
+  Pacific Coast                     0                   154
+  Gulf Coast                        0                    93
+  AK Coast                          0                    67
+                
+                 PI supports increase
+  Atlantic Coast                    0
+  Pacific Coast                     0
+  Gulf Coast                       17
+  AK Coast                          0
+
+=== Regional validation against Q3 site-sensitivity summaries when available ===
+# A tibble: 4 × 13
+  coast_region   n_site_months n_sites_EDI_monthly mean_abs_Q3_EDI_pct_change
+  <chr>                  <int>               <int>                      <dbl>
+1 Atlantic Coast           462                  14                       4.89
+2 Pacific Coast            154                   6                       3.94
+3 Gulf Coast               110                   5                      21.4 
+4 AK Coast                  67                   4                       5.92
+# ℹ 9 more variables: median_abs_Q3_EDI_pct_change <dbl>,
+#   pct_months_5pct_or_more <dbl>, pct_months_10pct_or_more <dbl>,
+#   pct_months_PI_supported <dbl>, n_sites_Q3_site <int>,
+#   median_abs_pct_change <dbl>, q25_abs_pct_change <dbl>,
+#   q75_abs_pct_change <dbl>, mean_abs_pct_change <dbl>

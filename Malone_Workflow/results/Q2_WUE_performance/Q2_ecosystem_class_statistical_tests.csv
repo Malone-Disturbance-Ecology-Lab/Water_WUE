@@ -1,0 +1,6 @@
+"metric","response_variable","test","n_sites","n_upland","n_freshwater","n_saline","statistic","df","p_value","p_adjust_method","pairwise_upland_vs_freshwater_p_adj","pairwise_upland_vs_saline_p_adj","pairwise_freshwater_vs_saline_p_adj","signif"
+"Stability index","stability","Kruskal-Wallis",56,24,17,15,4.38231608432844,2,0.111787219318218,"BH/FDR for pairwise Wilcoxon",0.259402003976341,0.134475249874557,0.650438611412798,""
+"Plasticity slope (SPEI-3)","plasticity_slope_SPEI3","Kruskal-Wallis",56,24,17,15,3.66228254459679,2,0.160230596643786,"BH/FDR for pairwise Wilcoxon",0.259402003976341,0.242180360874883,0.705707365438352,""
+"Plasticity range (95th/5th)","plasticity_p95_p05","Kruskal-Wallis",56,24,17,15,1.55979102167183,2,0.458453912268679,"BH/FDR for pairwise Wilcoxon",0.989443175779737,0.461881484219336,0.461881484219336,""
+"Drought resistance","resistance","Kruskal-Wallis",39,18,11,10,3.41146853146853,2,0.181638965929715,"BH/FDR for pairwise Wilcoxon",0.459671590958564,0.240333691624282,0.459671590958564,""
+"Drought recovery","mean_recovery","Kruskal-Wallis",27,10,11,6,0.0692640692640651,2,0.965960790988658,"BH/FDR for pairwise Wilcoxon",1,1,1,""

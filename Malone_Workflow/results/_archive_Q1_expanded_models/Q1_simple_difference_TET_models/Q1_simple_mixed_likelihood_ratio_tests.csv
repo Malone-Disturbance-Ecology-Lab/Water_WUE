@@ -1,0 +1,3 @@
+"term","npar","AIC","LRT","Pr(Chi)","signif"
+"<none>",NA,23386.8164612555,NA,NA,""
+"difference_type:Trans_ratio_z",2,28115.273059459,4732.45659820355,0,"***"

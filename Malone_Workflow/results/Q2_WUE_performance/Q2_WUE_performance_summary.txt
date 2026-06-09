@@ -1,0 +1,122 @@
+Q2_WUE_performance.R — run summary
+Input:   /Users/sm3466/Library/CloudStorage/Dropbox-YSE/Sparkle Malone/Research/WUE/Water_WUE/data/WUE_CUE_monthly_merged_indices_clean.csv 
+Output:  /Users/sm3466/Library/CloudStorage/Dropbox-YSE/Sparkle Malone/Research/WUE/Water_WUE/Malone_Workflow/results/Q2_WUE_performance 
+
+Single-SPEI drought metric: SPEI-3 
+
+--- Data ---
+Rows in cleaned monthly data: 1852 
+Sites: 64 
+Years: 1994 - 2025 
+
+--- 1. Stability ---
+Sites with stability estimates: 56 
+   mean_WUE_T        var_WUE_T            cv_WUE_T        stability       
+ Min.   : 0.4736   Min.   :  0.03754   Min.   :0.1377   Min.   : 0.09071  
+ 1st Qu.: 2.6082   1st Qu.:  0.42158   1st Qu.:0.2213   1st Qu.: 0.99191  
+ Median : 3.8478   Median :  1.33052   Median :0.3237   Median : 2.71631  
+ Mean   : 4.4429   Mean   :  6.60422   Mean   :0.3674   Mean   : 4.76173  
+ 3rd Qu.: 5.5400   3rd Qu.:  4.64827   3rd Qu.:0.4819   3rd Qu.: 6.80655  
+ Max.   :15.5055   Max.   :170.93595   Max.   :0.9096   Max.   :19.17515  
+
+By ecosystem class:
+# A tibble: 3 × 4
+  water_class     n mean_stability median_stability
+  <fct>       <int>          <dbl>            <dbl>
+1 Upland         24           3.34             1.66
+2 Freshwater     17           5.64             2.81
+3 Saline         15           6.04             6.10
+
+--- 2. Plasticity: slope ---
+Site × timescale rows: 392 
+# A tibble: 21 × 5
+   SPEI_timescale water_class     n mean_slope pct_negative
+   <fct>          <fct>       <int>      <dbl>        <dbl>
+ 1 SPEI_1         Upland         24   -0.0783          54.2
+ 2 SPEI_1         Freshwater     17   -0.390           41.2
+ 3 SPEI_1         Saline         15   -0.0577          46.7
+ 4 SPEI_3         Upland         24   -0.803           62.5
+ 5 SPEI_3         Freshwater     17   -0.180           52.9
+ 6 SPEI_3         Saline         15   -0.00656         40  
+ 7 SPEI_6         Upland         24   -0.299           50  
+ 8 SPEI_6         Freshwater     17   -0.364           58.8
+ 9 SPEI_6         Saline         15    0.220           26.7
+10 SPEI_12        Upland         24   -0.269           41.7
+# ℹ 11 more rows
+
+--- 3. Plasticity: range ---
+Sites with range estimates: 56 
+   WUE_T_max         WUE_T_min       plasticity_range plasticity_p95_p05
+ Min.   : 0.7916   Min.   :0.04913   Min.   : 1.451   Min.   : 1.422    
+ 1st Qu.: 4.6631   1st Qu.:0.79810   1st Qu.: 2.373   1st Qu.: 2.004    
+ Median : 5.8976   Median :1.81066   Median : 3.308   Median : 2.469    
+ Mean   : 8.2157   Mean   :2.01237   Mean   : 9.510   Mean   : 5.272    
+ 3rd Qu.: 9.8728   3rd Qu.:2.86649   3rd Qu.: 9.115   3rd Qu.: 4.057    
+ Max.   :42.7457   Max.   :5.72108   Max.   :95.550   Max.   :48.279    
+
+--- 4. Resistance ---
+Sites with resistance estimates: 39 
+ mean_WUE_T_drought mean_WUE_T_near_normal   resistance    
+ Min.   : 0.6869    Min.   :0.4977         Min.   :0.5860  
+ 1st Qu.: 2.5967    1st Qu.:2.6296         1st Qu.:0.9226  
+ Median : 3.5558    Median :3.6004         Median :1.0278  
+ Mean   : 4.2592    Mean   :3.9212         Mean   :1.1038  
+ 3rd Qu.: 4.9267    3rd Qu.:4.7631         3rd Qu.:1.2227  
+ Max.   :12.1314    Max.   :8.7658         Max.   :2.0808  
+
+By ecosystem class:
+# A tibble: 3 × 4
+  water_class     n mean_resistance pct_above_1
+  <fct>       <int>           <dbl>       <dbl>
+1 Upland         18            1.18        66.7
+2 Freshwater     11            1.07        63.6
+3 Saline         10            1.01        40  
+
+--- 5. Recovery ---
+Drought events: 52 
+Sites with recovery estimates: 27 
+ duration_months mean_WUE_T_pre    mean_WUE_T_post    recovery     
+ Min.   :2.000   Min.   : 0.5497   Min.   :0.363   Min.   :0.4678  
+ 1st Qu.:2.000   1st Qu.: 2.4640   1st Qu.:2.293   1st Qu.:0.9060  
+ Median :2.000   Median : 3.1183   Median :3.129   Median :0.9982  
+ Mean   :2.865   Mean   : 3.7754   Mean   :3.672   Mean   :1.0029  
+ 3rd Qu.:3.000   3rd Qu.: 4.3706   3rd Qu.:3.945   3rd Qu.:1.0938  
+ Max.   :6.000   Max.   :10.8395   Max.   :9.463   Max.   :1.9719  
+
+By ecosystem class:
+# A tibble: 3 × 4
+  water_class     n mean_recovery pct_full_recovery
+  <fct>       <int>         <dbl>             <dbl>
+1 Upland         10         0.949              46.7
+2 Freshwater     11         1.05               50  
+3 Saline          6         1.01               63.9
+
+--- Summary table coverage ---
+Sites in summary table: 56 
+Sites with all five metrics: 26 
+
+--- Ecosystem-class statistical tests ---
+                       metric      response_variable           test n_sites
+1             Stability index              stability Kruskal-Wallis      56
+2   Plasticity slope (SPEI-3) plasticity_slope_SPEI3 Kruskal-Wallis      56
+3 Plasticity range (95th/5th)     plasticity_p95_p05 Kruskal-Wallis      56
+4          Drought resistance             resistance Kruskal-Wallis      39
+5            Drought recovery          mean_recovery Kruskal-Wallis      27
+  n_upland n_freshwater n_saline  statistic df   p_value
+1       24           17       15 4.38231608  2 0.1117872
+2       24           17       15 3.66228254  2 0.1602306
+3       24           17       15 1.55979102  2 0.4584539
+4       18           11       10 3.41146853  2 0.1816390
+5       10           11        6 0.06926407  2 0.9659608
+               p_adjust_method pairwise_upland_vs_freshwater_p_adj
+1 BH/FDR for pairwise Wilcoxon                           0.2594020
+2 BH/FDR for pairwise Wilcoxon                           0.2594020
+3 BH/FDR for pairwise Wilcoxon                           0.9894432
+4 BH/FDR for pairwise Wilcoxon                           0.4596716
+5 BH/FDR for pairwise Wilcoxon                           1.0000000
+  pairwise_upland_vs_saline_p_adj pairwise_freshwater_vs_saline_p_adj signif
+1                       0.1344752                           0.6504386       
+2                       0.2421804                           0.7057074       
+3                       0.4618815                           0.4618815       
+4                       0.2403337                           0.4596716       
+5                       1.0000000                           1.0000000       

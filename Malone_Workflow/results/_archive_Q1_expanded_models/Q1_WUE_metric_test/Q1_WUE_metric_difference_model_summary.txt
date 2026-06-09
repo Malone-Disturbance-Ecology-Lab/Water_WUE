@@ -1,0 +1,266 @@
+Q1 WUE metric-difference mixed-model test
+Input: /Users/sm3466/YSE Dropbox/Sparkle Malone/Research/WUE/Water_WUE/data/WUE_CUE_monthly_merged_indices_clean.csv 
+Output: /Users/sm3466/YSE Dropbox/Sparkle Malone/Research/WUE/Water_WUE/data/results/Q1_WUE_metric_test 
+
+Rows in source monthly data: 2820 
+Rows with all three WUE metrics and Trans_ratio: 1899 
+Rows in long difference model data: 5697 
+Sites: 71 
+Ecotypes: 9 
+Years: 1994 - 2025 
+
+Difference definitions:
+  WUE_ET_minus_WUE_T = WUE - WUE_tra
+  WUE_ET_minus_WUE_E = WUE - WUE_eva
+  WUE_E_minus_WUE_T  = WUE_eva - WUE_tra
+
+Coverage by difference:
+     difference_type    n      mean     median       sd
+1 WUE_ET_minus_WUE_T 1899 -1.936106 -1.2400282 2.414452
+2 WUE_ET_minus_WUE_E 1899 -3.313794 -2.4436544 3.191952
+3  WUE_E_minus_WUE_T 1899  1.377688  0.9467765 4.332501
+
+Coverage by ecotype:
+  IGBP n_sites n_rows
+9  WET      41   3291
+5  ENF       6    654
+3  CSH       5    486
+6  GRA       7    432
+4  DBF       3    384
+2  CRO       4    216
+1  BSV       2    138
+7   MF       2     51
+8  OSH       1     45
+
+Primary model formula:
+WUE_difference ~ difference_type * Trans_ratio_z + difference_type * 
+    IGBP + difference_type * month_f + Trans_ratio_z * IGBP + 
+    (1 | site_name)
+
+Primary model summary:
+Linear mixed model fit by maximum likelihood  ['lmerMod']
+Formula: WUE_difference ~ difference_type * Trans_ratio_z + difference_type *  
+    IGBP + difference_type * month_f + Trans_ratio_z * IGBP +  
+    (1 | site_name)
+   Data: diff_data
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+  23984.3   24449.6  -11922.1   23844.3      5627 
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-12.5453  -0.3372   0.0093   0.4059   7.2759 
+
+Random effects:
+ Groups    Name        Variance Std.Dev.
+ site_name (Intercept) 1.220    1.105   
+ Residual              3.707    1.925   
+Number of obs: 5697, groups:  site_name, 71
+
+Fixed effects:
+                                                Estimate Std. Error t value
+(Intercept)                                     -0.41720    1.14183  -0.365
+difference_typeWUE_ET_minus_WUE_E               -5.58799    1.06131  -5.265
+difference_typeWUE_E_minus_WUE_T                 4.61830    1.06131   4.352
+Trans_ratio_z                                    2.25099    0.35081   6.416
+IGBPCRO                                         -1.02410    1.08626  -0.943
+IGBPCSH                                         -0.35857    1.03664  -0.346
+IGBPDBF                                         -0.15845    1.12780  -0.140
+IGBPENF                                         -0.58680    1.01007  -0.581
+IGBPGRA                                         -0.28724    1.00241  -0.287
+IGBPMF                                           0.26339    1.36502   0.193
+IGBPOSH                                         -1.92057    1.52039  -1.263
+IGBPWET                                          0.32438    0.91051   0.356
+month_f2                                        -1.62387    0.77044  -2.108
+month_f3                                        -1.60335    0.72811  -2.202
+month_f4                                        -1.58648    0.71955  -2.205
+month_f5                                        -1.71284    0.71737  -2.388
+month_f6                                        -1.49925    0.71677  -2.092
+month_f7                                        -1.80513    0.71848  -2.512
+month_f8                                        -1.91561    0.71862  -2.666
+month_f9                                        -1.67717    0.72198  -2.323
+month_f10                                       -1.59245    0.73276  -2.173
+month_f11                                       -1.94867    2.10035  -0.928
+difference_typeWUE_ET_minus_WUE_E:Trans_ratio_z -3.63221    0.06712 -54.112
+difference_typeWUE_E_minus_WUE_T:Trans_ratio_z   2.16299    0.06712  32.224
+difference_typeWUE_ET_minus_WUE_E:IGBPCRO       -0.06830    0.52079  -0.131
+difference_typeWUE_E_minus_WUE_T:IGBPCRO        -0.36033    0.52079  -0.692
+difference_typeWUE_ET_minus_WUE_E:IGBPCSH       -1.48460    0.46447  -3.196
+difference_typeWUE_E_minus_WUE_T:IGBPCSH         1.27798    0.46447   2.752
+difference_typeWUE_ET_minus_WUE_E:IGBPDBF       -0.75871    0.48490  -1.565
+difference_typeWUE_E_minus_WUE_T:IGBPDBF         0.48822    0.48490   1.007
+difference_typeWUE_ET_minus_WUE_E:IGBPENF       -1.32180    0.45161  -2.927
+difference_typeWUE_E_minus_WUE_T:IGBPENF         1.40565    0.45161   3.113
+difference_typeWUE_ET_minus_WUE_E:IGBPGRA       -0.06102    0.47202  -0.129
+difference_typeWUE_E_minus_WUE_T:IGBPGRA         0.17247    0.47202   0.365
+difference_typeWUE_ET_minus_WUE_E:IGBPMF        -0.53663    0.77946  -0.688
+difference_typeWUE_E_minus_WUE_T:IGBPMF          0.04927    0.77946   0.063
+difference_typeWUE_ET_minus_WUE_E:IGBPOSH        1.13095    0.82208   1.376
+difference_typeWUE_E_minus_WUE_T:IGBPOSH         1.71855    0.82208   2.090
+difference_typeWUE_ET_minus_WUE_E:IGBPWET       -0.38438    0.41723  -0.921
+difference_typeWUE_E_minus_WUE_T:IGBPWET        -0.70925    0.41723  -1.700
+difference_typeWUE_ET_minus_WUE_E:month_f2       4.49929    1.06910   4.208
+difference_typeWUE_E_minus_WUE_T:month_f2       -0.99318    1.06910  -0.929
+difference_typeWUE_ET_minus_WUE_E:month_f3       4.56813    1.00390   4.550
+difference_typeWUE_E_minus_WUE_T:month_f3       -1.27099    1.00390  -1.266
+difference_typeWUE_ET_minus_WUE_E:month_f4       4.84371    0.98895   4.898
+difference_typeWUE_E_minus_WUE_T:month_f4       -1.48224    0.98895  -1.499
+difference_typeWUE_ET_minus_WUE_E:month_f5       4.67009    0.98518   4.740
+difference_typeWUE_E_minus_WUE_T:month_f5       -1.18926    0.98518  -1.207
+difference_typeWUE_ET_minus_WUE_E:month_f6       4.64056    0.98294   4.721
+difference_typeWUE_E_minus_WUE_T:month_f6       -1.27882    0.98294  -1.301
+difference_typeWUE_ET_minus_WUE_E:month_f7       4.78358    0.98429   4.860
+difference_typeWUE_E_minus_WUE_T:month_f7       -1.07197    0.98429  -1.089
+difference_typeWUE_ET_minus_WUE_E:month_f8       4.89003    0.98448   4.967
+difference_typeWUE_E_minus_WUE_T:month_f8       -0.98967    0.98448  -1.005
+difference_typeWUE_ET_minus_WUE_E:month_f9       5.04206    0.98967   5.095
+difference_typeWUE_E_minus_WUE_T:month_f9       -1.39329    0.98967  -1.408
+difference_typeWUE_ET_minus_WUE_E:month_f10      4.90625    1.00444   4.885
+difference_typeWUE_E_minus_WUE_T:month_f10      -1.33683    1.00444  -1.331
+difference_typeWUE_ET_minus_WUE_E:month_f11      4.98585    2.89968   1.719
+difference_typeWUE_E_minus_WUE_T:month_f11      -1.68651    2.89968  -0.582
+Trans_ratio_z:IGBPCRO                            0.13706    0.44609   0.307
+Trans_ratio_z:IGBPCSH                           -0.51681    0.38048  -1.358
+Trans_ratio_z:IGBPDBF                           -1.09559    0.41789  -2.622
+Trans_ratio_z:IGBPENF                           -0.09502    0.38862  -0.245
+Trans_ratio_z:IGBPGRA                           -0.13267    0.36886  -0.360
+Trans_ratio_z:IGBPMF                            -1.16823    0.68415  -1.708
+Trans_ratio_z:IGBPOSH                            1.31023    0.47716   2.746
+Trans_ratio_z:IGBPWET                           -0.78150    0.35490  -2.202
+
+Primary drop1 likelihood-ratio tests:
+                           term npar      AIC        LRT      Pr(Chi)
+1                        <none>   NA 23984.26         NA           NA
+2 difference_type:Trans_ratio_z    2 28791.61 4811.35439 0.000000e+00
+3          difference_type:IGBP   16 24335.92  383.66078 9.619812e-72
+4       difference_type:month_f   20 24002.91   58.64571 1.151501e-05
+5            Trans_ratio_z:IGBP    8 24046.50   78.24238 1.103254e-13
+
+Additive model formula:
+WUE_difference ~ difference_type + Trans_ratio_z + IGBP + month_f + 
+    (1 | site_name)
+
+Additive model summary:
+Linear mixed model fit by maximum likelihood  ['lmerMod']
+Formula: WUE_difference ~ difference_type + Trans_ratio_z + IGBP + month_f +  
+    (1 | site_name)
+   Data: diff_data
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+  29443.8   29603.3  -14697.9   29395.8      5673 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-9.1763 -0.3954  0.0471  0.3906  6.0648 
+
+Random effects:
+ Groups    Name        Variance Std.Dev.
+ site_name (Intercept) 0.9047   0.9511  
+ Residual              9.9606   3.1560  
+Number of obs: 5697, groups:  site_name, 71
+
+Fixed effects:
+                                  Estimate Std. Error t value
+(Intercept)                       -1.60226    1.02477  -1.564
+difference_typeWUE_ET_minus_WUE_E -1.37769    0.10242 -13.451
+difference_typeWUE_E_minus_WUE_T   3.31379    0.10242  32.354
+Trans_ratio_z                      1.22032    0.07421  16.443
+IGBPCRO                           -0.45017    0.93129  -0.483
+IGBPCSH                            0.04448    0.86452   0.051
+IGBPDBF                           -0.10654    0.95765  -0.111
+IGBPENF                           -0.08859    0.84545  -0.105
+IGBPGRA                            0.02301    0.83935   0.027
+IGBPMF                             0.10349    1.12971   0.092
+IGBPOSH                           -1.69431    1.29241  -1.311
+IGBPWET                            0.53266    0.75160   0.709
+month_f2                          -0.69724    0.75218  -0.927
+month_f3                          -0.68662    0.71871  -0.955
+month_f4                          -0.68158    0.71369  -0.955
+month_f5                          -0.77025    0.71235  -1.081
+month_f6                          -0.63612    0.71308  -0.892
+month_f7                          -0.82140    0.71583  -1.147
+month_f8                          -0.87231    0.71606  -1.218
+month_f9                          -0.68410    0.71881  -0.952
+month_f10                         -0.59020    0.72996  -0.809
+month_f11                         -0.87914    2.04726  -0.429
+
+T:ET by ecotype model formula:
+WUE_difference ~ difference_type + Trans_ratio_z * IGBP + month_f + 
+    (1 | site_name)
+
+T:ET by ecotype model summary:
+Linear mixed model fit by maximum likelihood  ['lmerMod']
+Formula: WUE_difference ~ difference_type + Trans_ratio_z * IGBP + month_f +  
+    (1 | site_name)
+   Data: diff_data
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+  29428.2   29641.0  -14682.1   29364.2      5665 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-9.3695 -0.4070  0.0539  0.3807  5.9751 
+
+Random effects:
+ Groups    Name        Variance Std.Dev.
+ site_name (Intercept) 0.8299   0.911   
+ Residual              9.9136   3.149   
+Number of obs: 5697, groups:  site_name, 71
+
+Fixed effects:
+                                  Estimate Std. Error t value
+(Intercept)                       -1.24026    1.09365  -1.134
+difference_typeWUE_ET_minus_WUE_E -1.37769    0.10218 -13.483
+difference_typeWUE_E_minus_WUE_T   3.31379    0.10218  32.431
+Trans_ratio_z                      1.74330    0.51048   3.415
+IGBPCRO                           -0.96111    1.00037  -0.961
+IGBPCSH                           -0.40001    0.94807  -0.422
+IGBPDBF                           -0.22095    1.04435  -0.212
+IGBPENF                           -0.54593    0.92438  -0.591
+IGBPGRA                           -0.26767    0.92408  -0.290
+IGBPMF                             0.06947    1.34166   0.052
+IGBPOSH                           -0.97905    1.36442  -0.718
+IGBPWET                            0.04371    0.84734   0.052
+month_f2                          -0.57215    0.75128  -0.762
+month_f3                          -0.63462    0.71728  -0.885
+month_f4                          -0.60222    0.71224  -0.846
+month_f5                          -0.69463    0.71079  -0.977
+month_f6                          -0.53004    0.71162  -0.745
+month_f7                          -0.73275    0.71435  -1.026
+month_f8                          -0.78949    0.71444  -1.105
+month_f9                          -0.61896    0.71722  -0.863
+month_f10                         -0.56512    0.72789  -0.776
+month_f11                         -0.94700    2.04277  -0.464
+Trans_ratio_z:IGBPCRO              0.29419    0.67919   0.433
+Trans_ratio_z:IGBPCSH             -0.53637    0.55081  -0.974
+Trans_ratio_z:IGBPDBF             -1.03319    0.62573  -1.651
+Trans_ratio_z:IGBPENF             -0.17769    0.57103  -0.311
+Trans_ratio_z:IGBPGRA             -0.10096    0.54599  -0.185
+Trans_ratio_z:IGBPMF              -1.11561    1.06119  -1.051
+Trans_ratio_z:IGBPOSH              1.32783    0.73783   1.800
+Trans_ratio_z:IGBPWET             -0.76916    0.51972  -1.480
+
+Model comparison:
+Data: diff_data
+Models:
+additive_model: WUE_difference ~ difference_type + Trans_ratio_z + IGBP + month_f + (1 | site_name)
+tet_ecotype_model: WUE_difference ~ difference_type + Trans_ratio_z * IGBP + month_f + (1 | site_name)
+primary_model: WUE_difference ~ difference_type * Trans_ratio_z + difference_type * IGBP + difference_type * month_f + Trans_ratio_z * IGBP + (1 | site_name)
+                  npar   AIC   BIC logLik -2*log(L)    Chisq Df Pr(>Chisq)    
+additive_model      24 29444 29603 -14698     29396                           
+tet_ecotype_model   32 29428 29641 -14682     29364   31.517  8  0.0001136 ***
+primary_model       70 23984 24450 -11922     23844 5519.985 38  < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Single-contrast likelihood-ratio tests:
+     difference_type               term npar      AIC        LRT      Pr(Chi)
+1 WUE_ET_minus_WUE_T             <none>   NA 6813.291         NA           NA
+2 WUE_ET_minus_WUE_T            month_f   10 6810.010  16.719047 8.081657e-02
+3 WUE_ET_minus_WUE_T Trans_ratio_z:IGBP    8 6914.267 116.975313 1.395196e-21
+4 WUE_ET_minus_WUE_E             <none>   NA 7443.344         NA           NA
+5 WUE_ET_minus_WUE_E            month_f   10 7436.234  12.890038 2.298851e-01
+6 WUE_ET_minus_WUE_E Trans_ratio_z:IGBP    8 7583.848 156.504066 8.603260e-30
+7  WUE_E_minus_WUE_T             <none>   NA 7913.146         NA           NA
+8  WUE_E_minus_WUE_T            month_f   10 7902.019   8.872811 5.442154e-01
+9  WUE_E_minus_WUE_T Trans_ratio_z:IGBP    8 8078.323 181.176774 5.827601e-35

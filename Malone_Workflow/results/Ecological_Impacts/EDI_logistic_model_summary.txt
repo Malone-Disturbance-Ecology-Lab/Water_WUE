@@ -1,0 +1,255 @@
+Ecological_Impacts.R — run summary
+SPEI timescale used: SPEI_3
+Output:  /Users/sm3466/Library/CloudStorage/Dropbox-YSE/Sparkle Malone/Research/WUE/Water_WUE/Malone_Workflow/results/Ecological_Impacts 
+
+=== Calibration data ===
+Total site-months with SPEI_3 < 0 and valid baseline: 722 
+Of which resistance < 1 (impacted):                   373 
+Proportion impacted: 51.7 %
+
+=== Response-based EDI model ===
+Response: WUE_T percent change from site-month near-normal baseline
+Rows with valid response baseline: 1534 
+
+Family: gaussian 
+Link function: identity 
+
+Formula:
+WUE_T_pct_change ~ water_class + month_f + s(SPEI_3, by = water_class, 
+    k = 6) + s(site_name, bs = "re")
+
+Parametric coefficients:
+                      Estimate Std. Error t value Pr(>|t|)  
+(Intercept)             24.631     15.580   1.581    0.114  
+water_classFreshwater   -5.759      3.384  -1.702    0.089 .
+water_classSaline       -5.891      3.858  -1.527    0.127  
+month_f2               -24.243     16.993  -1.427    0.154  
+month_f3               -14.728     16.122  -0.914    0.361  
+month_f4               -12.756     15.774  -0.809    0.419  
+month_f5               -19.495     15.680  -1.243    0.214  
+month_f6               -18.135     15.625  -1.161    0.246  
+month_f7               -21.556     15.650  -1.377    0.169  
+month_f8               -12.224     15.707  -0.778    0.437  
+month_f9               -19.465     15.800  -1.232    0.218  
+month_f10              -20.137     16.138  -1.248    0.212  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+                                      edf Ref.df      F p-value    
+s(SPEI_3):water_classUpland      3.175274      5 13.259  <2e-16 ***
+s(SPEI_3):water_classFreshwater  0.001494      5  0.000  0.7128    
+s(SPEI_3):water_classSaline      0.001088      5  0.000  0.9201    
+s(site_name)                    13.146556     43  0.475  0.0211 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =  0.0546   Deviance explained = 7.14%
+-REML = 7965.3  Scale est. = 1946.7    n = 1534
+
+=== Response-based EDI thresholds ===
+             water_class response_threshold_pct stable_SPEI_min stable_SPEI_max
+Upland.1          Upland                    0.5      -0.4313189        1.378545
+Upland.2          Upland                    1.0      -0.4614833        1.408709
+Upland.3          Upland                    2.5      -0.5368942        1.514285
+Upland.4          Upland                    5.0      -0.6424696        1.680189
+Freshwater.1  Freshwater                    0.5              NA              NA
+Freshwater.2  Freshwater                    1.0              NA              NA
+Freshwater.3  Freshwater                    2.5              NA              NA
+Freshwater.4  Freshwater                    5.0      -1.8490456        1.906422
+Saline.1          Saline                    0.5              NA              NA
+Saline.2          Saline                    1.0              NA              NA
+Saline.3          Saline                    2.5              NA              NA
+Saline.4          Saline                    5.0      -1.8490456        1.906422
+             dry_any_impact_threshold dry_decrease_threshold
+Upland.1                    -1.004442                     NA
+Upland.2                    -1.004442                     NA
+Upland.3                    -1.004442                     NA
+Upland.4                    -1.004442                     NA
+Freshwater.1                -1.004442              -1.004442
+Freshwater.2                -1.004442              -1.004442
+Freshwater.3                -1.004442              -1.004442
+Freshwater.4                       NA                     NA
+Saline.1                    -1.004442              -1.004442
+Saline.2                    -1.004442              -1.004442
+Saline.3                    -1.004442              -1.004442
+Saline.4                           NA                     NA
+             dry_increase_threshold wet_any_impact_threshold
+Upland.1                  -1.004442                 1.001490
+Upland.2                  -1.004442                 1.001490
+Upland.3                  -1.004442                 1.001490
+Upland.4                  -1.004442                 1.695271
+Freshwater.1                     NA                 1.001490
+Freshwater.2                     NA                 1.001490
+Freshwater.3                     NA                 1.001490
+Freshwater.4                     NA                       NA
+Saline.1                         NA                 1.001490
+Saline.2                         NA                 1.001490
+Saline.3                         NA                 1.001490
+Saline.4                         NA                       NA
+             wet_decrease_threshold wet_increase_threshold
+Upland.1                    1.00149               1.393627
+Upland.2                    1.00149               1.423792
+Upland.3                    1.00149               1.529367
+Upland.4                         NA               1.695271
+Freshwater.1                1.00149                     NA
+Freshwater.2                1.00149                     NA
+Freshwater.3                1.00149                     NA
+Freshwater.4                     NA                     NA
+Saline.1                    1.00149                     NA
+Saline.2                    1.00149                     NA
+Saline.3                    1.00149                     NA
+Saline.4                         NA                     NA
+             min_predicted_pct_change max_predicted_pct_change
+Upland.1                    -7.959233                45.490116
+Upland.2                    -7.959233                45.490116
+Upland.3                    -7.959233                45.490116
+Upland.4                    -7.959233                45.490116
+Freshwater.1                -2.685035                -2.681698
+Freshwater.2                -2.685035                -2.681698
+Freshwater.3                -2.685035                -2.681698
+Freshwater.4                -2.685035                -2.681698
+Saline.1                    -2.817000                -2.815599
+Saline.2                    -2.817000                -2.815599
+Saline.3                    -2.817000                -2.815599
+Saline.4                    -2.817000                -2.815599
+             max_predicted_magnitude
+Upland.1                   45.490116
+Upland.2                   45.490116
+Upland.3                   45.490116
+Upland.4                   45.490116
+Freshwater.1                2.685035
+Freshwater.2                2.685035
+Freshwater.3                2.685035
+Freshwater.4                2.685035
+Saline.1                    2.817000
+Saline.2                    2.817000
+Saline.3                    2.817000
+Saline.4                    2.817000
+
+=== Response class counts across all site-months ===
+            
+             Stable (<0.5%) Very mild (0.5-1%) Mild (1-2.5%) Moderate (2.5-5%)
+  Upland                 22                 39           100               178
+  Freshwater              0                228            34               119
+  Saline                  0                142            14                76
+            
+             Strong (>=5%) <NA>
+  Upland               354  100
+  Freshwater           139  109
+  Saline                89  129
+
+=== Response direction counts across all site-months ===
+            
+             WUE_T decrease Stable WUE_T increase <NA>
+  Upland                241     22            430  100
+  Freshwater            272      0            248  109
+  Saline                157      0            164  129
+=== Pooled logistic model ===
+
+Call:
+glm(formula = y ~ SPEI_3, family = binomial(link = "logit"), 
+    data = model_df)
+
+Coefficients:
+            Estimate Std. Error z value Pr(>|z|)
+(Intercept)   0.2070     0.1280   1.617    0.106
+SPEI_3        0.1815     0.1344   1.351    0.177
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 1000.11  on 721  degrees of freedom
+Residual deviance:  998.28  on 720  degrees of freedom
+AIC: 1002.3
+
+Number of Fisher Scoring iterations: 3
+
+
+=== Ecosystem-stratified models ===
+
+--- Upland ---
+
+Call:
+glm(formula = y ~ SPEI_3, family = binomial(link = "logit"), 
+    data = sub_df)
+
+Coefficients:
+            Estimate Std. Error z value Pr(>|z|)  
+(Intercept)   0.3511     0.1817   1.932   0.0534 .
+SPEI_3        0.5103     0.2070   2.466   0.0137 *
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 482.42  on 347  degrees of freedom
+Residual deviance: 476.19  on 346  degrees of freedom
+AIC: 480.19
+
+Number of Fisher Scoring iterations: 4
+
+
+--- Freshwater ---
+
+Call:
+glm(formula = y ~ SPEI_3, family = binomial(link = "logit"), 
+    data = sub_df)
+
+Coefficients:
+             Estimate Std. Error z value Pr(>|z|)
+(Intercept) -0.054480   0.233346  -0.233    0.815
+SPEI_3      -0.004425   0.236529  -0.019    0.985
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 327.01  on 235  degrees of freedom
+Residual deviance: 327.01  on 234  degrees of freedom
+AIC: 331.01
+
+Number of Fisher Scoring iterations: 3
+
+
+--- Saline ---
+
+Call:
+glm(formula = y ~ SPEI_3, family = binomial(link = "logit"), 
+    data = sub_df)
+
+Coefficients:
+            Estimate Std. Error z value Pr(>|z|)
+(Intercept)   0.3993     0.3004   1.329    0.184
+SPEI_3       -0.0865     0.2904  -0.298    0.766
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 183.82  on 137  degrees of freedom
+Residual deviance: 183.73  on 136  degrees of freedom
+AIC: 187.73
+
+Number of Fisher Scoring iterations: 4
+
+
+=== SPEI-3 thresholds at EDI class boundaries ===
+                 model water_class EDI_0.30_SPEI3 EDI_0.50_SPEI3 EDI_0.70_SPEI3
+1               Pooled         All      -5.808737      -1.140534      3.5276681
+(Intercept)  Ecosystem      Upland      -2.348568      -0.688044      0.9724796
+(Intercept)1 Ecosystem  Freshwater     179.187253     -12.313264   -203.8137799
+(Intercept)2 Ecosystem      Saline      14.410802       4.615983     -5.1788362
+
+=== EDI validation against Q2 metrics (drought months, SPEI_3 < -1) ===
+# A tibble: 4 × 10
+  EDI_class water_class n_months n_sites mean_SPEI_3 mean_EDI mean_WUE_T
+  <fct>     <fct>          <int>   <int>       <dbl>    <dbl>      <dbl>
+1 None      Upland             1       1       -2.62    0.271       4.91
+2 Watch     Upland           110      18       -1.43    0.408       5.18
+3 Watch     Freshwater        81      11       -1.65    0.488       2.77
+4 Stress    Saline            91      10       -1.67    0.633       3.33
+# ℹ 3 more variables: mean_monthly_resist <dbl>, mean_site_resistance <dbl>,
+#   mean_recovery <dbl>
+
+=== Severity class counts across all site-months ===
+            
+             None Watch Stress Impact
+  Upland        1   191    466    135
+  Freshwater    0   629      0      0
+  Saline        0     0    450      0

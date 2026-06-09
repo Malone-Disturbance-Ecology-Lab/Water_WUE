@@ -1,0 +1,23 @@
+"coast_region","EDI_Q3_class","EDI_Q3_direction","prediction_interval_support","n_site_months","n_sites","mean_SPEI_3","mean_pct_change","median_abs_pct_change","prop_site_months"
+"Atlantic Coast","No meaningful change (<5%)","No meaningful change","PI overlaps no-change",259,14,0.242321649418669,1.60141505232212,2.43261675770918,56.0606060606061
+"Atlantic Coast","Watch (5-10%)","WUE_T decrease","PI overlaps no-change",55,12,-0.172719504870131,-7.28683169431797,7.36165684734389,11.9047619047619
+"Atlantic Coast","Watch (5-10%)","WUE_T increase","PI overlaps no-change",106,14,-0.566971405274286,7.18847797976575,7.23792422139095,22.9437229437229
+"Atlantic Coast","Stress (10-20%)","WUE_T decrease","PI overlaps no-change",13,8,1.34035765769603,-10.5167203063927,10.469690433633,2.81385281385281
+"Atlantic Coast","Stress (10-20%)","WUE_T increase","PI overlaps no-change",29,8,-0.45522985489377,12.0882459348614,11.946824950397,6.27705627705628
+"Pacific Coast","No meaningful change (<5%)","No meaningful change","PI overlaps no-change",108,6,0.0886105002003593,1.63850881027843,2.09954478764924,70.1298701298701
+"Pacific Coast","Watch (5-10%)","WUE_T decrease","PI overlaps no-change",15,3,0.158244449362751,-6.56364635622475,6.32846461021405,9.74025974025974
+"Pacific Coast","Watch (5-10%)","WUE_T increase","PI overlaps no-change",24,6,-0.912471130489434,6.64949405563624,6.19293942503772,15.5844155844156
+"Pacific Coast","Stress (10-20%)","WUE_T increase","PI overlaps no-change",7,2,0.252729205893441,14.3747851177507,14.0454692114914,4.54545454545455
+"Gulf Coast","No meaningful change (<5%)","No meaningful change","PI overlaps no-change",12,5,-0.33902569789264,1.92885230566641,4.13651276834426,10.9090909090909
+"Gulf Coast","Watch (5-10%)","WUE_T decrease","PI overlaps no-change",10,4,0.570057002077857,-7.29428367889004,6.815555750147,9.09090909090909
+"Gulf Coast","Watch (5-10%)","WUE_T increase","PI overlaps no-change",3,2,0.275489996582276,7.70381267250759,6.98780088129268,2.72727272727273
+"Gulf Coast","Stress (10-20%)","WUE_T decrease","PI overlaps no-change",27,5,0.59502225314755,-15.8035106283052,15.660150417992,24.5454545454545
+"Gulf Coast","Stress (10-20%)","WUE_T increase","PI overlaps no-change",7,4,1.04931669530851,14.1639277819329,12.9824166544547,6.36363636363636
+"Gulf Coast","Impact (>=20%)","WUE_T decrease","PI overlaps no-change",24,5,0.412916824946771,-24.8169891294882,24.2513375780324,21.8181818181818
+"Gulf Coast","Impact (>=20%)","WUE_T increase","PI overlaps no-change",10,4,-0.877254985880138,28.2633714232948,28.8101890614415,9.09090909090909
+"Gulf Coast","Impact (>=20%)","WUE_T increase","PI supports increase",17,4,-1.1329373664841,47.4490310328933,44.4813830877152,15.4545454545455
+"AK Coast","No meaningful change (<5%)","No meaningful change","PI overlaps no-change",37,4,-0.132346372831533,-0.256638603730963,3.13714027979837,55.2238805970149
+"AK Coast","Watch (5-10%)","WUE_T decrease","PI overlaps no-change",14,3,-0.997638383672721,-8.32307698652433,8.39895945912775,20.8955223880597
+"AK Coast","Watch (5-10%)","WUE_T increase","PI overlaps no-change",10,3,0.606204026024333,6.437001827407,6.40937851669492,14.9253731343284
+"AK Coast","Stress (10-20%)","WUE_T increase","PI overlaps no-change",2,1,2.00100390331701,16.6860468858055,16.6860468858055,2.98507462686567
+"AK Coast","Impact (>=20%)","WUE_T increase","PI overlaps no-change",4,2,2.41024911666906,21.6819083667224,21.2209783526787,5.97014925373134

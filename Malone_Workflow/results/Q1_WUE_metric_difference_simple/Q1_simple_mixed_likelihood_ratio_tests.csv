@@ -1,0 +1,3 @@
+"term","npar","AIC","LRT","Pr(Chi)","signif"
+"<none>",NA,22878.9064869296,NA,NA,""
+"difference_type:water_class:Trans_ratio_z",4,23185.1652076147,314.258720685091,9.09072190425567e-67,"***"

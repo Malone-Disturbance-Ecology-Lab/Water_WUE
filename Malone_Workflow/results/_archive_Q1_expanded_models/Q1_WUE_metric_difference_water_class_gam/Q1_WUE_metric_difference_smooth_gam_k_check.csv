@@ -1,0 +1,11 @@
+"","k'","edf","k-index","p-value"
+"s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_T__Upland",5,4.27605649647817,1.07979648910011,1
+"s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_E__Upland",5,4.63308470775738,1.07979648910011,1
+"s(Trans_ratio):diff_ecosystemWUE_E_minus_WUE_T__Upland",5,4.60295741579438,1.07979648910011,1
+"s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_T__Freshwater",5,3.57910568141878,1.07979648910011,1
+"s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_E__Freshwater",5,4.47735714612306,1.07979648910011,1
+"s(Trans_ratio):diff_ecosystemWUE_E_minus_WUE_T__Freshwater",5,4.42435579099777,1.07979648910011,1
+"s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_T__Saline",5,3.71821141065822,1.07979648910011,1
+"s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_E__Saline",5,2.86337222825042,1.07979648910011,1
+"s(Trans_ratio):diff_ecosystemWUE_E_minus_WUE_T__Saline",5,3.01771621934683,1.07979648910011,1
+"s(site_name)",64,57.2368320688115,NA,NA

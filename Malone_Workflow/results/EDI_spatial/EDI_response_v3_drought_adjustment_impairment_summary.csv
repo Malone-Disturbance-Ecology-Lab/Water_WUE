@@ -1,0 +1,5 @@
+coast_region,dry_month_frequency_pct,dry_mean_WUE_T_pct_change,dry_mean_abs_WUE_T_pct_change,drought_adjustment_index_pct,drought_impairment_index_pct,net_adjustment_minus_impairment_pct,Q4_WUE_T_SPEI3_upland_max_decline_probability_5pct,Q3_SPEI3_mean_slope,Q3_pct_negative_site_slopes,interpretation
+AK Coast,14.74,-3.2982,3.2982,0.0,0.0,0.0,0.393358653130824,0.721780304344557,18.1818181818182,weak_dry_response
+Pacific Coast,19.9,2.5033,2.5033,0.0,0.0,0.0,0.394657878440191,-0.582792703087057,55.5555555555556,weak_dry_response
+Gulf Coast,23.36,44.9081,46.9948,94.03,4.82,89.21,0.442432101630322,-3.28834321620173,100.0,dry_adjustment_signal_not_impairment
+Atlantic Coast,18.08,2.5904,2.5904,0.0,0.0,0.0,0.380239830112536,-0.111114511446506,51.8518518518518,weak_dry_response

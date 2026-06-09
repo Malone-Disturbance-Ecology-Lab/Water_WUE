@@ -1,0 +1,2 @@
+"model","AIC","BIC","logLik","deviance_explained","adjusted_r_squared"
+"coast_threshold_gam",55347.653737182,56361.1224009501,-27538.3485914309,0.584280451942988,0.580260337683297

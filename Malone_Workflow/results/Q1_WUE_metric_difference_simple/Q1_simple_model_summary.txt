@@ -1,0 +1,198 @@
+Q1 difference type + T:ET + ecosystem models
+Input: /Users/sm3466/Library/CloudStorage/Dropbox-YSE/Sparkle Malone/Research/WUE/Water_WUE/data/WUE_CUE_monthly_merged_indices_clean.csv 
+Output: /Users/sm3466/Library/CloudStorage/Dropbox-YSE/Sparkle Malone/Research/WUE/Water_WUE/Malone_Workflow/results/Q1_WUE_metric_difference_simple 
+
+Full-data rows: 5427 
+Near-normal GAM rows: 3606 
+Sites: 64 
+
+Ecosystem classes: Upland, Freshwater, Saline 
+
+Mixed model formula:
+WUE_difference ~ difference_type * water_class * Trans_ratio_z + 
+    (1 | site_name) + (1 | month_f)
+
+Mixed model summary:
+Linear mixed model fit by maximum likelihood  ['lmerMod']
+Formula: WUE_difference ~ difference_type * water_class * Trans_ratio_z +  
+    (1 | site_name) + (1 | month_f)
+   Data: diff_data
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+  22878.9   23017.5  -11418.5   22836.9      5406 
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-12.7808  -0.3196   0.0158   0.3850   7.3188 
+
+Random effects:
+ Groups    Name        Variance Std.Dev.
+ site_name (Intercept) 1.358667 1.16562 
+ month_f   (Intercept) 0.003019 0.05495 
+ Residual              3.790603 1.94695 
+Number of obs: 5427, groups:  site_name, 64; month_f, 11
+
+Fixed effects:
+                                                                      Estimate
+(Intercept)                                                           -2.68157
+difference_typeWUE_ET_minus_WUE_E                                     -1.56472
+difference_typeWUE_E_minus_WUE_T                                       4.12796
+water_classFreshwater                                                  0.79823
+water_classSaline                                                      1.01716
+Trans_ratio_z                                                          2.19507
+difference_typeWUE_ET_minus_WUE_E:water_classFreshwater                0.13451
+difference_typeWUE_E_minus_WUE_T:water_classFreshwater                -1.27213
+difference_typeWUE_ET_minus_WUE_E:water_classSaline                    0.62288
+difference_typeWUE_E_minus_WUE_T:water_classSaline                    -1.49832
+difference_typeWUE_ET_minus_WUE_E:Trans_ratio_z                       -4.37299
+difference_typeWUE_E_minus_WUE_T:Trans_ratio_z                         2.48568
+water_classFreshwater:Trans_ratio_z                                   -1.06225
+water_classSaline:Trans_ratio_z                                       -0.73389
+difference_typeWUE_ET_minus_WUE_E:water_classFreshwater:Trans_ratio_z  1.26948
+difference_typeWUE_E_minus_WUE_T:water_classFreshwater:Trans_ratio_z  -0.15658
+difference_typeWUE_ET_minus_WUE_E:water_classSaline:Trans_ratio_z      1.64787
+difference_typeWUE_E_minus_WUE_T:water_classSaline:Trans_ratio_z      -1.11533
+                                                                      Std. Error
+(Intercept)                                                              0.23240
+difference_typeWUE_ET_minus_WUE_E                                        0.10009
+difference_typeWUE_E_minus_WUE_T                                         0.10009
+water_classFreshwater                                                    0.36146
+water_classSaline                                                        0.39629
+Trans_ratio_z                                                            0.08876
+difference_typeWUE_ET_minus_WUE_E:water_classFreshwater                  0.14969
+difference_typeWUE_E_minus_WUE_T:water_classFreshwater                   0.14969
+difference_typeWUE_ET_minus_WUE_E:water_classSaline                      0.16821
+difference_typeWUE_E_minus_WUE_T:water_classSaline                       0.16821
+difference_typeWUE_ET_minus_WUE_E:Trans_ratio_z                          0.09405
+difference_typeWUE_E_minus_WUE_T:Trans_ratio_z                           0.09405
+water_classFreshwater:Trans_ratio_z                                      0.14283
+water_classSaline:Trans_ratio_z                                          0.17155
+difference_typeWUE_ET_minus_WUE_E:water_classFreshwater:Trans_ratio_z    0.15742
+difference_typeWUE_E_minus_WUE_T:water_classFreshwater:Trans_ratio_z     0.15742
+difference_typeWUE_ET_minus_WUE_E:water_classSaline:Trans_ratio_z        0.16054
+difference_typeWUE_E_minus_WUE_T:water_classSaline:Trans_ratio_z         0.16054
+                                                                      t value
+(Intercept)                                                           -11.539
+difference_typeWUE_ET_minus_WUE_E                                     -15.633
+difference_typeWUE_E_minus_WUE_T                                       41.241
+water_classFreshwater                                                   2.208
+water_classSaline                                                       2.567
+Trans_ratio_z                                                          24.730
+difference_typeWUE_ET_minus_WUE_E:water_classFreshwater                 0.899
+difference_typeWUE_E_minus_WUE_T:water_classFreshwater                 -8.499
+difference_typeWUE_ET_minus_WUE_E:water_classSaline                     3.703
+difference_typeWUE_E_minus_WUE_T:water_classSaline                     -8.907
+difference_typeWUE_ET_minus_WUE_E:Trans_ratio_z                       -46.494
+difference_typeWUE_E_minus_WUE_T:Trans_ratio_z                         26.428
+water_classFreshwater:Trans_ratio_z                                    -7.437
+water_classSaline:Trans_ratio_z                                        -4.278
+difference_typeWUE_ET_minus_WUE_E:water_classFreshwater:Trans_ratio_z   8.064
+difference_typeWUE_E_minus_WUE_T:water_classFreshwater:Trans_ratio_z   -0.995
+difference_typeWUE_ET_minus_WUE_E:water_classSaline:Trans_ratio_z      10.265
+difference_typeWUE_E_minus_WUE_T:water_classSaline:Trans_ratio_z       -6.947
+
+Mixed model drop1 LRT:
+                                       term npar      AIC      LRT      Pr(Chi)
+1                                    <none>   NA 22878.91       NA           NA
+2 difference_type:water_class:Trans_ratio_z    4 23185.17 314.2587 9.090722e-67
+  signif
+1       
+2    ***
+
+Mixed additive vs interaction comparison:
+                      npar      AIC      BIC    logLik -2*log(L)   Chisq Df
+simple_mixed_additive    9 28115.60 28174.99 -14048.80  28097.60      NA NA
+simple_mixed            21 22878.91 23017.49 -11418.45  22836.91 5260.69 12
+                      Pr(>Chisq) signif
+simple_mixed_additive         NA       
+simple_mixed                   0    ***
+
+Simple GAM formula:
+WUE_difference ~ difference_type * water_class + s(Trans_ratio, 
+    by = diff_ecosystem, k = 6) + s(site_name, bs = "re") + s(month_f, 
+    bs = "re")
+
+Simple GAM summary:
+
+Family: gaussian 
+Link function: identity 
+
+Formula:
+WUE_difference ~ difference_type * water_class + s(Trans_ratio, 
+    by = diff_ecosystem, k = 6) + s(site_name, bs = "re") + s(month_f, 
+    bs = "re")
+
+Parametric coefficients:
+                                                        Estimate Std. Error
+(Intercept)                                             -2.49814    0.22582
+difference_typeWUE_ET_minus_WUE_E                       -1.73189    0.10827
+difference_typeWUE_E_minus_WUE_T                         4.15071    0.10828
+water_classFreshwater                                    0.72606    0.35272
+water_classSaline                                        0.86590    0.38915
+difference_typeWUE_ET_minus_WUE_E:water_classFreshwater  0.02429    0.16697
+difference_typeWUE_E_minus_WUE_T:water_classFreshwater  -1.08988    0.16696
+difference_typeWUE_ET_minus_WUE_E:water_classSaline      0.81574    0.19380
+difference_typeWUE_E_minus_WUE_T:water_classSaline      -1.55292    0.19268
+                                                        t value Pr(>|t|)    
+(Intercept)                                             -11.063  < 2e-16 ***
+difference_typeWUE_ET_minus_WUE_E                       -15.996  < 2e-16 ***
+difference_typeWUE_E_minus_WUE_T                         38.333  < 2e-16 ***
+water_classFreshwater                                     2.058   0.0396 *  
+water_classSaline                                         2.225   0.0261 *  
+difference_typeWUE_ET_minus_WUE_E:water_classFreshwater   0.145   0.8844    
+difference_typeWUE_E_minus_WUE_T:water_classFreshwater   -6.528 7.64e-11 ***
+difference_typeWUE_ET_minus_WUE_E:water_classSaline       4.209 2.63e-05 ***
+difference_typeWUE_E_minus_WUE_T:water_classSaline       -8.060 1.04e-15 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+                                                               edf Ref.df
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_T__Upland      4.481      5
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_E__Upland      4.511      5
+s(Trans_ratio):diff_ecosystemWUE_E_minus_WUE_T__Upland       4.696      5
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_T__Freshwater  1.206      5
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_E__Freshwater  4.277      5
+s(Trans_ratio):diff_ecosystemWUE_E_minus_WUE_T__Freshwater   4.207      5
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_T__Saline      2.953      5
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_E__Saline      2.457      5
+s(Trans_ratio):diff_ecosystemWUE_E_minus_WUE_T__Saline       1.094      5
+s(site_name)                                                55.381     61
+s(month_f)                                                   1.213     10
+                                                                   F p-value
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_T__Upland      275.795  <2e-16
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_E__Upland      413.879  <2e-16
+s(Trans_ratio):diff_ecosystemWUE_E_minus_WUE_T__Upland      1272.622  <2e-16
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_T__Freshwater   24.745  <2e-16
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_E__Freshwater  206.716  <2e-16
+s(Trans_ratio):diff_ecosystemWUE_E_minus_WUE_T__Freshwater   386.636  <2e-16
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_T__Saline       62.007  <2e-16
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_E__Saline       41.897  <2e-16
+s(Trans_ratio):diff_ecosystemWUE_E_minus_WUE_T__Saline       208.502  <2e-16
+s(site_name)                                                  11.719  <2e-16
+s(month_f)                                                     0.174   0.283
+                                                               
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_T__Upland     ***
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_E__Upland     ***
+s(Trans_ratio):diff_ecosystemWUE_E_minus_WUE_T__Upland      ***
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_T__Freshwater ***
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_E__Freshwater ***
+s(Trans_ratio):diff_ecosystemWUE_E_minus_WUE_T__Freshwater  ***
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_T__Saline     ***
+s(Trans_ratio):diff_ecosystemWUE_ET_minus_WUE_E__Saline     ***
+s(Trans_ratio):diff_ecosystemWUE_E_minus_WUE_T__Saline      ***
+s(site_name)                                                ***
+s(month_f)                                                     
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =  0.815   Deviance explained =   82%
+-ML = 7295.2  Scale est. = 3.0817    n = 3606
+
+GAM comparison:
+              model      AIC      BIC deviance_explained adjusted_r_squared
+1 simple_linear_gam 15045.19 15515.79          0.7813131          0.7768479
+2 simple_smooth_gam 14406.46 15060.58          0.8197999          0.8149502
+     scale delta_AIC
+1 3.716249  638.7322
+2 3.081715    0.0000

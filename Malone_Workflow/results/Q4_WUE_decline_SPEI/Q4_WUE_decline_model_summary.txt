@@ -1,0 +1,114 @@
+Q4 WUE decline thresholds across SPEI gradients
+Input: /Users/sm3466/YSE Dropbox/Sparkle Malone/Research/WUE/Water_WUE/data/WUE_CUE_monthly_merged_indices_clean.csv 
+Output: /Users/sm3466/YSE Dropbox/Sparkle Malone/Research/WUE/Water_WUE/data/results/Q4_WUE_decline_SPEI 
+
+Rows in source monthly data: 2820 
+Rows after complete-case and ecosystem filters: 1847 
+Rows in SPEI decline analysis data: 2622 
+Sites: 39 
+Years: 1997 - 2025 
+
+Continuous WUE percent-change model:
+
+Family: gaussian 
+Link function: identity 
+
+Formula:
+WUE_pct_change ~ metric + water_class + month_f + s(SPEI_value, 
+    by = model_group, k = 6) + s(site_name, bs = "re")
+
+Parametric coefficients:
+                      Estimate Std. Error t value Pr(>|t|)   
+(Intercept)           -12.0070     6.4210  -1.870  0.06160 . 
+metricWUE_T             0.3214     1.5461   0.208  0.83532   
+water_classFreshwater   0.3139     3.9180   0.080  0.93616   
+water_classSaline       0.9638     4.2524   0.227  0.82071   
+month_f3               13.0862     6.5331   2.003  0.04527 * 
+month_f4               17.8092     6.3379   2.810  0.00499 **
+month_f5                8.5828     6.3755   1.346  0.17835   
+month_f6               12.1133     6.3134   1.919  0.05514 . 
+month_f7               10.7399     6.3498   1.691  0.09089 . 
+month_f8               11.4895     6.3951   1.797  0.07251 . 
+month_f9               14.5014     6.4474   2.249  0.02459 * 
+month_f10              10.0146     6.8729   1.457  0.14521   
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+                                    edf Ref.df     F p-value    
+s(SPEI_value):model_groupWUE_ET  0.6774      5 0.206   0.254    
+s(SPEI_value):model_groupWUE_T   0.4892      5 0.215   0.172    
+s(site_name)                    23.9853     36 3.080  <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =  0.0422   Deviance explained = 5.55%
+-REML =  13361  Scale est. = 1566.8    n = 2622
+
+Selected WUE_T decline thresholds from continuous SPEI-48 model:
+                   SPEI_timescale water_class decline_threshold_pct
+WUE_T.Upland.1            SPEI_48      Upland                   0.5
+WUE_T.Upland.2            SPEI_48      Upland                   1.0
+WUE_T.Upland.3            SPEI_48      Upland                   1.5
+WUE_T.Upland.4            SPEI_48      Upland                   2.5
+WUE_T.Upland.5            SPEI_48      Upland                   5.0
+WUE_T.Upland.6            SPEI_48      Upland                  10.0
+WUE_T.Upland.7            SPEI_48      Upland                  20.0
+WUE_T.Freshwater.1        SPEI_48  Freshwater                   0.5
+WUE_T.Freshwater.2        SPEI_48  Freshwater                   1.0
+WUE_T.Freshwater.3        SPEI_48  Freshwater                   1.5
+WUE_T.Freshwater.4        SPEI_48  Freshwater                   2.5
+WUE_T.Freshwater.5        SPEI_48  Freshwater                   5.0
+WUE_T.Freshwater.6        SPEI_48  Freshwater                  10.0
+WUE_T.Freshwater.7        SPEI_48  Freshwater                  20.0
+WUE_T.Saline.1            SPEI_48      Saline                   0.5
+WUE_T.Saline.2            SPEI_48      Saline                   1.0
+WUE_T.Saline.3            SPEI_48      Saline                   1.5
+WUE_T.Saline.4            SPEI_48      Saline                   2.5
+WUE_T.Saline.5            SPEI_48      Saline                   5.0
+WUE_T.Saline.6            SPEI_48      Saline                  10.0
+WUE_T.Saline.7            SPEI_48      Saline                  20.0
+                   dry_SPEI_threshold wet_SPEI_threshold
+WUE_T.Upland.1                     NA           1.020073
+WUE_T.Upland.2                     NA           1.020073
+WUE_T.Upland.3                     NA           1.020073
+WUE_T.Upland.4                     NA                 NA
+WUE_T.Upland.5                     NA                 NA
+WUE_T.Upland.6                     NA                 NA
+WUE_T.Upland.7                     NA                 NA
+WUE_T.Freshwater.1                 NA           1.020073
+WUE_T.Freshwater.2                 NA           1.020073
+WUE_T.Freshwater.3                 NA           1.156465
+WUE_T.Freshwater.4                 NA                 NA
+WUE_T.Freshwater.5                 NA                 NA
+WUE_T.Freshwater.6                 NA                 NA
+WUE_T.Freshwater.7                 NA                 NA
+WUE_T.Saline.1                     NA           1.020073
+WUE_T.Saline.2                     NA           1.338321
+WUE_T.Saline.3                     NA                 NA
+WUE_T.Saline.4                     NA                 NA
+WUE_T.Saline.5                     NA                 NA
+WUE_T.Saline.6                     NA                 NA
+WUE_T.Saline.7                     NA                 NA
+                   min_predicted_pct_change max_predicted_pct_change
+WUE_T.Upland.1                    -2.350663                0.7165298
+WUE_T.Upland.2                    -2.350663                0.7165298
+WUE_T.Upland.3                    -2.350663                0.7165298
+WUE_T.Upland.4                    -2.350663                0.7165298
+WUE_T.Upland.5                    -2.350663                0.7165298
+WUE_T.Upland.6                    -2.350663                0.7165298
+WUE_T.Upland.7                    -2.350663                0.7165298
+WUE_T.Freshwater.1                -2.036808                1.0303847
+WUE_T.Freshwater.2                -2.036808                1.0303847
+WUE_T.Freshwater.3                -2.036808                1.0303847
+WUE_T.Freshwater.4                -2.036808                1.0303847
+WUE_T.Freshwater.5                -2.036808                1.0303847
+WUE_T.Freshwater.6                -2.036808                1.0303847
+WUE_T.Freshwater.7                -2.036808                1.0303847
+WUE_T.Saline.1                    -1.386835                1.6803578
+WUE_T.Saline.2                    -1.386835                1.6803578
+WUE_T.Saline.3                    -1.386835                1.6803578
+WUE_T.Saline.4                    -1.386835                1.6803578
+WUE_T.Saline.5                    -1.386835                1.6803578
+WUE_T.Saline.6                    -1.386835                1.6803578
+WUE_T.Saline.7                    -1.386835                1.6803578

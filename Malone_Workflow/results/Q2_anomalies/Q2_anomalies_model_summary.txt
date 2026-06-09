@@ -1,0 +1,740 @@
+Q2 moisture-anomaly analysis for WUE_ET and WUE_T
+Input: /Users/sm3466/YSE Dropbox/Sparkle Malone/Research/WUE/Water_WUE/data/WUE_CUE_monthly_merged_indices_clean.csv 
+Output: /Users/sm3466/YSE Dropbox/Sparkle Malone/Research/WUE/Water_WUE/data/results/Q2_anomalies 
+
+Rows in source monthly data: 2820 
+Rows after complete-case and ecosystem filters: 1828 
+Rows in metric x timescale long data: 5394 
+Rows in dry/wet anomaly subset: 1722 
+Sites: 44 
+Years: 1997 - 2025 
+
+Anomaly definitions:
+  Dry: SPEI < -1
+  Near-normal: -1 <= SPEI <= 1
+  Wet: SPEI > 1
+
+Coverage by timescale/anomaly/metric/ecosystem:
+# A tibble: 36 × 11
+   timescale anomaly_class metric water_class n_months n_sites mean_spei
+   <fct>     <fct>         <fct>  <fct>          <int>   <int>     <dbl>
+ 1 SPEI_6    Dry           WUE_ET Upland           104      17  -1.44   
+ 2 SPEI_6    Dry           WUE_ET Freshwater        68       8  -1.51   
+ 3 SPEI_6    Dry           WUE_ET Saline            54      10  -1.53   
+ 4 SPEI_6    Dry           WUE_T  Upland           104      17  -1.44   
+ 5 SPEI_6    Dry           WUE_T  Freshwater        68       8  -1.51   
+ 6 SPEI_6    Dry           WUE_T  Saline            54      10  -1.53   
+ 7 SPEI_6    Near-normal   WUE_ET Upland           452      18  -0.00359
+ 8 SPEI_6    Near-normal   WUE_ET Freshwater       284      13  -0.0151 
+ 9 SPEI_6    Near-normal   WUE_ET Saline           213      10   0.114  
+10 SPEI_6    Near-normal   WUE_T  Upland           452      18  -0.00359
+# ℹ 26 more rows
+# ℹ 4 more variables: mean_wue <dbl>, mean_response <dbl>,
+#   mean_abs_response <dbl>, pct_decrease <dbl>
+
+WUE value model:
+WUE_value ~ metric * timescale * anomaly_class * water_class + 
+    Trans_ratio_z + month_f + (1 | site_name)
+Linear mixed model fit by maximum likelihood  ['lmerMod']
+Formula: WUE_value ~ metric * timescale * anomaly_class * water_class +  
+    Trans_ratio_z + month_f + (1 | site_name)
+   Data: analysis_data
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+  18841.8   19158.3   -9372.9   18745.8      5346 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.6503 -0.4731 -0.0159  0.4144  8.4583 
+
+Random effects:
+ Groups    Name        Variance Std.Dev.
+ site_name (Intercept) 2.250    1.500   
+ Residual              1.821    1.349   
+Number of obs: 5394, groups:  site_name, 44
+
+Fixed effects:
+                                                                             Estimate
+(Intercept)                                                                  2.504541
+metricWUE_T                                                                  2.085247
+timescaleSPEI_48                                                            -0.158520
+anomaly_classNear-normal                                                    -0.270882
+anomaly_classWet                                                             0.002128
+water_classFreshwater                                                       -0.622351
+water_classSaline                                                           -0.850319
+Trans_ratio_z                                                               -0.615512
+month_f2                                                                     0.529914
+month_f3                                                                     0.471501
+month_f4                                                                     0.319525
+month_f5                                                                     0.423607
+month_f6                                                                     0.160765
+month_f7                                                                     0.356961
+month_f8                                                                     0.494136
+month_f9                                                                     0.212957
+month_f10                                                                    0.239684
+metricWUE_T:timescaleSPEI_48                                                 0.249572
+metricWUE_T:anomaly_classNear-normal                                         0.085961
+metricWUE_T:anomaly_classWet                                                -0.304243
+timescaleSPEI_48:anomaly_classNear-normal                                    0.249130
+timescaleSPEI_48:anomaly_classWet                                           -0.038337
+metricWUE_T:water_classFreshwater                                           -1.062850
+metricWUE_T:water_classSaline                                               -0.487261
+timescaleSPEI_48:water_classFreshwater                                       0.003114
+timescaleSPEI_48:water_classSaline                                           0.283524
+anomaly_classNear-normal:water_classFreshwater                               0.154371
+anomaly_classWet:water_classFreshwater                                      -0.402966
+anomaly_classNear-normal:water_classSaline                                   0.028875
+anomaly_classWet:water_classSaline                                           0.015083
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal                       -0.334109
+metricWUE_T:timescaleSPEI_48:anomaly_classWet                               -0.679539
+metricWUE_T:timescaleSPEI_48:water_classFreshwater                          -0.351074
+metricWUE_T:timescaleSPEI_48:water_classSaline                              -1.016908
+metricWUE_T:anomaly_classNear-normal:water_classFreshwater                   0.001918
+metricWUE_T:anomaly_classWet:water_classFreshwater                           0.548520
+metricWUE_T:anomaly_classNear-normal:water_classSaline                       0.081581
+metricWUE_T:anomaly_classWet:water_classSaline                               0.799946
+timescaleSPEI_48:anomaly_classNear-normal:water_classFreshwater             -0.192323
+timescaleSPEI_48:anomaly_classWet:water_classFreshwater                      0.369841
+timescaleSPEI_48:anomaly_classNear-normal:water_classSaline                 -0.119143
+timescaleSPEI_48:anomaly_classWet:water_classSaline                         -0.274478
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal:water_classFreshwater  0.555938
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classFreshwater          0.731511
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal:water_classSaline      1.030720
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classSaline              1.824211
+                                                                            Std. Error
+(Intercept)                                                                   0.510189
+metricWUE_T                                                                   0.187120
+timescaleSPEI_48                                                              0.220054
+anomaly_classNear-normal                                                      0.147806
+anomaly_classWet                                                              0.201615
+water_classFreshwater                                                         0.578317
+water_classSaline                                                             0.610190
+Trans_ratio_z                                                                 0.037235
+month_f2                                                                      0.374343
+month_f3                                                                      0.362899
+month_f4                                                                      0.361385
+month_f5                                                                      0.361108
+month_f6                                                                      0.361915
+month_f7                                                                      0.362820
+month_f8                                                                      0.363321
+month_f9                                                                      0.363698
+month_f10                                                                     0.367687
+metricWUE_T:timescaleSPEI_48                                                  0.307749
+metricWUE_T:anomaly_classNear-normal                                          0.207534
+metricWUE_T:anomaly_classWet                                                  0.281819
+timescaleSPEI_48:anomaly_classNear-normal                                     0.238575
+timescaleSPEI_48:anomaly_classWet                                             0.331476
+metricWUE_T:water_classFreshwater                                             0.297598
+metricWUE_T:water_classSaline                                                 0.320075
+timescaleSPEI_48:water_classFreshwater                                        0.313559
+timescaleSPEI_48:water_classSaline                                            0.343659
+anomaly_classNear-normal:water_classFreshwater                                0.236130
+anomaly_classWet:water_classFreshwater                                        0.292988
+anomaly_classNear-normal:water_classSaline                                    0.255652
+anomaly_classWet:water_classSaline                                            0.342054
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal                         0.332873
+metricWUE_T:timescaleSPEI_48:anomaly_classWet                                 0.463660
+metricWUE_T:timescaleSPEI_48:water_classFreshwater                            0.438940
+metricWUE_T:timescaleSPEI_48:water_classSaline                                0.481842
+metricWUE_T:anomaly_classNear-normal:water_classFreshwater                    0.330821
+metricWUE_T:anomaly_classWet:water_classFreshwater                            0.410698
+metricWUE_T:anomaly_classNear-normal:water_classSaline                        0.357212
+metricWUE_T:anomaly_classWet:water_classSaline                                0.475413
+timescaleSPEI_48:anomaly_classNear-normal:water_classFreshwater               0.347722
+timescaleSPEI_48:anomaly_classWet:water_classFreshwater                       0.439896
+timescaleSPEI_48:anomaly_classNear-normal:water_classSaline                   0.381460
+timescaleSPEI_48:anomaly_classWet:water_classSaline                           0.511967
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal:water_classFreshwater   0.485659
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classFreshwater           0.615825
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal:water_classSaline       0.534514
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classSaline               0.718533
+                                                                            t value
+(Intercept)                                                                   4.909
+metricWUE_T                                                                  11.144
+timescaleSPEI_48                                                             -0.720
+anomaly_classNear-normal                                                     -1.833
+anomaly_classWet                                                              0.011
+water_classFreshwater                                                        -1.076
+water_classSaline                                                            -1.394
+Trans_ratio_z                                                               -16.531
+month_f2                                                                      1.416
+month_f3                                                                      1.299
+month_f4                                                                      0.884
+month_f5                                                                      1.173
+month_f6                                                                      0.444
+month_f7                                                                      0.984
+month_f8                                                                      1.360
+month_f9                                                                      0.586
+month_f10                                                                     0.652
+metricWUE_T:timescaleSPEI_48                                                  0.811
+metricWUE_T:anomaly_classNear-normal                                          0.414
+metricWUE_T:anomaly_classWet                                                 -1.080
+timescaleSPEI_48:anomaly_classNear-normal                                     1.044
+timescaleSPEI_48:anomaly_classWet                                            -0.116
+metricWUE_T:water_classFreshwater                                            -3.571
+metricWUE_T:water_classSaline                                                -1.522
+timescaleSPEI_48:water_classFreshwater                                        0.010
+timescaleSPEI_48:water_classSaline                                            0.825
+anomaly_classNear-normal:water_classFreshwater                                0.654
+anomaly_classWet:water_classFreshwater                                       -1.375
+anomaly_classNear-normal:water_classSaline                                    0.113
+anomaly_classWet:water_classSaline                                            0.044
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal                        -1.004
+metricWUE_T:timescaleSPEI_48:anomaly_classWet                                -1.466
+metricWUE_T:timescaleSPEI_48:water_classFreshwater                           -0.800
+metricWUE_T:timescaleSPEI_48:water_classSaline                               -2.110
+metricWUE_T:anomaly_classNear-normal:water_classFreshwater                    0.006
+metricWUE_T:anomaly_classWet:water_classFreshwater                            1.336
+metricWUE_T:anomaly_classNear-normal:water_classSaline                        0.228
+metricWUE_T:anomaly_classWet:water_classSaline                                1.683
+timescaleSPEI_48:anomaly_classNear-normal:water_classFreshwater              -0.553
+timescaleSPEI_48:anomaly_classWet:water_classFreshwater                       0.841
+timescaleSPEI_48:anomaly_classNear-normal:water_classSaline                  -0.312
+timescaleSPEI_48:anomaly_classWet:water_classSaline                          -0.536
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal:water_classFreshwater   1.145
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classFreshwater           1.188
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal:water_classSaline       1.928
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classSaline               2.539
+
+WUE value drop1 LRT:
+                                        term npar      AIC        LRT
+1                                     <none>   NA 18841.79         NA
+2                              Trans_ratio_z    1 19106.34 266.549515
+3                                    month_f    9 18864.24  40.449995
+4 metric:timescale:anomaly_class:water_class    4 18840.70   6.906332
+       Pr(Chi)
+1           NA
+2 6.411284e-60
+3 6.296756e-06
+4 1.409217e-01
+
+Signed response model:
+WUE_response ~ metric * timescale * anomaly_class * water_class + 
+    Trans_ratio_z + month_f + (1 | site_name)
+Linear mixed model fit by maximum likelihood  ['lmerMod']
+Formula: WUE_response ~ metric * timescale * anomaly_class * water_class +  
+    Trans_ratio_z + month_f + (1 | site_name)
+   Data: analysis_data
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+  16333.8   16650.3   -8118.9   16237.8      5346 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-6.8829 -0.3790  0.0002  0.3519  9.1443 
+
+Random effects:
+ Groups    Name        Variance Std.Dev.
+ site_name (Intercept) 0.1254   0.3541  
+ Residual              1.1654   1.0795  
+Number of obs: 5394, groups:  site_name, 44
+
+Fixed effects:
+                                                                            Estimate
+(Intercept)                                                                  0.25137
+metricWUE_T                                                                  0.31208
+timescaleSPEI_48                                                             0.12785
+anomaly_classNear-normal                                                    -0.16815
+anomaly_classWet                                                            -0.03204
+water_classFreshwater                                                       -0.01993
+water_classSaline                                                           -0.15820
+Trans_ratio_z                                                               -0.43646
+month_f2                                                                    -0.34557
+month_f3                                                                    -0.17851
+month_f4                                                                    -0.10849
+month_f5                                                                    -0.14212
+month_f6                                                                    -0.08817
+month_f7                                                                    -0.10990
+month_f8                                                                    -0.07108
+month_f9                                                                    -0.09258
+month_f10                                                                   -0.26033
+metricWUE_T:timescaleSPEI_48                                                -0.82346
+metricWUE_T:anomaly_classNear-normal                                        -0.31208
+metricWUE_T:anomaly_classWet                                                -0.29440
+timescaleSPEI_48:anomaly_classNear-normal                                   -0.12893
+timescaleSPEI_48:anomaly_classWet                                           -0.60791
+metricWUE_T:water_classFreshwater                                           -0.34442
+metricWUE_T:water_classSaline                                                0.06468
+timescaleSPEI_48:water_classFreshwater                                      -0.37391
+timescaleSPEI_48:water_classSaline                                          -0.47088
+anomaly_classNear-normal:water_classFreshwater                               0.08359
+anomaly_classWet:water_classFreshwater                                      -0.22112
+anomaly_classNear-normal:water_classSaline                                   0.05359
+anomaly_classWet:water_classSaline                                           0.06412
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal                        0.82346
+metricWUE_T:timescaleSPEI_48:anomaly_classWet                                0.67859
+metricWUE_T:timescaleSPEI_48:water_classFreshwater                           0.87326
+metricWUE_T:timescaleSPEI_48:water_classSaline                               0.32051
+metricWUE_T:anomaly_classNear-normal:water_classFreshwater                   0.34442
+metricWUE_T:anomaly_classWet:water_classFreshwater                           0.28778
+metricWUE_T:anomaly_classNear-normal:water_classSaline                      -0.06468
+metricWUE_T:anomaly_classWet:water_classSaline                               0.23328
+timescaleSPEI_48:anomaly_classNear-normal:water_classFreshwater              0.35298
+timescaleSPEI_48:anomaly_classWet:water_classFreshwater                      0.94684
+timescaleSPEI_48:anomaly_classNear-normal:water_classSaline                  0.51414
+timescaleSPEI_48:anomaly_classWet:water_classSaline                          0.86938
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal:water_classFreshwater -0.87326
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classFreshwater         -0.77783
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal:water_classSaline     -0.32051
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classSaline             -0.19951
+                                                                            Std. Error
+(Intercept)                                                                    0.31626
+metricWUE_T                                                                    0.14970
+timescaleSPEI_48                                                               0.17591
+anomaly_classNear-normal                                                       0.11819
+anomaly_classWet                                                               0.16115
+water_classFreshwater                                                          0.21545
+water_classSaline                                                              0.22927
+Trans_ratio_z                                                                  0.02735
+month_f2                                                                       0.29905
+month_f3                                                                       0.28969
+month_f4                                                                       0.28842
+month_f5                                                                       0.28818
+month_f6                                                                       0.28875
+month_f7                                                                       0.28939
+month_f8                                                                       0.28974
+month_f9                                                                       0.29008
+month_f10                                                                      0.29323
+metricWUE_T:timescaleSPEI_48                                                   0.24621
+metricWUE_T:anomaly_classNear-normal                                           0.16604
+metricWUE_T:anomaly_classWet                                                   0.22547
+timescaleSPEI_48:anomaly_classNear-normal                                      0.19067
+timescaleSPEI_48:anomaly_classWet                                              0.26473
+metricWUE_T:water_classFreshwater                                              0.23809
+metricWUE_T:water_classSaline                                                  0.25607
+timescaleSPEI_48:water_classFreshwater                                         0.25070
+timescaleSPEI_48:water_classSaline                                             0.27468
+anomaly_classNear-normal:water_classFreshwater                                 0.18875
+anomaly_classWet:water_classFreshwater                                         0.23415
+anomaly_classNear-normal:water_classSaline                                     0.20430
+anomaly_classWet:water_classSaline                                             0.27318
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal                          0.26631
+metricWUE_T:timescaleSPEI_48:anomaly_classWet                                  0.37095
+metricWUE_T:timescaleSPEI_48:water_classFreshwater                             0.35117
+metricWUE_T:timescaleSPEI_48:water_classSaline                                 0.38550
+metricWUE_T:anomaly_classNear-normal:water_classFreshwater                     0.26467
+metricWUE_T:anomaly_classWet:water_classFreshwater                             0.32858
+metricWUE_T:anomaly_classNear-normal:water_classSaline                         0.28579
+metricWUE_T:anomaly_classWet:water_classSaline                                 0.38035
+timescaleSPEI_48:anomaly_classNear-normal:water_classFreshwater                0.27793
+timescaleSPEI_48:anomaly_classWet:water_classFreshwater                        0.35146
+timescaleSPEI_48:anomaly_classNear-normal:water_classSaline                    0.30489
+timescaleSPEI_48:anomaly_classWet:water_classSaline                            0.40918
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal:water_classFreshwater    0.38855
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classFreshwater            0.49269
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal:water_classSaline        0.42764
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classSaline                0.57486
+                                                                            t value
+(Intercept)                                                                   0.795
+metricWUE_T                                                                   2.085
+timescaleSPEI_48                                                              0.727
+anomaly_classNear-normal                                                     -1.423
+anomaly_classWet                                                             -0.199
+water_classFreshwater                                                        -0.093
+water_classSaline                                                            -0.690
+Trans_ratio_z                                                               -15.958
+month_f2                                                                     -1.156
+month_f3                                                                     -0.616
+month_f4                                                                     -0.376
+month_f5                                                                     -0.493
+month_f6                                                                     -0.305
+month_f7                                                                     -0.380
+month_f8                                                                     -0.245
+month_f9                                                                     -0.319
+month_f10                                                                    -0.888
+metricWUE_T:timescaleSPEI_48                                                 -3.344
+metricWUE_T:anomaly_classNear-normal                                         -1.880
+metricWUE_T:anomaly_classWet                                                 -1.306
+timescaleSPEI_48:anomaly_classNear-normal                                    -0.676
+timescaleSPEI_48:anomaly_classWet                                            -2.296
+metricWUE_T:water_classFreshwater                                            -1.447
+metricWUE_T:water_classSaline                                                 0.253
+timescaleSPEI_48:water_classFreshwater                                       -1.491
+timescaleSPEI_48:water_classSaline                                           -1.714
+anomaly_classNear-normal:water_classFreshwater                                0.443
+anomaly_classWet:water_classFreshwater                                       -0.944
+anomaly_classNear-normal:water_classSaline                                    0.262
+anomaly_classWet:water_classSaline                                            0.235
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal                         3.092
+metricWUE_T:timescaleSPEI_48:anomaly_classWet                                 1.829
+metricWUE_T:timescaleSPEI_48:water_classFreshwater                            2.487
+metricWUE_T:timescaleSPEI_48:water_classSaline                                0.831
+metricWUE_T:anomaly_classNear-normal:water_classFreshwater                    1.301
+metricWUE_T:anomaly_classWet:water_classFreshwater                            0.876
+metricWUE_T:anomaly_classNear-normal:water_classSaline                       -0.226
+metricWUE_T:anomaly_classWet:water_classSaline                                0.613
+timescaleSPEI_48:anomaly_classNear-normal:water_classFreshwater               1.270
+timescaleSPEI_48:anomaly_classWet:water_classFreshwater                       2.694
+timescaleSPEI_48:anomaly_classNear-normal:water_classSaline                   1.686
+timescaleSPEI_48:anomaly_classWet:water_classSaline                           2.125
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal:water_classFreshwater  -2.247
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classFreshwater          -1.579
+metricWUE_T:timescaleSPEI_48:anomaly_classNear-normal:water_classSaline      -0.749
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classSaline              -0.347
+
+Signed response drop1 LRT:
+                                        term npar      AIC        LRT
+1                                     <none>   NA 16333.81         NA
+2                              Trans_ratio_z    1 16536.47 204.654491
+3                                    month_f    9 16328.20  12.391358
+4 metric:timescale:anomaly_class:water_class    4 16331.04   5.223257
+       Pr(Chi)
+1           NA
+2 2.014534e-46
+3 1.921346e-01
+4 2.651473e-01
+
+Response magnitude model, dry/wet anomalies only:
+WUE_response_magnitude ~ metric * timescale * anomaly_class * 
+    water_class + Trans_ratio_z + month_f + (1 | site_name)
+Linear mixed model fit by maximum likelihood  ['lmerMod']
+Formula: WUE_response_magnitude ~ metric * timescale * anomaly_class *  
+    water_class + Trans_ratio_z + month_f + (1 | site_name)
+   Data: anomaly_data
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+   3812.3    4008.5   -1870.1    3740.3      1686 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.8970 -0.4435 -0.0608  0.3336 10.7960 
+
+Random effects:
+ Groups    Name        Variance Std.Dev.
+ site_name (Intercept) 0.3274   0.5722  
+ Residual              0.4789   0.6920  
+Number of obs: 1722, groups:  site_name, 42
+
+Fixed effects:
+                                                                    Estimate
+(Intercept)                                                          0.98942
+metricWUE_T                                                          0.69320
+timescaleSPEI_48                                                    -0.37510
+anomaly_classWet                                                    -0.17186
+water_classFreshwater                                               -0.39543
+water_classSaline                                                   -0.23311
+Trans_ratio_z                                                       -0.17872
+month_f2                                                            -0.26262
+month_f3                                                            -0.05538
+month_f4                                                            -0.20405
+month_f5                                                            -0.23378
+month_f6                                                            -0.04337
+month_f7                                                            -0.16583
+month_f8                                                            -0.16883
+month_f9                                                            -0.21543
+month_f10                                                           -0.42523
+metricWUE_T:timescaleSPEI_48                                         0.45858
+metricWUE_T:anomaly_classWet                                        -0.17779
+timescaleSPEI_48:anomaly_classWet                                    0.65515
+metricWUE_T:water_classFreshwater                                   -0.54055
+metricWUE_T:water_classSaline                                       -0.16393
+timescaleSPEI_48:water_classFreshwater                               0.31977
+timescaleSPEI_48:water_classSaline                                   0.53357
+anomaly_classWet:water_classFreshwater                               0.21358
+anomaly_classWet:water_classSaline                                   0.04136
+metricWUE_T:timescaleSPEI_48:anomaly_classWet                       -0.27716
+metricWUE_T:timescaleSPEI_48:water_classFreshwater                  -0.34314
+metricWUE_T:timescaleSPEI_48:water_classSaline                      -0.82959
+metricWUE_T:anomaly_classWet:water_classFreshwater                   0.30911
+metricWUE_T:anomaly_classWet:water_classSaline                       0.18509
+timescaleSPEI_48:anomaly_classWet:water_classFreshwater             -0.60897
+timescaleSPEI_48:anomaly_classWet:water_classSaline                 -0.96270
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classFreshwater  0.12735
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classSaline      0.87399
+                                                                    Std. Error
+(Intercept)                                                            0.28244
+metricWUE_T                                                            0.09597
+timescaleSPEI_48                                                       0.11736
+anomaly_classWet                                                       0.10728
+water_classFreshwater                                                  0.24358
+water_classSaline                                                      0.25516
+Trans_ratio_z                                                          0.03579
+month_f2                                                               0.25163
+month_f3                                                               0.24353
+month_f4                                                               0.24240
+month_f5                                                               0.24261
+month_f6                                                               0.24420
+month_f7                                                               0.24492
+month_f8                                                               0.24563
+month_f9                                                               0.24622
+month_f10                                                              0.24938
+metricWUE_T:timescaleSPEI_48                                           0.15783
+metricWUE_T:anomaly_classWet                                           0.14453
+timescaleSPEI_48:anomaly_classWet                                      0.17467
+metricWUE_T:water_classFreshwater                                      0.15263
+metricWUE_T:water_classSaline                                          0.16415
+timescaleSPEI_48:water_classFreshwater                                 0.16533
+timescaleSPEI_48:water_classSaline                                     0.18083
+anomaly_classWet:water_classFreshwater                                 0.15375
+anomaly_classWet:water_classSaline                                     0.18531
+metricWUE_T:timescaleSPEI_48:anomaly_classWet                          0.23779
+metricWUE_T:timescaleSPEI_48:water_classFreshwater                     0.22511
+metricWUE_T:timescaleSPEI_48:water_classSaline                         0.24712
+metricWUE_T:anomaly_classWet:water_classFreshwater                     0.21063
+metricWUE_T:anomaly_classWet:water_classSaline                         0.24382
+timescaleSPEI_48:anomaly_classWet:water_classFreshwater                0.23060
+timescaleSPEI_48:anomaly_classWet:water_classSaline                    0.26769
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classFreshwater    0.31583
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classSaline        0.36851
+                                                                    t value
+(Intercept)                                                           3.503
+metricWUE_T                                                           7.223
+timescaleSPEI_48                                                     -3.196
+anomaly_classWet                                                     -1.602
+water_classFreshwater                                                -1.623
+water_classSaline                                                    -0.914
+Trans_ratio_z                                                        -4.993
+month_f2                                                             -1.044
+month_f3                                                             -0.227
+month_f4                                                             -0.842
+month_f5                                                             -0.964
+month_f6                                                             -0.178
+month_f7                                                             -0.677
+month_f8                                                             -0.687
+month_f9                                                             -0.875
+month_f10                                                            -1.705
+metricWUE_T:timescaleSPEI_48                                          2.906
+metricWUE_T:anomaly_classWet                                         -1.230
+timescaleSPEI_48:anomaly_classWet                                     3.751
+metricWUE_T:water_classFreshwater                                    -3.542
+metricWUE_T:water_classSaline                                        -0.999
+timescaleSPEI_48:water_classFreshwater                                1.934
+timescaleSPEI_48:water_classSaline                                    2.951
+anomaly_classWet:water_classFreshwater                                1.389
+anomaly_classWet:water_classSaline                                    0.223
+metricWUE_T:timescaleSPEI_48:anomaly_classWet                        -1.166
+metricWUE_T:timescaleSPEI_48:water_classFreshwater                   -1.524
+metricWUE_T:timescaleSPEI_48:water_classSaline                       -3.357
+metricWUE_T:anomaly_classWet:water_classFreshwater                    1.468
+metricWUE_T:anomaly_classWet:water_classSaline                        0.759
+timescaleSPEI_48:anomaly_classWet:water_classFreshwater              -2.641
+timescaleSPEI_48:anomaly_classWet:water_classSaline                  -3.596
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classFreshwater   0.403
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classSaline       2.372
+
+Response magnitude drop1 LRT:
+                                        term npar      AIC       LRT
+1                                     <none>   NA 3812.288        NA
+2                              Trans_ratio_z    1 3834.633 24.344973
+3                                    month_f    9 3822.371 28.083496
+4 metric:timescale:anomaly_class:water_class    2 3814.635  6.347431
+       Pr(Chi)
+1           NA
+2 8.053663e-07
+3 9.237000e-04
+4 4.184783e-02
+
+Response direction model, dry/wet anomalies only:
+decrease_binary ~ metric * timescale * anomaly_class * water_class + 
+    Trans_ratio_z + month_f + (1 | site_name)
+Generalized linear mixed model fit by maximum likelihood (Laplace
+  Approximation) [glmerMod]
+ Family: binomial  ( logit )
+Formula: decrease_binary ~ metric * timescale * anomaly_class * water_class +  
+    Trans_ratio_z + month_f + (1 | site_name)
+   Data: anomaly_data
+Control: 
+lme4::glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2e+05))
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+   2210.9    2401.7   -1070.4    2140.9      1687 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-6.3258 -0.8721  0.3094  0.8463  2.9620 
+
+Random effects:
+ Groups    Name        Variance Std.Dev.
+ site_name (Intercept) 0.3377   0.5811  
+Number of obs: 1722, groups:  site_name, 42
+
+Fixed effects:
+                                                                     Estimate
+(Intercept)                                                         -15.09635
+metricWUE_T                                                          -0.24838
+timescaleSPEI_48                                                     -0.34239
+anomaly_classWet                                                     -0.93370
+water_classFreshwater                                                -0.17638
+water_classSaline                                                    -0.37178
+Trans_ratio_z                                                         0.21060
+month_f2                                                             16.31765
+month_f3                                                             15.31371
+month_f4                                                             14.97827
+month_f5                                                             15.29170
+month_f6                                                             15.15213
+month_f7                                                             15.10494
+month_f8                                                             15.09767
+month_f9                                                             14.63152
+month_f10                                                            15.66762
+metricWUE_T:timescaleSPEI_48                                          0.62063
+metricWUE_T:anomaly_classWet                                          0.92951
+timescaleSPEI_48:anomaly_classWet                                     1.89039
+metricWUE_T:water_classFreshwater                                     0.31586
+metricWUE_T:water_classSaline                                         0.24838
+timescaleSPEI_48:water_classFreshwater                                1.34325
+timescaleSPEI_48:water_classSaline                                    2.40300
+anomaly_classWet:water_classFreshwater                                1.50232
+anomaly_classWet:water_classSaline                                    0.89976
+metricWUE_T:timescaleSPEI_48:anomaly_classWet                        -1.10450
+metricWUE_T:timescaleSPEI_48:water_classFreshwater                   -0.92582
+metricWUE_T:timescaleSPEI_48:water_classSaline                       -0.40771
+metricWUE_T:anomaly_classWet:water_classFreshwater                   -1.35043
+metricWUE_T:anomaly_classWet:water_classSaline                       -0.32563
+timescaleSPEI_48:anomaly_classWet:water_classFreshwater              -3.21258
+timescaleSPEI_48:anomaly_classWet:water_classSaline                  -3.16687
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classFreshwater   2.02683
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classSaline       0.08343
+                                                                    Std. Error
+(Intercept)                                                           18.82266
+metricWUE_T                                                            0.28796
+timescaleSPEI_48                                                       0.35326
+anomaly_classWet                                                       0.33270
+water_classFreshwater                                                  0.41413
+water_classSaline                                                      0.44994
+Trans_ratio_z                                                          0.08960
+month_f2                                                              18.82621
+month_f3                                                              18.82272
+month_f4                                                              18.82249
+month_f5                                                              18.82201
+month_f6                                                              18.82210
+month_f7                                                              18.82211
+month_f8                                                              18.82213
+month_f9                                                              18.82227
+month_f10                                                             18.82289
+metricWUE_T:timescaleSPEI_48                                           0.48214
+metricWUE_T:anomaly_classWet                                           0.44586
+timescaleSPEI_48:anomaly_classWet                                      0.53807
+metricWUE_T:water_classFreshwater                                      0.46676
+metricWUE_T:water_classSaline                                          0.50133
+timescaleSPEI_48:water_classFreshwater                                 0.50845
+timescaleSPEI_48:water_classSaline                                     0.64176
+anomaly_classWet:water_classFreshwater                                 0.47436
+anomaly_classWet:water_classSaline                                     0.56601
+metricWUE_T:timescaleSPEI_48:anomaly_classWet                          0.73880
+metricWUE_T:timescaleSPEI_48:water_classFreshwater                     0.69751
+metricWUE_T:timescaleSPEI_48:water_classSaline                         0.90945
+metricWUE_T:anomaly_classWet:water_classFreshwater                     0.65006
+metricWUE_T:anomaly_classWet:water_classSaline                         0.75536
+timescaleSPEI_48:anomaly_classWet:water_classFreshwater                0.71333
+timescaleSPEI_48:anomaly_classWet:water_classSaline                    0.88641
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classFreshwater    0.98212
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classSaline        1.24434
+                                                                    z value
+(Intercept)                                                          -0.802
+metricWUE_T                                                          -0.863
+timescaleSPEI_48                                                     -0.969
+anomaly_classWet                                                     -2.806
+water_classFreshwater                                                -0.426
+water_classSaline                                                    -0.826
+Trans_ratio_z                                                         2.351
+month_f2                                                              0.867
+month_f3                                                              0.814
+month_f4                                                              0.796
+month_f5                                                              0.812
+month_f6                                                              0.805
+month_f7                                                              0.803
+month_f8                                                              0.802
+month_f9                                                              0.777
+month_f10                                                             0.832
+metricWUE_T:timescaleSPEI_48                                          1.287
+metricWUE_T:anomaly_classWet                                          2.085
+timescaleSPEI_48:anomaly_classWet                                     3.513
+metricWUE_T:water_classFreshwater                                     0.677
+metricWUE_T:water_classSaline                                         0.495
+timescaleSPEI_48:water_classFreshwater                                2.642
+timescaleSPEI_48:water_classSaline                                    3.744
+anomaly_classWet:water_classFreshwater                                3.167
+anomaly_classWet:water_classSaline                                    1.590
+metricWUE_T:timescaleSPEI_48:anomaly_classWet                        -1.495
+metricWUE_T:timescaleSPEI_48:water_classFreshwater                   -1.327
+metricWUE_T:timescaleSPEI_48:water_classSaline                       -0.448
+metricWUE_T:anomaly_classWet:water_classFreshwater                   -2.077
+metricWUE_T:anomaly_classWet:water_classSaline                       -0.431
+timescaleSPEI_48:anomaly_classWet:water_classFreshwater              -4.504
+timescaleSPEI_48:anomaly_classWet:water_classSaline                  -3.573
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classFreshwater   2.064
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classSaline       0.067
+                                                                    Pr(>|z|)
+(Intercept)                                                         0.422535
+metricWUE_T                                                         0.388384
+timescaleSPEI_48                                                    0.332433
+anomaly_classWet                                                    0.005010
+water_classFreshwater                                               0.670175
+water_classSaline                                                   0.408634
+Trans_ratio_z                                                       0.018748
+month_f2                                                            0.386078
+month_f3                                                            0.415888
+month_f4                                                            0.426169
+month_f5                                                            0.416541
+month_f6                                                            0.420809
+month_f7                                                            0.422258
+month_f8                                                            0.422481
+month_f9                                                            0.436951
+month_f10                                                           0.405200
+metricWUE_T:timescaleSPEI_48                                        0.198013
+metricWUE_T:anomaly_classWet                                        0.037093
+timescaleSPEI_48:anomaly_classWet                                   0.000443
+metricWUE_T:water_classFreshwater                                   0.498585
+metricWUE_T:water_classSaline                                       0.620288
+timescaleSPEI_48:water_classFreshwater                              0.008245
+timescaleSPEI_48:water_classSaline                                  0.000181
+anomaly_classWet:water_classFreshwater                              0.001540
+anomaly_classWet:water_classSaline                                  0.111912
+metricWUE_T:timescaleSPEI_48:anomaly_classWet                       0.134918
+metricWUE_T:timescaleSPEI_48:water_classFreshwater                  0.184400
+metricWUE_T:timescaleSPEI_48:water_classSaline                      0.653933
+metricWUE_T:anomaly_classWet:water_classFreshwater                  0.037764
+metricWUE_T:anomaly_classWet:water_classSaline                      0.666397
+timescaleSPEI_48:anomaly_classWet:water_classFreshwater             6.68e-06
+timescaleSPEI_48:anomaly_classWet:water_classSaline                 0.000353
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classFreshwater 0.039043
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classSaline     0.946541
+                                                                       
+(Intercept)                                                            
+metricWUE_T                                                            
+timescaleSPEI_48                                                       
+anomaly_classWet                                                    ** 
+water_classFreshwater                                                  
+water_classSaline                                                      
+Trans_ratio_z                                                       *  
+month_f2                                                               
+month_f3                                                               
+month_f4                                                               
+month_f5                                                               
+month_f6                                                               
+month_f7                                                               
+month_f8                                                               
+month_f9                                                               
+month_f10                                                              
+metricWUE_T:timescaleSPEI_48                                           
+metricWUE_T:anomaly_classWet                                        *  
+timescaleSPEI_48:anomaly_classWet                                   ***
+metricWUE_T:water_classFreshwater                                      
+metricWUE_T:water_classSaline                                          
+timescaleSPEI_48:water_classFreshwater                              ** 
+timescaleSPEI_48:water_classSaline                                  ***
+anomaly_classWet:water_classFreshwater                              ** 
+anomaly_classWet:water_classSaline                                     
+metricWUE_T:timescaleSPEI_48:anomaly_classWet                          
+metricWUE_T:timescaleSPEI_48:water_classFreshwater                     
+metricWUE_T:timescaleSPEI_48:water_classSaline                         
+metricWUE_T:anomaly_classWet:water_classFreshwater                  *  
+metricWUE_T:anomaly_classWet:water_classSaline                         
+timescaleSPEI_48:anomaly_classWet:water_classFreshwater             ***
+timescaleSPEI_48:anomaly_classWet:water_classSaline                 ***
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classFreshwater *  
+metricWUE_T:timescaleSPEI_48:anomaly_classWet:water_classSaline        
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Response direction drop1 LRT:
+                                        term npar      AIC       LRT
+1                                     <none>   NA 2210.868        NA
+2                              Trans_ratio_z    1 2214.258  5.390688
+3                                    month_f    9 2232.772 39.904353
+4 metric:timescale:anomaly_class:water_class    2 2212.044  5.176886
+       Pr(Chi)
+1           NA
+2 2.024449e-02
+3 7.907774e-06
+4 7.513694e-02
