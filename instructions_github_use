@@ -10,3 +10,7 @@ work just as well (RStudio method: New Project -> Version Control -> Git -> past
 8) After restarting, you should now see a "Git" pane in the upper right hand corner.
 9) Proceed with the usual Git workflow by staging (checking the checkboxes) -> writing commit message -> press "Commit button" -> pull -> push
 10) Success! 
+11) Additional note: once your GitHub token expires after every 90 days, you will want to generate a new token
+in GitHub. In GitHub go to Settings -> Developer Settings -> create new CLASSIC token. Have the webpage open 
+for now. Then go to RStudio, run usethis::edit_r_environ(). Replace your old token with the new token in the
+pop-up window. Save the .Renviron file. Restart R. Your GitHub credentials should now be saved!
