@@ -1,0 +1,12 @@
+1) To start a new research project, you should go on GitHub to create a new repo.
+2) Then, clone the GitHub repo to your local computer (either your local working directory or MaloneLab Server, whichever you prefer)
+3) From our debugging today, it seems like the best method is to just clone with your Terminal. However, I think the RStudio method will
+work just as well (RStudio method: New Project -> Version Control -> Git -> paste url of your GitHub repo inside the prompt)
+4) Check your local repo's connection to GitHub by running "git remote -v" in the Terminal (make sure you're inside the local repo too)
+5) If it says "fatal: detected dubious ownership in repository at ...", follow their directions to add a safe directory
+(the directions may look something like this: "git config --global --add safe.directory ...")
+6) After you run this command, double-check again by running "git remote -v". This should now point to the GitHub repo as the remote repo.
+7) Restart RStudio just in case. 
+8) After restarting, you should now see a "Git" pane in the upper right hand corner.
+9) Proceed with the usual Git workflow by staging (checking the checkboxes) -> writing commit message -> press "Commit button" -> pull -> push
+10) Success! 
