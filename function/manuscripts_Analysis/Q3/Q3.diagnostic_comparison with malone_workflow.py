@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+c# -*- coding: utf-8 -*-
 """
 Created on Fri Jun 19 22:20:26 2026
 @author: ammar
@@ -24,9 +24,11 @@ from pathlib import Path
 # PATHS - UPDATED TO MATCH NEW WORKFLOW
 # ============================================================================
 
-python_output_dir = r"M:\Research\WUE_CUE\WUE_manuscript_version6\Q3\results\Q3_WUE_T_SPEI_sensitivity"
-python_figure_dir = r"M:\Research\WUE_CUE\WUE_manuscript_version6\Q3\figures"
+python_output_dir = r"M:\Research\WUE_CUE\WUE_manuscript_version6\Q3\Q3_WUE_T_SPEI_sensitivity_outputs"
+python_figure_dir = r"M:\Research\WUE_CUE\WUE_manuscript_version6\Q3\Q3_WUE_T_SPEI_sensitivity_figures"
 malone_output_dir = r"M:\Research\WUE_CUE\Water_WUE\Malone_Workflow\results\Q3_WUE_T_SPEI_sensitivity"
+
+
 
 print("="*70)
 print("UPDATED DIAGNOSTIC: COMPARING PYTHON Q3 vs MALONE R Q3 OUTPUTS")
@@ -253,9 +255,11 @@ if python_csv_available.get("predictions", False) and malone_csv_available.get("
     try:
         python_df = pd.read_csv(os.path.join(python_output_dir, all_csv_files["predictions"]))
         malone_df = pd.read_csv(os.path.join(malone_output_dir, all_csv_files["predictions"]))
+        python_df["SPEI_value_round"] = python_df["SPEI_value"].round(3)
+        malone_df["SPEI_value_round"] = malone_df["SPEI_value"].round(3)
         results, match = compare_dataframes(
             python_df, malone_df, "predictions",
-            ['SPEI_timescale', 'water_class', 'SPEI_value'],
+            ['SPEI_timescale', 'water_class', 'SPEI_value_round'],
             ['predicted_WUE_T', 'predicted_se']
         )
         all_results['predictions'] = results
@@ -327,9 +331,12 @@ if python_csv_available.get("coast_predictions", False) and malone_csv_available
     try:
         python_df = pd.read_csv(os.path.join(python_output_dir, all_csv_files["coast_predictions"]))
         malone_df = pd.read_csv(os.path.join(malone_output_dir, all_csv_files["coast_predictions"]))
+        # Round SPEI_value only for merge matching, to avoid tiny floating-point mismatch
+        python_df["SPEI_value_round"] = python_df["SPEI_value"].round(3)
+        malone_df["SPEI_value_round"] = malone_df["SPEI_value"].round(3)
         results, match = compare_dataframes(
             python_df, malone_df, "coast_predictions",
-            ['SPEI_timescale', 'coast_region', 'SPEI_value'],
+            ['SPEI_timescale', 'coast_region', 'SPEI_value_round'],
             ['predicted_WUE_T', 'predicted_se']
         )
         all_results['coast_predictions'] = results

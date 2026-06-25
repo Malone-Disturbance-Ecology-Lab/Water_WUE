@@ -1,0 +1,59 @@
+================================================================================
+Q2 MALONE METHODS AND RESULTS VERIFICATION REPORT
+Generated from Malone R Q2 output folder
+================================================================================
+
+DATA COVERAGE
+----------------------------------------
+Valid monthly observations: 1,852
+Number of sites: 64
+Year range: 1994 to 2025
+  Upland: 781 obs, 29 sites
+  Freshwater: 626 obs, 20 sites
+  Saline: 445 obs, 15 sites
+
+MALONE METHODS COUNTS
+----------------------------------------
+Stability sites: 56
+Plasticity slope site×timescale rows: 392
+Plasticity slope unique sites: 56
+SPEI timescales present: SPEI_1, SPEI_12, SPEI_24, SPEI_3, SPEI_36, SPEI_48, SPEI_6
+Plasticity range sites: 56
+Resistance sites: 39
+Recovery events: 52
+Recovery sites: 27
+Summary table sites: 56
+Complete all-five-metric sites (raw range): 26
+Complete all-five-metric sites (robust range): 26
+
+RECOVERY EVENTS CHECK
+----------------------------------------
+Malone recovery events: 52
+Malone recovery sites: 27
+Malone complete sites: 26
+
+✓ Malone supports 52 events across 27 sites
+  → Manuscript saying '53 events across 28 sites' is WRONG
+
+MANUSCRIPT VALUE CHECKS
+----------------------------------------
+monthly_observations: Malone=1852, Draft=1852 ✓
+sites: Malone=64, Draft=64 ✓
+year_range: Malone=1994 to 2025, Draft=1994 to 2025 ✓
+stability_sites: Malone=56, Draft=56 ✓
+plasticity_range_sites: Malone=56, Draft=56 ✓
+resistance_sites: Malone=39, Draft=39 ✓
+recovery_events: Malone=52, Draft=52 ✓
+recovery_sites: Malone=27, Draft=27 ✓
+complete_sites: Malone=26, Draft=27 ✗ MISMATCH
+
+INTERPRETATION CHECKS
+----------------------------------------
+Highest mean stability: Saline
+Most negative mean SPEI-3 slope: Upland
+Highest mean resistance: Upland
+No significant Kruskal-Wallis tests (p<0.05)
+
+================================================================================
+Report generated from Malone R output files
+================================================================================
