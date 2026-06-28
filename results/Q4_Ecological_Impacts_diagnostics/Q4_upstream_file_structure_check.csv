@@ -1,0 +1,5 @@
+file,malone_exists,python_exists,status
+Q2_site_resistance,True,False,missing_file
+Q2_site_recovery,True,False,missing_file
+Q3_predicted_impact_classes_upland,True,False,missing_file
+Q3_threshold_summary_5_10_20pct_upland,True,False,missing_file
