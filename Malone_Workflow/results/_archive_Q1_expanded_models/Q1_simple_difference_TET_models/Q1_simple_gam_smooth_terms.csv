@@ -1,5 +1,0 @@
-"smooth_term","edf","Ref.df","F","p_value","signif"
-"s(Trans_ratio):difference_typeWUE_ET_minus_WUE_T",4.57016857895764,5,303.616183536241,0,"***"
-"s(Trans_ratio):difference_typeWUE_ET_minus_WUE_E",4.7185254442934,5,611.774760146317,0,"***"
-"s(Trans_ratio):difference_typeWUE_E_minus_WUE_T",4.79135270634553,5,1654.14112932044,0,"***"
-"s(site_name)",57.1131124970742,63,12.6231417739163,0,"***"

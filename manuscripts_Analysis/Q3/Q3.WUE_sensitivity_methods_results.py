@@ -34,7 +34,621 @@ N_OBSERVATIONS = 1872
 N_SITES = 64
 YEAR_START = 1994
 YEAR_END = 2025
-N_YEARS = 32
+"""
+CHUNK 3A: Flux-Tower Disturbance Exposure Screening
+Purpose: For each flux tower, identify IDS disturbance polygons that contain the tower point 
+or overlap simple tower-centered windows.
+"""
+
+import geopandas as gpd
+import pandas as pd
+import numpy as np
+from shapely.geometry import box
+from pathlib import Path
+import warnings
+warnings.filterwarnings('ignore')
+
+# ============================================================================
+# Configuration
+# ============================================================================
+
+DISTURBANCE_GPKG = r"M:\Research\NE_temperate_forest_resilience\Data\Disturbance_data\results\NE_AOI_all_disturbances_master.gpkg"
+TOWER_CSV = r"M:\Research\NE_temperate_forest_resilience\Data\tower_sites.csv"
+OUTPUT_FOLDER = r"M:\Research\NE_temperate_forest_resilience\Data\Disturbance_data\results\tower_screening"
+
+# Create output folder if it doesn't exist
+Path(OUTPUT_FOLDER).mkdir(parents=True, exist_ok=True)
+
+# Window sizes in meters (radial distance from tower)
+WINDOW_SIZES = [500, 1500, 2500, 4000]
+
+# Use EPSG:5070 (NAD83 / Conus Albers) - good equal-area projected CRS for CONUS in meters
+TARGET_CRS = "EPSG:5070"
+
+
+# ============================================================================
+# Step 1: Load data
+# ============================================================================
+
+print("=" * 80)
+print("Step 1: Loading data")
+print("=" * 80)
+
+# Load disturbance polygons
+print("Loading disturbance polygons...")
+disturbance_gdf = gpd.read_file(DISTURBANCE_GPKG)
+print(f"  Loaded {len(disturbance_gdf)} disturbance polygons")
+print(f"  Original CRS: {disturbance_gdf.crs}")
+
+# Force projected CRS in meters
+print(f"  Reprojecting to {TARGET_CRS}...")
+disturbance_gdf = disturbance_gdf.to_crs(TARGET_CRS)
+print(f"  New CRS: {disturbance_gdf.crs}")
+
+# Load tower locations
+print("Loading tower locations...")
+tower_df = pd.read_csv(TOWER_CSV)
+print(f"  Loaded {len(tower_df)} tower records")
+print(f"  Columns: {list(tower_df.columns)}")
+
+# Detect tower ID column
+id_col = None
+for col in ['Site ID', 'Site Name', 'site_code', 'tower_id', 'SITE_ID', 'SITE_NAME']:
+    if col in tower_df.columns:
+        id_col = col
+        break
+if id_col is None:
+    id_col = tower_df.columns[0]  # fallback to first column
+print(f"  Using ID column: {id_col}")
+
+# Detect latitude column
+lat_col = None
+for col in ['Latitude', 'latitude', 'lat', 'LATITUDE', 'LAT']:
+    if col in tower_df.columns:
+        lat_col = col
+        break
+if lat_col is None:
+    lat_col = tower_df.columns[1]  # fallback
+print(f"  Using latitude column: {lat_col}")
+
+# Detect longitude column
+lon_col = None
+for col in ['Longitude', 'longitude', 'lon', 'LONGITUDE', 'LON']:
+    if col in tower_df.columns:
+        lon_col = col
+        break
+if lon_col is None:
+    lon_col = tower_df.columns[0]  # fallback
+print(f"  Using longitude column: {lon_col}")
+
+# Create tower GeoDataFrame
+print("Creating tower GeoDataFrame...")
+tower_gdf = gpd.GeoDataFrame(
+    tower_df,
+    geometry=gpd.points_from_xy(tower_df[lon_col], tower_df[lat_col]),
+    crs="EPSG:4326"
+)
+
+# Reproject to match disturbance CRS
+tower_gdf = tower_gdf.to_crs(TARGET_CRS)
+print(f"  Reprojected towers to {TARGET_CRS}")
+
+
+# ============================================================================
+# Step 2: Create tower windows
+# ============================================================================
+
+print("\n" + "=" * 80)
+print("Step 2: Creating tower windows (circular buffers)")
+print("=" * 80)
+
+def create_window(point, radius_m):
+    """Create circular buffer around tower point with given radius in meters."""
+    return point.buffer(radius_m)
+
+# Create windows for each tower and window size
+tower_windows = []
+for idx, tower in tower_gdf.iterrows():
+    tower_id = tower[id_col]
+    tower_name = tower.get('tower_name', tower_id)
+    
+    for size in WINDOW_SIZES:
+        window_geom = create_window(tower.geometry, size)
+        window_area_m2 = window_geom.area
+        window_area_km2 = window_area_m2 / 1_000_000
+        window_area_acres = window_area_m2 * 0.000247105
+        
+        tower_windows.append({
+            'tower_id': tower_id,
+            'tower_name': tower_name,
+            'latitude': tower[lat_col],
+            'longitude': tower[lon_col],
+            'window_size_m': size,
+            'window_geometry': window_geom,
+            'tower_point_geometry': tower.geometry,  # Store real tower point for later use
+            'window_area_m2': window_area_m2,
+            'window_area_km2': window_area_km2,
+            'window_area_acres': window_area_acres
+        })
+
+# Create GeoDataFrame with proper geometry column
+tower_windows_df = gpd.GeoDataFrame(
+    tower_windows,
+    geometry="window_geometry",
+    crs=TARGET_CRS
+)
+print(f"  Created {len(tower_windows_df)} tower-window combinations")
+
+
+# ============================================================================
+# Step 3: Find disturbance polygons near each tower
+# ============================================================================
+
+print("\n" + "=" * 80)
+print("Step 3: Finding disturbance polygon overlaps")
+print("=" * 80)
+
+# Build spatial index for disturbance polygons
+print("Building spatial index...")
+disturbance_sindex = disturbance_gdf.sindex
+
+all_overlaps = []
+
+for tower_idx, tower_window in tower_windows_df.iterrows():
+    tower_id = tower_window['tower_id']
+    tower_name = tower_window['tower_name']
+    window_size = tower_window['window_size_m']
+    window_geom = tower_window['window_geometry']
+    window_area_m2 = tower_window['window_area_m2']
+    window_area_km2 = tower_window['window_area_km2']
+    window_area_acres = tower_window['window_area_acres']
+    tower_point = tower_window['tower_point_geometry']
+    
+    # Find candidate polygons using spatial index
+    possible_matches_idx = list(disturbance_sindex.intersection(window_geom.bounds))
+    
+    if not possible_matches_idx:
+        continue
+    
+    # Get candidate polygons
+    candidates = disturbance_gdf.iloc[possible_matches_idx]
+    
+    # Check for actual intersections
+    for dist_idx, disturbance in candidates.iterrows():
+        if not window_geom.intersects(disturbance.geometry):
+            continue
+        
+        # Calculate overlap
+        overlap = window_geom.intersection(disturbance.geometry)
+        if overlap.is_empty:
+            continue
+        
+        overlap_area_m2 = overlap.area
+        overlap_area_km2 = overlap_area_m2 / 1_000_000
+        overlap_area_acres = overlap_area_m2 * 0.000247105
+        percent_of_window_overlapped = (overlap_area_m2 / window_area_m2) * 100
+        
+        # Calculate percent of disturbance polygon overlapped
+        disturbance_area_m2 = disturbance.geometry.area
+        percent_of_polygon_overlapped = (
+            overlap_area_m2 / disturbance_area_m2 * 100
+            if disturbance_area_m2 > 0 else np.nan
+        )
+        
+        # Check if tower point is inside disturbance polygon using .covers()
+        tower_inside = disturbance.geometry.covers(tower_point)
+        
+        # Get disturbance attributes
+        all_overlaps.append({
+            'tower_id': tower_id,
+            'tower_name': tower_name,
+            'latitude': tower_window['latitude'],
+            'longitude': tower_window['longitude'],
+            'window_size_m': window_size,
+            'window_area_km2': window_area_km2,
+            'SURVEY_YEAR': disturbance.get('SURVEY_YEAR', None),
+            'original_agent': disturbance.get('original_agent', None),
+            'original_damage_type': disturbance.get('original_damage_type', None),
+            'original_host': disturbance.get('original_host', None),
+            'original_host_group': disturbance.get('original_host_group', None),
+            'DAMAGE_AREA_ID': disturbance.get('DAMAGE_AREA_ID', None),
+            'OBSERVATION_ID': disturbance.get('OBSERVATION_ID', None),
+            'AOI_state': disturbance.get('AOI_state', None),
+            'AOI_state_abbr': disturbance.get('AOI_state_abbr', None),
+            'AREA_TYPE': disturbance.get('AREA_TYPE', None),
+            'DATA_SOURCE_NAME': disturbance.get('DATA_SOURCE_NAME', None),
+            'PERCENT_AFFECTED': disturbance.get('PERCENT_AFFECTED', None),
+            'PERCENT_MID': disturbance.get('PERCENT_MID', None),
+            'LEGACY_SEVERITY': disturbance.get('LEGACY_SEVERITY', None),
+            'tower_inside_disturbance_polygon': tower_inside,
+            'overlap_area_m2': overlap_area_m2,
+            'overlap_area_km2': overlap_area_km2,
+            'overlap_area_acres': overlap_area_acres,
+            'percent_of_window_overlapped': percent_of_window_overlapped,
+            'disturbance_polygon_area_km2': disturbance_area_m2 / 1_000_000,
+            'percent_of_polygon_overlapped_by_window': percent_of_polygon_overlapped
+        })
+
+overlaps_df = pd.DataFrame(all_overlaps)
+print(f"  Found {len(overlaps_df)} tower-window-disturbance overlaps")
+
+
+# ============================================================================
+# Step 4: Create simple damage-effect flags
+# ============================================================================
+
+print("\n" + "=" * 80)
+print("Step 4: Creating damage-effect flags")
+print("=" * 80)
+
+def create_damage_flags(damage_type):
+    """Create damage effect flags based on original_damage_type."""
+    if pd.isna(damage_type):
+        damage_type = ''
+    else:
+        damage_type = str(damage_type).lower()
+    
+    return {
+        'mortality_flag': any(x in damage_type for x in ['mortality', 'dead', 'dieback', 'topkill']),
+        'defoliation_flag': any(x in damage_type for x in ['defoliation', 'defol']),
+        'discoloration_flag': 'discoloration' in damage_type,
+        'crown_dieback_flag': 'crown dieback' in damage_type,
+        'breakage_or_uprooted_flag': any(x in damage_type for x in ['branch breakage', 'main stem broken', 'uprooted'])
+    }
+
+if len(overlaps_df) > 0:
+    flags = overlaps_df['original_damage_type'].apply(create_damage_flags)
+    flags_df = pd.DataFrame(flags.tolist())
+    overlaps_df = pd.concat([overlaps_df, flags_df], axis=1)
+else:
+    # Add empty flag columns if no overlaps
+    for col in ['mortality_flag', 'defoliation_flag', 'discoloration_flag', 
+                'crown_dieback_flag', 'breakage_or_uprooted_flag']:
+        overlaps_df[col] = False
+
+print(f"  Added damage flags to {len(overlaps_df)} records")
+
+
+# ============================================================================
+# Step 5: Create reported damage intensity field (FIXED - case insensitive)
+# ============================================================================
+
+print("\n" + "=" * 80)
+print("Step 5: Creating damage intensity field")
+print("=" * 80)
+
+def parse_percent_affected(value):
+    """
+    Parse PERCENT_AFFECTED text to numeric value.
+    Case insensitive - handles both uppercase and lowercase text.
+    """
+    if pd.isna(value):
+        return None
+    value = str(value).strip().lower()
+    
+    if 'very severe' in value or '>50' in value:
+        return 75
+    elif 'severe' in value or '30-50' in value:
+        return 40
+    elif 'moderate' in value or '11-29' in value:
+        return 20
+    elif 'very light' in value or '1-3' in value:
+        return 2
+    elif 'light' in value or '4-10' in value:
+        return 7
+    else:
+        return None
+
+def calculate_damage_intensity(row):
+    """Calculate damage intensity using PERCENT_MID, then PERCENT_AFFECTED, then LEGACY_SEVERITY."""
+    # Try PERCENT_MID first
+    percent_mid = row.get('PERCENT_MID')
+    if pd.notna(percent_mid):
+        try:
+            return float(percent_mid)
+        except (ValueError, TypeError):
+            pass
+    
+    # Try PERCENT_AFFECTED
+    percent_affected = row.get('PERCENT_AFFECTED')
+    if pd.notna(percent_affected):
+        parsed = parse_percent_affected(percent_affected)
+        if parsed is not None:
+            return parsed
+    
+    # Try LEGACY_SEVERITY
+    legacy = row.get('LEGACY_SEVERITY')
+    if pd.notna(legacy):
+        parsed = parse_percent_affected(legacy)
+        if parsed is not None:
+            return parsed
+    
+    return None
+
+if len(overlaps_df) > 0:
+    overlaps_df['damage_intensity_mid'] = overlaps_df.apply(calculate_damage_intensity, axis=1)
+    overlaps_df['high_damage_50_flag'] = overlaps_df['damage_intensity_mid'] >= 50
+else:
+    overlaps_df['damage_intensity_mid'] = None
+    overlaps_df['high_damage_50_flag'] = False
+
+print(f"  Calculated damage intensity for {len(overlaps_df)} records")
+
+
+# ============================================================================
+# Step 6: Save polygon-level tower overlap table
+# ============================================================================
+
+print("\n" + "=" * 80)
+print("Step 6: Saving polygon-level overlap table")
+print("=" * 80)
+
+# Ensure all required columns exist (add any missing ones with NaN)
+required_columns = [
+    'tower_id', 'tower_name', 'latitude', 'longitude', 'window_size_m', 'window_area_km2',
+    'SURVEY_YEAR', 'original_agent', 'original_damage_type', 'original_host', 
+    'original_host_group', 'DAMAGE_AREA_ID', 'OBSERVATION_ID', 'AOI_state', 
+    'AOI_state_abbr', 'AREA_TYPE', 'DATA_SOURCE_NAME', 'PERCENT_AFFECTED', 
+    'PERCENT_MID', 'LEGACY_SEVERITY', 'damage_intensity_mid', 'high_damage_50_flag',
+    'mortality_flag', 'defoliation_flag', 'discoloration_flag', 'crown_dieback_flag',
+    'breakage_or_uprooted_flag', 'tower_inside_disturbance_polygon', 'overlap_area_m2',
+    'overlap_area_km2', 'overlap_area_acres', 'percent_of_window_overlapped',
+    'disturbance_polygon_area_km2', 'percent_of_polygon_overlapped_by_window'
+]
+
+# Add any missing columns
+for col in required_columns:
+    if col not in overlaps_df.columns:
+        overlaps_df[col] = None
+
+# Save
+output_file = Path(OUTPUT_FOLDER) / "NE_AOI_tower_disturbance_polygon_overlaps.csv"
+overlaps_df[required_columns].to_csv(output_file, index=False)
+print(f"  Saved to: {output_file}")
+print(f"  Records: {len(overlaps_df)}")
+
+
+# ============================================================================
+# Step 7: Save tower-year-agent summary table (FIXED)
+# ============================================================================
+
+print("\n" + "=" * 80)
+print("Step 7: Saving tower-year-agent summary table")
+print("=" * 80)
+
+if len(overlaps_df) > 0:
+    # Create damage-specific area columns BEFORE grouping
+    overlaps_df["mortality_overlap_area_km2"] = np.where(
+        overlaps_df["mortality_flag"], overlaps_df["overlap_area_km2"], 0
+    )
+    overlaps_df["defoliation_overlap_area_km2"] = np.where(
+        overlaps_df["defoliation_flag"], overlaps_df["overlap_area_km2"], 0
+    )
+    overlaps_df["discoloration_overlap_area_km2"] = np.where(
+        overlaps_df["discoloration_flag"], overlaps_df["overlap_area_km2"], 0
+    )
+    overlaps_df["crown_dieback_overlap_area_km2"] = np.where(
+        overlaps_df["crown_dieback_flag"], overlaps_df["overlap_area_km2"], 0
+    )
+
+    # Define grouping columns
+    summary_cols = [
+        "tower_id", "tower_name", "window_size_m",
+        "SURVEY_YEAR", "original_agent", "original_damage_type"
+    ]
+
+    # Aggregate using named aggregation (fixes the duplicate column bug)
+    summary_df = (
+        overlaps_df
+        .groupby(summary_cols, dropna=False)
+        .agg(
+            overlap_record_count=("DAMAGE_AREA_ID", "count"),
+            unique_damage_area_count=("DAMAGE_AREA_ID", "nunique"),
+            unique_observation_count=("OBSERVATION_ID", "nunique"),
+            total_overlap_area_km2=("overlap_area_km2", "sum"),
+            total_overlap_area_acres=("overlap_area_acres", "sum"),
+            percent_of_window_overlapped_total=("percent_of_window_overlapped", "sum"),
+            mean_damage_intensity_mid=("damage_intensity_mid", "mean"),
+            max_damage_intensity_mid=("damage_intensity_mid", "max"),
+            high_damage_50_record_count=("high_damage_50_flag", "sum"),
+            tower_inside_any_polygon=("tower_inside_disturbance_polygon", "any"),
+            mortality_overlap_area_km2=("mortality_overlap_area_km2", "sum"),
+            defoliation_overlap_area_km2=("defoliation_overlap_area_km2", "sum"),
+            discoloration_overlap_area_km2=("discoloration_overlap_area_km2", "sum"),
+            crown_dieback_overlap_area_km2=("crown_dieback_overlap_area_km2", "sum"),
+            dominant_host=("original_host", lambda x: x.mode().iloc[0] if len(x.mode()) > 0 else None),
+            states_present=("AOI_state_abbr", lambda x: ", ".join(sorted(set(x.dropna()))))
+        )
+        .reset_index()
+    )
+
+    # Save
+    output_file = Path(OUTPUT_FOLDER) / "NE_AOI_tower_disturbance_year_agent_summary.csv"
+    summary_df.to_csv(output_file, index=False)
+    print(f"  Saved to: {output_file}")
+    print(f"  Records: {len(summary_df)}")
+else:
+    print("  No overlaps found, skipping summary table")
+
+
+# ============================================================================
+# Step 8: Save top 10 tower-specific disturbances
+# ============================================================================
+
+print("\n" + "=" * 80)
+print("Step 8: Saving top 10 disturbances by window")
+print("=" * 80)
+
+if len(overlaps_df) > 0 and len(summary_df) > 0:
+    # Group by tower, window
+    top10_list = []
+    
+    for (tower_id, tower_name, window_size), group in summary_df.groupby(['tower_id', 'tower_name', 'window_size_m']):
+        # Sort by total overlap area and take top 10
+        top10 = group.nlargest(10, 'total_overlap_area_km2')
+        top10 = top10.copy()
+        top10['rank'] = range(1, len(top10) + 1)
+        top10_list.append(top10)
+    
+    if top10_list:
+        top10_df = pd.concat(top10_list, ignore_index=True)
+        
+        # Select columns
+        top10_cols = [
+            'tower_id', 'tower_name', 'window_size_m', 'rank',
+            'SURVEY_YEAR', 'original_agent', 'original_damage_type',
+            'total_overlap_area_km2', 'percent_of_window_overlapped_total',
+            'mean_damage_intensity_mid', 'high_damage_50_record_count',
+            'tower_inside_any_polygon',
+            'mortality_overlap_area_km2', 'defoliation_overlap_area_km2',
+            'discoloration_overlap_area_km2', 'crown_dieback_overlap_area_km2',
+            'dominant_host', 'states_present'
+        ]
+        top10_df = top10_df[top10_cols]
+        
+        # Save
+        output_file = Path(OUTPUT_FOLDER) / "NE_AOI_tower_top10_disturbances_by_window.csv"
+        top10_df.to_csv(output_file, index=False)
+        print(f"  Saved to: {output_file}")
+        print(f"  Records: {len(top10_df)}")
+    else:
+        print("  No top 10 records to save")
+else:
+    print("  No overlaps found, skipping top 10 table")
+
+
+# ============================================================================
+# Step 9: Save simple tower screening recommendation table (FIXED - safer)
+# ============================================================================
+
+print("\n" + "=" * 80)
+print("Step 9: Saving tower screening recommendations")
+print("=" * 80)
+
+recommendations = []
+
+for tower_id in tower_gdf[id_col].unique():
+    tower_name = tower_gdf[tower_gdf[id_col] == tower_id]['tower_name'].iloc[0] if 'tower_name' in tower_gdf.columns else tower_id
+    
+    rec = {
+        'tower_id': tower_id,
+        'tower_name': tower_name,
+        'has_disturbance_500m': False,
+        'has_disturbance_1500m': False,
+        'has_disturbance_2500m': False,
+        'has_disturbance_4000m': False,
+        'years_with_disturbance_500m': '',
+        'years_with_disturbance_1500m': '',
+        'years_with_disturbance_2500m': '',
+        'years_with_disturbance_4000m': '',
+        'top_disturbance_500m': '',
+        'top_disturbance_1500m': '',
+        'top_disturbance_2500m': '',
+        'top_disturbance_4000m': ''
+    }
+    
+    # Check each window size
+    for size in WINDOW_SIZES:
+        size_col = f'has_disturbance_{size}m'
+        years_col = f'years_with_disturbance_{size}m'
+        top_col = f'top_disturbance_{size}m'
+        
+        # Get overlaps for this tower and window
+        tower_overlaps = overlaps_df[(overlaps_df['tower_id'] == tower_id) & 
+                                     (overlaps_df['window_size_m'] == size)]
+        
+        if len(tower_overlaps) > 0:
+            rec[size_col] = True
+            
+            # Get unique years
+            years = tower_overlaps['SURVEY_YEAR'].dropna().unique()
+            rec[years_col] = ', '.join(sorted([str(int(y)) for y in years if pd.notna(y)]))
+            
+            # Get top disturbance (by overlap area) - SAFER VERSION with missing value handling
+            top_group = (
+                tower_overlaps
+                .groupby(['original_agent', 'original_damage_type', 'SURVEY_YEAR'], dropna=False)['overlap_area_km2']
+                .sum()
+            )
+            
+            if len(top_group) > 0:
+                top_idx = top_group.idxmax()
+                if isinstance(top_idx, tuple):
+                    # Handle potential None/NaN values in the tuple
+                    agent = top_idx[0] if top_idx[0] is not None else 'Unknown Agent'
+                    damage_type = top_idx[1] if top_idx[1] is not None else 'Unknown Damage'
+                    year = top_idx[2] if top_idx[2] is not None else 'Unknown Year'
+                    rec[top_col] = f"{agent} - {damage_type} ({year})"
+    
+    # Determine recommended first window
+    if rec['has_disturbance_500m']:
+        rec['recommended_first_window_to_test'] = '500m'
+    elif rec['has_disturbance_1500m']:
+        rec['recommended_first_window_to_test'] = '1500m'
+    elif rec['has_disturbance_2500m']:
+        rec['recommended_first_window_to_test'] = '2500m'
+    elif rec['has_disturbance_4000m']:
+        rec['recommended_first_window_to_test'] = '4000m'
+    else:
+        rec['recommended_first_window_to_test'] = 'no nearby mapped disturbance'
+    
+    recommendations.append(rec)
+
+recommendations_df = pd.DataFrame(recommendations)
+
+# Save
+output_file = Path(OUTPUT_FOLDER) / "NE_AOI_tower_screening_recommendations.csv"
+recommendations_df.to_csv(output_file, index=False)
+print(f"  Saved to: {output_file}")
+print(f"  Records: {len(recommendations_df)}")
+
+
+# ============================================================================
+# Step 10: Console summary
+# ============================================================================
+
+print("\n" + "=" * 80)
+print("Step 10: Console Summary")
+print("=" * 80)
+
+print(f"\nNumber of towers loaded: {len(tower_gdf)}")
+print(f"Number of disturbance polygons loaded: {len(disturbance_gdf)}")
+print(f"Number of tower-window polygon overlaps: {len(overlaps_df)}")
+
+print("\n" + "-" * 80)
+print("Tower-specific summaries:")
+print("-" * 80)
+
+for tower_id in tower_gdf[id_col].unique():
+    tower_name = tower_gdf[tower_gdf[id_col] == tower_id]['tower_name'].iloc[0] if 'tower_name' in tower_gdf.columns else tower_id
+    
+    print(f"\nTower: {tower_id} ({tower_name})")
+    
+    # Check disturbances in each window
+    for size in WINDOW_SIZES:
+        count = len(overlaps_df[(overlaps_df['tower_id'] == tower_id) & 
+                               (overlaps_df['window_size_m'] == size)])
+        print(f"  {size}m window: {'Yes' if count > 0 else 'No'} ({count} overlaps)")
+    
+    # Get top 5 disturbances for 1500m and 4000m
+    for size in [1500, 4000]:
+        tower_overlaps = overlaps_df[(overlaps_df['tower_id'] == tower_id) & 
+                                     (overlaps_df['window_size_m'] == size)]
+        
+        if len(tower_overlaps) > 0:
+            top5 = tower_overlaps.groupby(['original_agent', 'original_damage_type', 'SURVEY_YEAR'])['overlap_area_km2'].sum().nlargest(5)
+            print(f"\n  Top 5 for {size}m window:")
+            for idx, area in top5.items():
+                print(f"    - {idx[0]} / {idx[1]} ({idx[2]}) - {area:.2f} km²")
+    
+    # Get recommendation
+    rec = recommendations_df[recommendations_df['tower_id'] == tower_id]
+    if len(rec) > 0:
+        print(f"\n  Recommended first window: {rec['recommended_first_window_to_test'].iloc[0]}")
+
+print("\n" + "=" * 80)
+print("Processing complete!")
+print("=" * 80)N_YEARS = 32
 N_LONG_OBS = 13104
 N_SPEI_TIMESCALES = 7
 
