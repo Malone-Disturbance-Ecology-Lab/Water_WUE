@@ -472,6 +472,24 @@ q1_smooth_gam <- mgcv::gam(
   select = TRUE
 )
 
+# Save smooth-term table for edf and p-values
+smooth_terms <- as.data.frame(summary(q1_smooth_gam)$s.table)
+smooth_terms$term <- rownames(smooth_terms)
+rownames(smooth_terms) <- NULL
+smooth_terms <- smooth_terms[, c("term", setdiff(names(smooth_terms), "term"))]
+
+# Add significance symbols for smooth-term p-values
+p_col_smooth <- grep("p-value", names(smooth_terms), value = TRUE)[1]
+if (!is.na(p_col_smooth)) {{
+  smooth_terms$signif <- sig(smooth_terms[[p_col_smooth]])
+}}
+
+write.csv(
+  smooth_terms,
+  file.path("{output_dir_r}", "Q1_final_smooth_gam_smooth_terms.csv"),
+  row.names = FALSE
+)
+
 # SMOOTH GAM PREDICTIONS (Panel C)
 smooth_grid <- expand.grid(
   difference_type = levels(q1_data$difference_type),
@@ -655,6 +673,7 @@ expected_r_outputs = [
     "Q1_final_near_normal_mixed_predictions_TET.csv",
     # Panel C
     "Q1_final_smooth_gam_predictions_TET.csv",
+    "Q1_final_smooth_gam_smooth_terms.csv",
     # Panel D
     "Q1_final_linear_gam_predictions_TET.csv",
     "Q1_final_gam_model_comparison.csv",
@@ -756,6 +775,7 @@ print("\nLoading R output CSVs...")
 summary_df = pd.read_csv(os.path.join(output_dir, "Q1_final_near_normal_summary_by_difference_type.csv"))
 mixed_pred = pd.read_csv(os.path.join(output_dir, "Q1_final_near_normal_mixed_predictions_TET.csv"))
 smooth_pred = pd.read_csv(os.path.join(output_dir, "Q1_final_smooth_gam_predictions_TET.csv"))
+smooth_terms = pd.read_csv(os.path.join(output_dir, "Q1_final_smooth_gam_smooth_terms.csv"))
 gam_comp = pd.read_csv(os.path.join(output_dir, "Q1_final_gam_model_comparison.csv"))
 
 # Define ecosystem colors
@@ -766,6 +786,7 @@ diff_label_levels = ["WUE_ET - WUE_T", "WUE_ET - WUE_E", "WUE_E - WUE_T"]
 print(f"  Summary: {len(summary_df)} rows")
 print(f"  Mixed predictions: {len(mixed_pred)} rows")
 print(f"  Smooth GAM predictions: {len(smooth_pred)} rows")
+print(f"  Smooth GAM terms: {len(smooth_terms)} rows")
 
 # Apply theme
 theme_wue_manuscript()
@@ -994,6 +1015,7 @@ This is the FINAL Q1 analysis for the WUE manuscript.
 
 ### Panel C (Smooth GAM)
 - `Q1_final_smooth_gam_predictions_TET.csv`
+- `Q1_final_smooth_gam_smooth_terms.csv`
 
 ### Panel D (Model Comparison)
 - `Q1_final_linear_gam_predictions_TET.csv` (diagnostic only)
@@ -1055,6 +1077,7 @@ main_csvs = [
     "Q1_final_near_normal_summary_by_difference_type.csv",
     "Q1_final_near_normal_mixed_predictions_TET.csv",
     "Q1_final_smooth_gam_predictions_TET.csv",
+    "Q1_final_smooth_gam_smooth_terms.csv",
     "Q1_final_gam_model_comparison.csv",
     "Q1_final_linear_gam_predictions_TET.csv",
     "Q1_final_near_normal_mixed_likelihood_ratio_tests.csv",
