@@ -14,7 +14,7 @@ Purpose:
 - Plot only actual site markers.
 - No changed-site rings.
 - No site-name labels.
-- Big legend with N sites per coast.
+- Big legend with coast names (no redundant N counts, since counts are on the figure).
 - Saves nothing.
 """
 
@@ -301,10 +301,10 @@ else:
 # =============================================================================
 
 COAST_COLORS = {
-    "Atlantic Coast": "#0000FF",   # blue
-    "Pacific Coast": "#FF0000",    # red
-    "Gulf Coast": "#00AA00",       # green
-    "AK Coast": "#8000FF",         # purple
+    "Atlantic Coast": "#2E8B57",   # SeaGreen
+    "Pacific Coast":  "#DC143C",   # Crimson
+    "Gulf Coast":     "#00CED1",   # DarkTurquoise
+    "AK Coast":       "#8B4513",   # SaddleBrown
 }
 
 COAST_ORDER = [
@@ -428,17 +428,15 @@ plot_one_panel(
 
 
 # =============================================================================
-# BIG COAST-ONLY LEGEND
+# BIG COAST-ONLY LEGEND (N counts removed – they are already on the figure)
 # =============================================================================
-
-updated_counts = coast_counts_for_label(site_df, "updated_coast")
 
 legend_handles = [
     Line2D(
         [0], [0],
         marker="o",
         linestyle="None",
-        label=f"{coast} (N={updated_counts[coast]})",
+        label=f"{coast}",
         markerfacecolor=COAST_COLORS[coast],
         markeredgecolor=COAST_COLORS[coast],
         markersize=18
@@ -452,7 +450,7 @@ fig.legend(
     ncol=4,
     frameon=True,
     fontsize=16,
-    title="Coast regions, updated workflow",
+    title="Coast regions",
     title_fontsize=18,
     borderpad=1.3,
     labelspacing=1.1,

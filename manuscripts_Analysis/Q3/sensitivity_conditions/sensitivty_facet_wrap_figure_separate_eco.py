@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Thu Jul 16 08:30:06 2026
+
+@author: ammar
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Q3_combined_figure_2x4_GridSpec.py
 
 Single figure with:
@@ -9,6 +16,8 @@ Single figure with:
 
 All blocks have the same width and height.
 GridSpec layout: Upland = row0, cols0-2; Freshwater = row0, cols2-4; Saline = row1, cols1-3
+
+Threshold markers added matching main Panel A logic.
 """
 
 import os
@@ -16,6 +25,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
+from matplotlib.lines import Line2D
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -40,6 +50,16 @@ ecosystem_order = ["Upland", "Freshwater", "Saline"]
 spei_order = ["SPEI_3", "SPEI_24", "SPEI_36", "SPEI_48"]
 spei_labels = ["SPEI-3", "SPEI-24", "SPEI-36", "SPEI-48"]
 
+# Threshold marker styles
+THRESHOLD_LEVELS = [5, 10, 20]
+THRESHOLD_MARKER_MAP = {5: "o", 10: "s", 20: "^"}
+
+def get_threshold_marker(threshold_pct):
+    try:
+        return THRESHOLD_MARKER_MAP[int(threshold_pct)]
+    except Exception:
+        return "s"
+
 # -----------------------------------------------------------------------------
 # LOAD AND AGGREGATE DATA
 # -----------------------------------------------------------------------------
@@ -56,6 +76,66 @@ agg_df = df.groupby(
     upper_pct=("predicted_upper_pct", "mean"),
     n_months=("month_f", "nunique")
 ).reset_index()
+
+# -----------------------------------------------------------------------------
+# COMPUTE THRESHOLD MARKERS
+# -----------------------------------------------------------------------------
+def find_spei_threshold_from_mean_curve(group_data, threshold_pct,
+                                        anomaly_side, impact_direction):
+    if group_data.empty:
+        return np.nan
+    g = group_data.sort_values("SPEI_value").copy()
+    if anomaly_side == "dry":
+        side_filter = g["SPEI_value"] < -1
+    else:
+        side_filter = g["SPEI_value"] > 1
+    if impact_direction == "increase":
+        direction_filter = g["mean_pct"] >= threshold_pct
+    else:
+        direction_filter = g["mean_pct"] <= -threshold_pct
+    threshold_values = g.loc[side_filter & direction_filter, "SPEI_value"].dropna()
+    if threshold_values.empty:
+        return np.nan
+    if anomaly_side == "dry":
+        return threshold_values.max()
+    else:
+        return threshold_values.min()
+
+def build_threshold_markers_from_agg(agg_df):
+    marker_rows = []
+    group_cols = ["coast_region", "water_class", "SPEI_timescale"]
+    for (coast, ecosystem, spei), g in agg_df.groupby(group_cols, observed=True):
+        for threshold_pct in THRESHOLD_LEVELS:
+            for anomaly_side in ["dry", "wet"]:
+                for impact_direction in ["decrease", "increase"]:
+                    spei_threshold = find_spei_threshold_from_mean_curve(
+                        g, threshold_pct, anomaly_side, impact_direction
+                    )
+                    if np.isfinite(spei_threshold):
+                        signed_threshold = threshold_pct if impact_direction == "increase" else -threshold_pct
+                        marker_rows.append({
+                            "coast_region": coast,
+                            "water_class": ecosystem,
+                            "SPEI_timescale": spei,
+                            "threshold_pct": threshold_pct,
+                            "threshold_label": f"{threshold_pct}%",
+                            "anomaly_side": anomaly_side,
+                            "impact_direction": impact_direction,
+                            "SPEI_threshold": spei_threshold,
+                            "pct_change_threshold": signed_threshold
+                        })
+    return pd.DataFrame(marker_rows)
+
+threshold_markers = build_threshold_markers_from_agg(agg_df)
+
+print("\nThreshold markers detected from averaged supplementary curves:")
+if threshold_markers.empty:
+    print("  No threshold markers detected.")
+else:
+    print(threshold_markers.groupby(
+        ["water_class", "coast_region", "SPEI_timescale", "threshold_pct"],
+        observed=True
+    ).size().reset_index(name="n_markers").to_string(index=False))
 
 # -----------------------------------------------------------------------------
 # Y-LIMITS PER (ECOSYSTEM, COAST)
@@ -83,20 +163,21 @@ def fill_ecosystem_block(fig, outer_spec, ecosystem, panel_title):
     """
     Create one 4×4 ecosystem block inside a fixed GridSpec slot.
     """
+    # GREATLY increased hspace for maximum row separation
     inner = outer_spec.subgridspec(
         4, 4,
-        wspace=0.12,
-        hspace=0.16
+        wspace=0.15,
+        hspace=0.40          # big vertical gap between rows
     )
 
     axes = np.empty((4, 4), dtype=object)
 
-    # FONT SIZES
-    spei_title_fontsize = 26
-    tick_fontsize = 33
-    row_label_fontsize = 30
-    section_fontsize = 30
-    line_width = 4.0
+    # MASSIVELY SCALED UP FONT SIZES
+    spei_title_fontsize = 34
+    tick_fontsize = 44       # big enough to read easily
+    row_label_fontsize = 38
+    section_fontsize = 38
+    line_width = 5.0
     ribbon_alpha = 0.10
 
     # Section title
@@ -146,9 +227,35 @@ def fill_ecosystem_block(fig, outer_spec, ecosystem, panel_title):
                 )
 
             # Reference lines
-            ax.axhline(0, color="black", linestyle="-", linewidth=1.4, alpha=0.65)
-            ax.axvline(-1, color="gray", linestyle="--", linewidth=1.4, alpha=0.65)
-            ax.axvline(1, color="gray", linestyle="--", linewidth=1.4, alpha=0.65)
+            ax.axhline(0, color="black", linestyle="-", linewidth=1.8, alpha=0.65)
+            ax.axvline(-1, color="gray", linestyle="--", linewidth=1.8, alpha=0.65)
+            ax.axvline(1, color="gray", linestyle="--", linewidth=1.8, alpha=0.65)
+
+            # Threshold markers with different sizes to highlight triangle
+            markers_sub = threshold_markers[
+                (threshold_markers["coast_region"] == coast) &
+                (threshold_markers["water_class"] == ecosystem) &
+                (threshold_markers["SPEI_timescale"] == spei)
+            ]
+
+            for _, mrow in markers_sub.iterrows():
+                marker = get_threshold_marker(mrow["threshold_pct"])
+                # Larger size for triangle (20%) so it's as visible as others
+                if mrow["threshold_pct"] == 20:
+                    marker_size = 550
+                else:
+                    marker_size = 450
+
+                ax.scatter(
+                    mrow["SPEI_threshold"],
+                    mrow["pct_change_threshold"],
+                    color=coast_palette[coast],
+                    s=marker_size,
+                    marker=marker,
+                    edgecolors="white",
+                    linewidths=1.8,
+                    zorder=7
+                )
 
             # Row-specific y-limit
             ylim = y_lims[(ecosystem, coast)]
@@ -164,41 +271,62 @@ def fill_ecosystem_block(fig, outer_spec, ecosystem, panel_title):
 
             # SPEI titles only on top row
             if coast_idx == 0:
-                ax.set_title(spei_labels[col], fontsize=spei_title_fontsize, pad=8)
+                ax.set_title(spei_labels[col], fontsize=spei_title_fontsize, pad=12)
 
             # Coast labels only on leftmost column
             if col == 0:
                 ax.set_ylabel(
                     coast_labels_plot[coast_idx],
                     fontsize=row_label_fontsize,
-                    labelpad=6,          # reduced from 10 to reduce overlap
+                    labelpad=10,
                     rotation=90
                 )
-                ax.tick_params(axis="y", labelsize=tick_fontsize, pad=8)
+                ax.tick_params(axis="y", labelsize=tick_fontsize, pad=10)
             else:
                 ax.tick_params(axis="y", labelleft=False)
 
             # X tick labels only on bottom row of each block
             if coast_idx == 3:
-                ax.tick_params(axis="x", labelsize=tick_fontsize, pad=8)
+                ax.tick_params(axis="x", labelsize=tick_fontsize, pad=10)
             else:
                 ax.tick_params(axis="x", labelbottom=False)
+
+            # -----------------------------------------------------------------
+            # VERY VISIBLE TICK LINES – long, thick, and clearly drawn
+            # -----------------------------------------------------------------
+            ax.tick_params(
+                axis='both',
+                which='major',
+                direction='out',
+                length=18,          # very long tick marks
+                width=3.0,          # very thick tick lines
+                colors='black',
+                bottom=True,
+                left=True,
+                top=False,
+                right=False,
+                pad=12
+            )
+            # Thick axis spines
+            for spine in ax.spines.values():
+                spine.set_linewidth(3.0)
 
     return axes
 
 # -----------------------------------------------------------------------------
-# CREATE MAIN FIGURE – INCREASED LEFT MARGIN FOR Y-LABEL
+# CREATE MAIN FIGURE – HUGE SIZE
 # -----------------------------------------------------------------------------
-fig = plt.figure(figsize=(36, 28))
+fig = plt.figure(figsize=(50, 40))   # extremely large
 
+# Slightly reduced hspace to keep block c from being too far down
 outer = fig.add_gridspec(
     2, 4,
-    left=0.1,             # increased from 0.05 to give space for y-label
+    left=0.1,
     right=0.98,
     top=0.96,
     bottom=0.07,
     wspace=0.35,
-    hspace=0.40
+    hspace=0.28          # reduced to bring block c up, but still enough room
 )
 
 upland_axes = fill_ecosystem_block(
@@ -223,28 +351,62 @@ saline_axes = fill_ecosystem_block(
 )
 
 # -----------------------------------------------------------------------------
-# GLOBAL AXIS LABELS – repositioned to avoid coast labels
+# GLOBAL AXIS LABELS – extra large
 # -----------------------------------------------------------------------------
 fig.text(
     0.50, 0.035,
     "SPEI",
     ha="center",
-    fontsize=32
+    fontsize=40
 )
 
 fig.text(
-    0.01, 0.73,                # moved slightly right, but still outside axes
+    0.01, 0.73,
     r"WUE$_{T}$ change from near-normal (%)",
     va="center",
     rotation=90,
-    fontsize=32
+    fontsize=40
 )
+
+# -----------------------------------------------------------------------------
+# THRESHOLD MARKER LEGEND – big and clear
+# -----------------------------------------------------------------------------
+if not threshold_markers.empty:
+    present_thresholds = sorted(threshold_markers["threshold_pct"].unique())
+
+    # Make triangle in legend larger as well
+    marker_handles = []
+    for tp in [5, 10, 20]:
+        if tp in present_thresholds:
+            ms = 28 if tp == 20 else 24   # triangle gets bigger
+            marker_handles.append(
+                Line2D(
+                    [0], [0],
+                    marker=get_threshold_marker(tp),
+                    linestyle="None",
+                    markerfacecolor="gray",
+                    markeredgecolor="white",
+                    markeredgewidth=1.8,
+                    markersize=ms,
+                    label=f"{tp}%"
+                )
+            )
+
+    fig.legend(
+        handles=marker_handles,
+        title="Threshold change (%)",
+        loc="center",
+        bbox_to_anchor=(0.88, 0.30),
+        frameon=True,
+        fontsize=36,
+        title_fontsize=36
+    )
 
 # -----------------------------------------------------------------------------
 # SAVE WITH DPI = 600
 # -----------------------------------------------------------------------------
 output_file = os.path.join(output_dir, "Q3_combined_2row_layout_equal_blocks.png")
-fig.savefig(output_file, dpi=600, bbox_inches="tight")
+fig.savefig(output_file, dpi=500, bbox_inches="tight")
 print(f"High-res combined figure saved to: {output_file}")
 
 plt.show()
