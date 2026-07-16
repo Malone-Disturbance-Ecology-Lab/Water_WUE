@@ -11,6 +11,7 @@ Panel B: Site sensitivity grouped by coastline.
 - Common x‑axis range (0 to max, ticks every 25) across all panels.
 - Diagnostic print for data check.
 - Coast name font size reduced to 22 (only y‑tick labels on left panel).
+- Added vertical dotted reference lines at 5%, 10%, and 20%.
 """
 
 import os
@@ -200,6 +201,19 @@ for idx, timescale in enumerate(SELECTED_TIMESCALES):
         )
         ax.spines['bottom'].set_visible(True)
         ax.spines['bottom'].set_linewidth(1.0)
+
+        # ===== ADD VERTICAL REFERENCE LINES =====
+        # Dotted vertical lines at 5%, 10%, 20% (matching Malone's R workflow)
+        for xref in [5, 10, 20]:
+            ax.axvline(
+                x=xref,
+                color="0.65",
+                linestyle=":",
+                linewidth=1.0,
+                alpha=1.0,
+                zorder=1
+            )
+        # ========================================
 
         ax.grid(False)
 

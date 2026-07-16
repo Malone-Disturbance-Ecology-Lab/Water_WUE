@@ -254,15 +254,102 @@ def classify_response_direction(x):
         return "WUE_T increase"
 
 
+# --------------------------------------------------------------------------
+# Proximity-based coast classifier
+# Drop-in replacement for old longitude-only classifier.
+# Keeps same function name: classify_coast_region(lat, long)
+# Keeps same output labels: AK Coast, Pacific Coast, Gulf Coast, Atlantic Coast
+# --------------------------------------------------------------------------
+
+EARTH_RADIUS_KM = 6371.0088
+
+COAST_POLYLINES = {
+    "Pacific Coast": [
+        (32.6, -117.2), (33.6, -118.2), (34.4, -119.7), (35.4, -120.9),
+        (36.6, -121.9), (37.8, -122.5), (39.0, -123.7), (41.0, -124.2),
+        (43.5, -124.2), (45.5, -123.9), (47.0, -124.1), (48.8, -124.7)
+    ],
+    "Gulf Coast": [
+        (25.8, -97.2), (28.0, -96.8), (29.3, -94.8), (29.5, -93.0),
+        (29.2, -91.5), (29.3, -90.0), (29.5, -88.8), (30.2, -87.7),
+        (30.1, -86.2), (29.9, -85.3), (29.7, -84.3), (28.8, -83.0),
+        (27.8, -82.8), (26.6, -82.2), (25.9, -81.8), (25.3, -81.1),
+        (25.0, -80.8)
+    ],
+    "Atlantic Coast": [
+        (25.1, -80.3), (26.0, -80.1), (27.0, -80.1), (28.4, -80.6),
+        (29.0, -80.9), (29.9, -81.3), (30.4, -81.4), (31.2, -81.3),
+        (32.0, -80.8), (33.0, -79.5), (34.5, -77.8), (35.7, -75.6),
+        (36.8, -75.9), (38.5, -75.0), (39.5, -74.3), (40.5, -73.9),
+        (41.3, -72.0), (42.4, -70.8), (43.5, -70.2)
+    ],
+}
+
+def _seg_dist(lat, lon, a_lat, a_lon, b_lat, b_lon):
+    """
+    Minimum distance from point to coastline segment AB
+    using local equirectangular projection.
+    """
+    import math
+
+    lat0 = math.radians(lat)
+
+    def proj(lat2, lon2):
+        x = EARTH_RADIUS_KM * math.radians(lon2 - lon) * math.cos(lat0)
+        y = EARTH_RADIUS_KM * math.radians(lat2 - lat)
+        return np.array([x, y], dtype=float)
+
+    p = np.array([0.0, 0.0], dtype=float)
+    a = proj(a_lat, a_lon)
+    b = proj(b_lat, b_lon)
+
+    ab = b - a
+    denom = np.dot(ab, ab)
+
+    if denom == 0:
+        return float(np.linalg.norm(p - a))
+
+    t = np.dot(p - a, ab) / denom
+    t = max(0.0, min(1.0, t))
+
+    closest = a + t * ab
+    return float(np.linalg.norm(p - closest))
+
+
+def _distance_to_polyline(lat, lon, polyline):
+    """Minimum distance from point to coastline polyline."""
+    distances = []
+
+    for i in range(len(polyline) - 1):
+        d = _seg_dist(lat, lon, *polyline[i], *polyline[i + 1])
+        distances.append(d)
+
+    return min(distances) if distances else float("inf")
+
+
 def classify_coast_region(lat, long):
-    if lat > 50:
+    """
+    Proximity-based coast classifier.
+
+    Returns:
+    AK Coast, Pacific Coast, Gulf Coast, Atlantic Coast, or Other/Check.
+    """
+    if pd.isna(lat) or pd.isna(long):
+        return "Other/Check"
+
+    lat = float(lat)
+    lon = float(long)
+
+    # Alaska handled separately
+    if lat >= 50:
         return "AK Coast"
-    elif long > -100:
-        return "Atlantic Coast"
-    elif long < -120:
-        return "Pacific Coast"
-    else:
-        return "Gulf Coast"
+
+    dists = {
+        name: _distance_to_polyline(lat, lon, polyline)
+        for name, polyline in COAST_POLYLINES.items()
+    }
+
+    return min(dists, key=dists.get)
 
 
 def theme_wue(ax, base_size=13):

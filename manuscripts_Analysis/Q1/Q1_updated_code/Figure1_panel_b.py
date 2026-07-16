@@ -102,7 +102,7 @@ edf_lookup = {
 # ------------------------------------------------------------------------------
 # Plotting
 # ------------------------------------------------------------------------------
-fig, axes = plt.subplots(1, 3, figsize=(24, 8), sharey=False)
+fig, axes = plt.subplots(1, 3, figsize=(24, 7), sharey=False)
 
 plt.rcParams.update({
     "font.size": 28,

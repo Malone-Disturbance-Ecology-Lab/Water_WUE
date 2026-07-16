@@ -35,9 +35,9 @@ ecosystem_colours = {
 
 # Two‑line y‑axis labels (difference + unit)
 diff_label_mapping = {
-    "WUE_ET - WUE_T": r"WUE$_{ET}$ – WUE$_{T}$\n(g C kg$^{-1}$ H$_2$O$^{-1}$)",
-    "WUE_ET - WUE_E": r"WUE$_{ET}$ – WUE$_{E}$\n(g C kg$^{-1}$ H$_2$O$^{-1}$)",
-    "WUE_E - WUE_T": r"WUE$_{E}$ – WUE$_{T}$\n(g C kg$^{-1}$ H$_2$O$^{-1}$)",
+    "WUE_ET - WUE_T": r"WUE$_{ET}$ – WUE$_{T}$ (g C kg$^{-1}$ H$_2$O$^{-1}$)",
+    "WUE_ET - WUE_E": r"WUE$_{ET}$ – WUE$_{E}$ (g C kg$^{-1}$ H$_2$O$^{-1}$)",
+    "WUE_E - WUE_T": r"WUE$_{E}$ – WUE$_{T}$ (g C kg$^{-1}$ H$_2$O$^{-1}$)",
 }
 diff_labels = list(diff_label_mapping.keys())
 
@@ -114,7 +114,7 @@ for i, diff_label in enumerate(diff_labels):
     ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
 
     # Panel label (a), (b), (c)
-    ax.text(-0.15, 1.02, f"{chr(97+i)})", transform=ax.transAxes,
+    ax.text(-0.15, 1.05, f"{chr(97+i)})", transform=ax.transAxes,
             fontsize=34, fontweight='bold', va='bottom', ha='left')
 
 # Adjust margins with more space between panels

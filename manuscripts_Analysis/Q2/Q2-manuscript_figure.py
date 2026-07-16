@@ -57,7 +57,7 @@ coast_labels = {
     "Atlantic Coast": "Atlantic",
     "Pacific Coast": "Pacific",
     "Gulf Coast": "Gulf",
-    "AK Coast": "AK"
+    "AK Coast": "Alaska"
 }
 
 df["coast_region"] = pd.Categorical(df["coast_region"], categories=coast_order, ordered=True)
@@ -66,9 +66,9 @@ df["water_class"] = pd.Categorical(df["water_class"], categories=ecosystem_order
 np.random.seed(42)
 
 # ------------------------------------------------------------------------------
-# Figure setup
+# Figure setup – standard 2x3 grid (no external legend column)
 # ------------------------------------------------------------------------------
-fig, axes = plt.subplots(2, 3, figsize=(24, 17))
+fig, axes = plt.subplots(2, 3, figsize=(26, 17))
 
 plt.rcParams.update({
     "font.size": 28,
@@ -92,34 +92,49 @@ ax_a = axes[0, 0]
 for eco in ecosystem_order:
     sub = df[df["water_class"] == eco]
     ax_a.scatter(sub["mean_TET"], sub["stability"],
-                 color=ecosystem_colours[eco], s=80, alpha=1.0,
+                 color=ecosystem_colours[eco], s=120, alpha=1.0,
                  label=eco, edgecolors='none')
     sub2 = sub.dropna(subset=["mean_TET", "stability"])
     if len(sub2) >= 3:
         slope, intercept, r, p, se = linregress(sub2["mean_TET"], sub2["stability"])
         x_vals = np.linspace(sub2["mean_TET"].min(), sub2["mean_TET"].max(), 50)
         ax_a.plot(x_vals, slope * x_vals + intercept,
-                  color=ecosystem_colours[eco], linewidth=2.5, linestyle='--')
+                  color=ecosystem_colours[eco], linewidth=1.5, linestyle='--')
+
+# Overall regression line with p-value in the label
+overall = df.dropna(subset=["mean_TET", "stability"])
+if len(overall) >= 3:
+    slope_all, intercept_all, _, _, _ = linregress(overall["mean_TET"], overall["stability"])
+    x_all = np.linspace(overall["mean_TET"].min(), overall["mean_TET"].max(), 50)
+    ax_a.plot(x_all, slope_all * x_all + intercept_all,
+              color='black', linewidth=4, linestyle='-',
+              label=f'Overall ({p_stab_text})')   # p‑value in legend
+
 ax_a.set_xlabel("Mean T:ET ratio")
 ax_a.set_ylabel("Stability")
-legend_a = ax_a.legend(loc='best', fontsize=28, labelspacing=0.2)
-for text, eco in zip(legend_a.get_texts(), ecosystem_order):
-    text.set_color(ecosystem_colours[eco])
+# Legend includes all labelled artists (ecosystems + overall)
+legend_a = ax_a.legend(loc='best', fontsize=24, labelspacing=0.2)
+# Colour ecosystem labels; keep overall black
+for text in legend_a.get_texts():
+    if text.get_text() in ecosystem_order:
+        text.set_color(ecosystem_colours[text.get_text()])
+    else:
+        text.set_color('black')
 ax_a.text(-0.20, 1.06, 'a)', transform=ax_a.transAxes,
           fontsize=40, fontweight='bold', va='bottom', ha='left')
-ax_a.text(0.5, 1.05, f'ρ = {rho:.2f}; {p_stab_text}', transform=ax_a.transAxes,
-          fontsize=30, fontweight='bold', va='bottom', ha='center')
-ax_a.xaxis.set_major_locator(MaxNLocator(5))
+# Removed the top-centre annotation (ρ and p)
+ax_a.xaxis.set_major_locator(MaxNLocator(4))
 ax_a.yaxis.set_major_locator(MaxNLocator(5))
+ax_a.tick_params(axis='x', labelsize=30)
 
 # ==============================================================================
-# Panel b – Stability vs T:ET by coast
+# Panel b – Stability vs T:ET by coast (unchanged from previous version)
 # ==============================================================================
 ax_b = axes[0, 1]
 for coast in coast_order:
     sub = df[df["coast_region"] == coast]
     ax_b.scatter(sub["mean_TET"], sub["stability"],
-                 color=coast_colours[coast], s=80, alpha=1.0,
+                 color=coast_colours[coast], s=120, alpha=1.0,
                  label=coast_labels[coast], edgecolors='none')
     sub2 = sub.dropna(subset=["mean_TET", "stability"])
     if len(sub2) >= 3:
@@ -129,30 +144,31 @@ for coast in coast_order:
                   color=coast_colours[coast], linewidth=2.5, linestyle='--')
 ax_b.set_xlabel("Mean T:ET ratio")
 ax_b.set_ylabel("Stability")
-legend_b = ax_b.legend(loc='best', fontsize=28, labelspacing=0.2)
+legend_b = ax_b.legend(loc='best', fontsize=24, labelspacing=0.2)
 for text, coast in zip(legend_b.get_texts(), coast_order):
     text.set_color(coast_colours[coast])
 ax_b.text(-0.20, 1.06, 'b)', transform=ax_b.transAxes,
           fontsize=40, fontweight='bold', va='bottom', ha='left')
-ax_b.text(0.5, 1.05, f'{p_stab_coast_text}', transform=ax_b.transAxes,
-          fontsize=36, fontweight='bold', va='bottom', ha='center')
-ax_b.xaxis.set_major_locator(MaxNLocator(5))
+# p‑value under legend (bottom‑left), font size 28
+ax_b.text(0.02, 0.02, p_stab_coast_text, transform=ax_b.transAxes,
+          fontsize=28, fontweight='bold', va='bottom', ha='left')
+ax_b.xaxis.set_major_locator(MaxNLocator(4))
 ax_b.yaxis.set_major_locator(MaxNLocator(5))
+ax_b.tick_params(axis='x', labelsize=30)
 
 # ==============================================================================
-# Panel c – SPEI‑3 plasticity slope by coast
+# Panel c – SPEI‑3 plasticity slope by coast – p‑value moved to bottom‑right
 # ==============================================================================
 ax_c = axes[0, 2]
 positions = np.arange(1, len(coast_order) + 1)
 
 for i, coast in enumerate(coast_order):
     vals = df[df["coast_region"] == coast]["plasticity_slope_SPEI3"].dropna().values
+    coast_p2 = np.percentile(vals, 2)
+    capped_vals = np.maximum(vals, coast_p2)
     x_jitter = np.random.normal(i + 1, 0.06, size=len(vals))
-    ax_c.scatter(x_jitter, vals, alpha=0.5, s=50,
+    ax_c.scatter(x_jitter, capped_vals, alpha=0.5, s=140,
                  color=coast_colours[coast], edgecolors='none')
-
-for i, coast in enumerate(coast_order):
-    vals = df[df["coast_region"] == coast]["plasticity_slope_SPEI3"].dropna().values
     bp = ax_c.boxplot(vals, positions=[i+1], widths=0.35, patch_artist=True,
                       showmeans=False, showfliers=False,
                       boxprops=dict(linewidth=2, color=coast_colours[coast],
@@ -169,13 +185,14 @@ for tick, coast in zip(ax_c.get_xticklabels(), coast_order):
 ax_c.set_ylabel("SPEI-3 plasticity slope")
 ax_c.text(-0.20, 1.06, 'c)', transform=ax_c.transAxes,
           fontsize=40, fontweight='bold', va='bottom', ha='left')
-ax_c.text(0.5, 1.05, f'{p_slope_text}', transform=ax_c.transAxes,
-          fontsize=36, fontweight='bold', va='bottom', ha='center')
+# p‑value moved to bottom‑right
+ax_c.text(0.98, 0.02, p_slope_text, transform=ax_c.transAxes,
+          fontsize=28, fontweight='bold', va='bottom', ha='right')
 ax_c.yaxis.set_major_locator(MaxNLocator(5))
 ax_c.tick_params(axis='x', labelsize=28)
 
 # ==============================================================================
-# Panel d – Plasticity range by coast – fixed: removed x-axis locator
+# Panel d – Plasticity range by coast – p‑value moved to top‑left
 # ==============================================================================
 ax_d = axes[1, 0]
 
@@ -197,7 +214,7 @@ for i, pc in enumerate(violin_parts['bodies']):
 for i, coast in enumerate(coast_order):
     vals = df[df["coast_region"] == coast]["plasticity_p95_p05"].dropna().values
     x_jitter = np.random.normal(i + 1, 0.06, size=len(vals))
-    ax_d.scatter(x_jitter, vals, alpha=0.6, s=50,
+    ax_d.scatter(x_jitter, vals, alpha=0.6, s=140,
                  color=coast_colours[coast], edgecolors='none')
 
 for i, coast in enumerate(coast_order):
@@ -217,28 +234,32 @@ ax_d.set_xticklabels([coast_labels[c] for c in coast_order], rotation=45, ha='ri
 for tick, coast in zip(ax_d.get_xticklabels(), coast_order):
     tick.set_color(coast_colours[coast])
 
-ax_d.set_xlim(0.5, len(coast_order) + 0.5)   # ensure labels are inside
-ax_d.set_ylabel("Plasticity range (95th / 5th)")
+ax_d.set_xlim(0.5, len(coast_order) + 0.5)
+ax_d.set_ylabel("Plasticity range")
 ax_d.text(-0.20, 1.06, 'd)', transform=ax_d.transAxes,
           fontsize=40, fontweight='bold', va='bottom', ha='left')
-ax_d.text(0.5, 1.05, f'{p_range_text}', transform=ax_d.transAxes,
-          fontsize=36, fontweight='bold', va='bottom', ha='center')
-
-# Keep y-axis ticks, but DO NOT set x-axis locator
+# p‑value moved to top‑left
+ax_d.text(0.02, 0.95, p_range_text, transform=ax_d.transAxes,
+          fontsize=28, fontweight='bold', va='top', ha='left')
 ax_d.yaxis.set_major_locator(MaxNLocator(5))
-# ax_d.xaxis.set_major_locator(MaxNLocator(5))   # REMOVED – this was causing label loss
 ax_d.tick_params(axis='x', labelsize=28)
 
 # ==============================================================================
-# Panel e – Drought resistance (overall)
+# Panel e – Drought resistance (sites colored by coast, larger markers)
 # ==============================================================================
 ax_e = axes[1, 1]
-vals_e = df["resistance"].dropna().values
-x_jitter_e = np.random.normal(1, 0.08, size=len(vals_e))
-ax_e.scatter(x_jitter_e, vals_e, alpha=0.6, s=50,
-             color='gray', edgecolors='none')
 
-bp_e = ax_e.boxplot(vals_e, positions=[1], widths=0.4, patch_artist=True,
+x_jitter_e = np.random.normal(1, 0.08, size=len(df))
+
+for coast in coast_order:
+    mask = df["coast_region"] == coast
+    vals = df.loc[mask, "resistance"].dropna().values
+    x_vals = x_jitter_e[mask][~pd.isna(df.loc[mask, "resistance"])]
+    ax_e.scatter(x_vals, vals, alpha=0.6, s=140,
+                 color=coast_colours[coast], edgecolors='none', label=coast_labels[coast])
+
+vals_e_all = df["resistance"].dropna().values
+bp_e = ax_e.boxplot(vals_e_all, positions=[1], widths=0.4, patch_artist=True,
                     showmeans=False, showfliers=False,
                     boxprops=dict(linewidth=2, color='gray', facecolor='gray', alpha=0.25),
                     whiskerprops=dict(linewidth=2, color='gray'),
@@ -254,15 +275,21 @@ ax_e.text(-0.20, 1.06, 'e)', transform=ax_e.transAxes,
 ax_e.yaxis.set_major_locator(MaxNLocator(5))
 
 # ==============================================================================
-# Panel f – Drought recovery (overall)
+# Panel f – Drought recovery (sites colored by coast, larger markers)
 # ==============================================================================
 ax_f = axes[1, 2]
-vals_f = df["mean_recovery"].dropna().values
-x_jitter_f = np.random.normal(1, 0.08, size=len(vals_f))
-ax_f.scatter(x_jitter_f, vals_f, alpha=0.6, s=50,
-             color='gray', edgecolors='none')
 
-bp_f = ax_f.boxplot(vals_f, positions=[1], widths=0.4, patch_artist=True,
+x_jitter_f = np.random.normal(1, 0.08, size=len(df))
+
+for coast in coast_order:
+    mask = df["coast_region"] == coast
+    vals = df.loc[mask, "mean_recovery"].dropna().values
+    x_vals = x_jitter_f[mask][~pd.isna(df.loc[mask, "mean_recovery"])]
+    ax_f.scatter(x_vals, vals, alpha=0.6, s=140,
+                 color=coast_colours[coast], edgecolors='none', label=coast_labels[coast])
+
+vals_f_all = df["mean_recovery"].dropna().values
+bp_f = ax_f.boxplot(vals_f_all, positions=[1], widths=0.4, patch_artist=True,
                     showmeans=False, showfliers=False,
                     boxprops=dict(linewidth=2, color='gray', facecolor='gray', alpha=0.25),
                     whiskerprops=dict(linewidth=2, color='gray'),
@@ -278,15 +305,15 @@ ax_f.text(-0.20, 1.06, 'f)', transform=ax_f.transAxes,
 ax_f.yaxis.set_major_locator(MaxNLocator(5))
 
 # ------------------------------------------------------------------------------
-# Adjust spacing
+# Adjust spacing and save
 # ------------------------------------------------------------------------------
-plt.subplots_adjust(left=0.08, right=0.95, top=0.90, bottom=0.25,
-                    wspace=0.25, hspace=0.45)
+plt.subplots_adjust(left=0.06, right=0.95, top=0.92, bottom=0.13,
+                    wspace=0.28, hspace=0.50)
 
 save_dir = r"M:\Research\WUE_CUE\WUE_manuscript_version6\Q2\Q2_WUE_performance_figures"
 os.makedirs(save_dir, exist_ok=True)
 fig_output = os.path.join(save_dir, "Q2_performance_figure.png")
-fig.savefig(fig_output, dpi=600, bbox_inches='tight', pad_inches=0.5, facecolor='white')
+fig.savefig(fig_output, dpi=600, bbox_inches='tight', facecolor='white')
 print(f"Figure saved to: {fig_output}")
 
 plt.show()

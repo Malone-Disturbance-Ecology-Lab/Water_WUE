@@ -39,11 +39,17 @@ if (length(months_to_use) == 0) months_to_use <- intersect(6:8, as.numeric(level
 month_f_levels <- factor(months_to_use, levels = month_levels)
 cat("  Months used:", as.character(month_f_levels), "\n")
 
-# SPEI sequence (2nd-98th percentile, 120 points)
-spei_seq <- seq(quantile(data$SPEI_value, 0.02, na.rm=TRUE),
-                quantile(data$SPEI_value, 0.98, na.rm=TRUE),
-                length.out = 120)
-cat("  SPEI range:", round(min(spei_seq), 3), "to", round(max(spei_seq), 3), "\n")
+spei_lower <- max(-3, min(data$SPEI_value, na.rm = TRUE))
+spei_upper <- min(3, max(data$SPEI_value, na.rm = TRUE))
+
+spei_seq <- seq(
+    spei_lower,
+    spei_upper,
+    length.out = 160
+)
+
+cat("  SPEI range:", round(min(spei_seq), 3), "to", round(max(spei_seq), 3), "
+")
 
 site_ref <- levels(data$site_name)[1]
 
@@ -190,7 +196,7 @@ for (grp in groups) {
 cat("  Thresholds computed. Total combinations:", nrow(all_threshold_combos), "\n")
 
 # -------------------------------------------------------------------------
-# SAVE CSVs (identical to before)
+# SAVE CSVs
 # -------------------------------------------------------------------------
 prediction_curves <- grid_with_baseline %>%
     select(coast_region, water_class, month_f, SPEI_timescale, SPEI_value,
@@ -287,40 +293,3 @@ support <- full_grid %>%
 write.csv(support, file.path(results_dir, "observed_support_metadata.csv"), row.names = FALSE)
 
 cat("\nCSVs saved to:", results_dir, "\n")
-
-# Console summaries (same as before)
-cat("\n=== TOP 10 STRONGEST MODEL-PREDICTED REFERENCE CONDITIONS ===\n")
-top10_response <- response_magnitude %>%
-    arrange(desc(max_abs_pct_change)) %>%
-    head(10)
-print(top10_response)
-
-cat("\n=== TOP 10 COAST × ECOSYSTEM × SPEI TIMESCALE COMBINATIONS ===\n")
-top10_sensitivity <- sensitivity_summary %>%
-    arrange(desc(mean_max_abs_pct_change)) %>%
-    head(10)
-print(top10_sensitivity)
-
-cat("\n=== THRESHOLD STABILITY (combinations with thresholds across most months) ===\n")
-threshold_stability <- threshold_sensitivity %>%
-    filter(n_months_with_threshold >= 6) %>%
-    arrange(desc(n_months_with_threshold), desc(mean_SPEI_threshold))
-print(threshold_stability)
-
-cat("\n=== MAIN DIAGNOSTIC INTERPRETATION ===\n")
-cat("The sensitivity analysis used a full prediction grid across all coast × ecosystem,\n")
-cat("growing-season month, and SPEI timescale combinations to evaluate model-predicted\n")
-cat("WUE_T response magnitude and threshold location.\n\n")
-cat("Gulf Coast SPEI-3 remains the dominant response across reference conditions.\n")
-cat("The largest predicted magnitudes occur under Freshwater and Saline reference conditions,\n")
-cat("but the Upland reference condition also remains strongly sensitive,\n")
-cat("ranking third overall. This confirms that Upland WUE is highly responsive to drought\n")
-cat("for Gulf Coast sites, even when other ecosystem classes are used as reference.\n")
-cat("The Freshwater and Saline magnitudes are model-based reference-condition predictions,\n")
-cat("not evidence that observed Freshwater/Saline ecosystem smooths were stronger than Upland.\n")
-cat("Thresholds for dry-decrease 10% are stable across months for Gulf Coast Upland\n")
-cat("(mean ~ -2.06, SD = 0 across 7 growing-season months).\n")
-cat("Alaska Coast SPEI-48 does not appear among the top responses.\n")
-
-cat("\nDIAGNOSTIC COMPLETE.\n")
-cat("No figures saved. Temporary R script is in:", "M:/Research/WUE_CUE/Water_WUE/manuscripts_Analysis/Q3/sensitivity_conditions", "\n")

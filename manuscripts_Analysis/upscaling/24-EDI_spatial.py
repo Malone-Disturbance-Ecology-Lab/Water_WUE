@@ -28,12 +28,14 @@ increase events, including dry-only maps and prediction-interval support maps.
 
 The older pooled logistic EDI is retained as a secondary exposure diagnostic.
 
-Coast regions (consistent with Q3 / Q4 workflow):
-  AK Coast       lat > 50
-  Pacific Coast  lat <= 50 AND lon < -120
-  Gulf Coast     lat <= 50 AND -120 <= lon <= -100
-  Atlantic Coast lat <= 50 AND lon > -100
+Coast regions (consistent with updated Q3 / Q4 workflow):
+  AK Coast       lat >= 50
+  Pacific Coast  lat < 50 and closest to the Pacific Coast reference polyline
+  Gulf Coast     lat < 50 and closest to the Gulf Coast reference polyline
+  Atlantic Coast lat < 50 and closest to the Atlantic Coast reference polyline
 
+For non-Alaska locations, coast assignment is based on minimum distance to
+coastline reference polylines rather than fixed longitude cutoffs.
 Inputs
 ------
   Masked SPEI-3 files:
@@ -111,12 +113,178 @@ EDI_IMPACT = 0.70
 # ---------------------------------------------------------------------------
 # COAST REGION DEFINITIONS  (matches Q3 classify_coast_region)
 # ---------------------------------------------------------------------------
-COAST_REGIONS = {
-    "AK Coast":       lambda lat, lon: lat > 50,
-    "Pacific Coast":  lambda lat, lon: (lat <= 50) & (lon < -120),
-    "Gulf Coast":     lambda lat, lon: (lat <= 50) & (lon >= -120) & (lon <= -100),
-    "Atlantic Coast": lambda lat, lon: (lat <= 50) & (lon > -100),
+# ---------------------------------------------------------------------------
+# COAST REGION DEFINITIONS — proximity-based classifier
+# Matches updated Q4 classify_coast_region(lat, long)
+# ---------------------------------------------------------------------------
+
+REGION_NAMES = ["AK Coast", "Pacific Coast", "Gulf Coast", "Atlantic Coast"]
+
+EARTH_RADIUS_KM = 6371.0088
+
+COAST_POLYLINES = {
+    "Pacific Coast": [
+        (32.6, -117.2), (33.6, -118.2), (34.4, -119.7), (35.4, -120.9),
+        (36.6, -121.9), (37.8, -122.5), (39.0, -123.7), (41.0, -124.2),
+        (43.5, -124.2), (45.5, -123.9), (47.0, -124.1), (48.8, -124.7)
+    ],
+    "Gulf Coast": [
+        (25.8, -97.2), (28.0, -96.8), (29.3, -94.8), (29.5, -93.0),
+        (29.2, -91.5), (29.3, -90.0), (29.5, -88.8), (30.2, -87.7),
+        (30.1, -86.2), (29.9, -85.3), (29.7, -84.3), (28.8, -83.0),
+        (27.8, -82.8), (26.6, -82.2), (25.9, -81.8), (25.3, -81.1),
+        (25.0, -80.8)
+    ],
+    "Atlantic Coast": [
+        (25.1, -80.3), (26.0, -80.1), (27.0, -80.1), (28.4, -80.6),
+        (29.0, -80.9), (29.9, -81.3), (30.4, -81.4), (31.2, -81.3),
+        (32.0, -80.8), (33.0, -79.5), (34.5, -77.8), (35.7, -75.6),
+        (36.8, -75.9), (38.5, -75.0), (39.5, -74.3), (40.5, -73.9),
+        (41.3, -72.0), (42.4, -70.8), (43.5, -70.2)
+    ],
 }
+
+
+def _seg_dist(lat, lon, a_lat, a_lon, b_lat, b_lon):
+    """
+    Minimum distance from point to coastline segment AB
+    using local equirectangular projection.
+    """
+    import math
+
+    lat0 = math.radians(lat)
+
+    def proj(lat2, lon2):
+        x = EARTH_RADIUS_KM * math.radians(lon2 - lon) * math.cos(lat0)
+        y = EARTH_RADIUS_KM * math.radians(lat2 - lat)
+        return np.array([x, y], dtype=float)
+
+    p = np.array([0.0, 0.0], dtype=float)
+    a = proj(a_lat, a_lon)
+    b = proj(b_lat, b_lon)
+
+    ab = b - a
+    denom = np.dot(ab, ab)
+
+    if denom == 0:
+        return float(np.linalg.norm(p - a))
+
+    t = np.dot(p - a, ab) / denom
+    t = max(0.0, min(1.0, t))
+
+    closest = a + t * ab
+    return float(np.linalg.norm(p - closest))
+
+
+def _distance_to_polyline(lat, lon, polyline):
+    """Minimum distance from point to coastline polyline."""
+    distances = []
+
+    for i in range(len(polyline) - 1):
+        d = _seg_dist(lat, lon, *polyline[i], *polyline[i + 1])
+        distances.append(d)
+
+    return min(distances) if distances else float("inf")
+
+
+def classify_coast_region(lat, long):
+    """
+    Proximity-based coast classifier.
+
+    Returns:
+    AK Coast, Pacific Coast, Gulf Coast, Atlantic Coast, or Other/Check.
+    """
+    if not np.isfinite(lat) or not np.isfinite(long):
+        return "Other/Check"
+
+    lat = float(lat)
+    lon = float(long)
+
+    # Alaska handled separately
+    if lat >= 50:
+        return "AK Coast"
+
+    dists = {
+        name: _distance_to_polyline(lat, lon, polyline)
+        for name, polyline in COAST_POLYLINES.items()
+    }
+
+    return min(dists, key=dists.get)
+
+
+def _segment_distance_grid(LAT, LON, a_lat, a_lon, b_lat, b_lon):
+    """
+    Vectorized minimum distance from every grid cell to coastline segment AB.
+    Uses the same local equirectangular logic as _seg_dist(), but for arrays.
+    """
+    lat0 = np.radians(LAT)
+
+    ax = EARTH_RADIUS_KM * np.radians(a_lon - LON) * np.cos(lat0)
+    ay = EARTH_RADIUS_KM * np.radians(a_lat - LAT)
+
+    bx = EARTH_RADIUS_KM * np.radians(b_lon - LON) * np.cos(lat0)
+    by = EARTH_RADIUS_KM * np.radians(b_lat - LAT)
+
+    abx = bx - ax
+    aby = by - ay
+    denom = abx * abx + aby * aby
+
+    with np.errstate(invalid="ignore", divide="ignore"):
+        t = -(ax * abx + ay * aby) / denom
+
+    t = np.where(denom == 0, 0.0, t)
+    t = np.clip(t, 0.0, 1.0)
+
+    closest_x = ax + t * abx
+    closest_y = ay + t * aby
+
+    return np.sqrt(closest_x * closest_x + closest_y * closest_y)
+
+
+def _distance_to_polyline_grid(LAT, LON, polyline):
+    """
+    Vectorized minimum distance from every grid cell to one coastline polyline.
+    """
+    min_dist = np.full(LAT.shape, np.inf, dtype=np.float64)
+
+    for i in range(len(polyline) - 1):
+        d = _segment_distance_grid(LAT, LON, *polyline[i], *polyline[i + 1])
+        min_dist = np.minimum(min_dist, d)
+
+    return min_dist
+
+
+def assign_coast_regions_to_grid(LAT, LON, region_names=REGION_NAMES):
+    """
+    Fast vectorized coast assignment for raster grid.
+    Matches updated Q4 proximity-based coast classifier:
+      lat >= 50 -> AK Coast
+      otherwise -> nearest Pacific/Gulf/Atlantic coastline polyline
+    """
+    coast_id = np.full(LAT.shape, -1, dtype=np.int8)
+    region_to_id = {name: i for i, name in enumerate(region_names)}
+
+    valid = np.isfinite(LAT) & np.isfinite(LON)
+
+    # Alaska first
+    ak = valid & (LAT >= 50)
+    coast_id[ak] = region_to_id["AK Coast"]
+
+    # Remaining non-Alaska pixels
+    candidate = valid & (~ak)
+
+    best_dist = np.full(LAT.shape, np.inf, dtype=np.float64)
+
+    for name, polyline in COAST_POLYLINES.items():
+        d = _distance_to_polyline_grid(LAT, LON, polyline)
+        update = candidate & (d < best_dist)
+
+        coast_id[update] = region_to_id[name]
+        best_dist[update] = d[update]
+
+    return coast_id
+
+
 COAST_COLORS = {
     "AK Coast":       "#2B6CB0",
     "Pacific Coast":  "#F6AD55",
@@ -412,13 +580,13 @@ def main():
     nlat, nlon = LAT.shape
 
     # ---- Build coast-region mask array (nlat, nlon) -------------------------
-    coast_id = np.full((nlat, nlon), -1, dtype=np.int8)
-    region_names = list(COAST_REGIONS.keys())
-    for rid, (name, fn) in enumerate(COAST_REGIONS.items()):
-        coast_id[fn(LAT, LON)] = rid
+# Uses the same proximity-based classifier as updated Q4 site assignment.
+    region_names = REGION_NAMES
+    coast_id = assign_coast_regions_to_grid(LAT, LON, region_names)
     print(f"Coast region pixel counts:")
     for rid, name in enumerate(region_names):
-        print(f"  {name}: {(coast_id == rid).sum():,}")
+        print(f"  {name}: {(coast_id == rid).sum():,}")    
+        
 
     # ---- Process all files --------------------------------------------------
     n_files      = len(files)

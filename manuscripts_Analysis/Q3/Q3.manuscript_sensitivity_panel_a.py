@@ -4,6 +4,9 @@ generate_panel_A_only.py – FINAL CLEAN VERSION
 Only zero line, SPEI anomaly lines, GAM curve, ribbon, and threshold markers.
 No gray dotted threshold lines.
 ADDED: global y‑axis label centered on the left, no overlap with coast labels.
+FIXED: visible x/y tick marks and axis borders.
+FIXED: Alaska coast name consistency (AK Coast vs Alaska Coast).
+ADDED: horizontal WUE_T threshold reference lines at ±5%, ±10%, ±20% (darker).
 """
 
 import os
@@ -25,13 +28,29 @@ os.makedirs(figure_dir, exist_ok=True)
 # ============================================================================
 # CONSTANTS
 # ============================================================================
+# Use consistent coast naming: "AK Coast" in code, display as "Alaska Coast"
 COAST_COLORS = {
     "Atlantic Coast": "#2E8B57",
     "Pacific Coast":  "#DC143C",
     "Gulf Coast":     "#00CED1",
     "AK Coast":       "#8B4513"
 }
-COAST_REGION_LEVELS = ["Atlantic Coast", "Pacific Coast", "Gulf Coast", "AK Coast"]
+
+COAST_REGION_LEVELS = [
+    "Atlantic Coast",
+    "Pacific Coast",
+    "Gulf Coast",
+    "AK Coast"
+]
+
+# Display labels for y-axis (row titles)
+COAST_DISPLAY_LABELS = {
+    "Atlantic Coast": "Atlantic Coast",
+    "Pacific Coast": "Pacific Coast",
+    "Gulf Coast": "Gulf Coast",
+    "AK Coast": "Alaska Coast"
+}
+
 SELECTED_TIMESCALES = ["SPEI_1", "SPEI_3", "SPEI_48"]
 TIMESCALE_LABELS = {"SPEI_1": "SPEI-1", "SPEI_3": "SPEI-3", "SPEI_48": "SPEI-48"}
 
@@ -66,8 +85,32 @@ if 'threshold_pct' in coast_threshold_markers.columns:
     if coast_threshold_markers['threshold_pct'].dtype in ['int64', 'float64']:
         coast_threshold_markers['threshold_pct'] = coast_threshold_markers['threshold_pct'].astype(int).astype(str) + '%'
 
+# --------------------------------------------------------------------------
+# Diagnostic checks for coast names
+# --------------------------------------------------------------------------
+print("\nUnique coast names in prediction file:")
+print(sorted(coast_prediction_impact["coast_region"].dropna().unique()))
+
+print("\nUnique coast names in threshold marker file:")
+print(sorted(coast_threshold_markers["coast_region"].dropna().unique()))
+
+# Validate that all coasts in COAST_REGION_LEVELS have colors defined
+missing_colors = [c for c in COAST_REGION_LEVELS if c not in COAST_COLORS]
+if missing_colors:
+    raise ValueError(f"Missing colors for coasts: {missing_colors}")
+
+# Check if any coast in COAST_REGION_LEVELS is missing from the data
+prediction_coasts = set(coast_prediction_impact["coast_region"].dropna().unique())
+marker_coasts = set(coast_threshold_markers["coast_region"].dropna().unique())
+missing_prediction = [c for c in COAST_REGION_LEVELS if c not in prediction_coasts]
+if missing_prediction:
+    print(f"WARNING: These coasts are missing from prediction data: {missing_prediction}")
+missing_marker = [c for c in COAST_REGION_LEVELS if c not in marker_coasts]
+if missing_marker:
+    print(f"WARNING: These coasts are missing from threshold marker data: {missing_marker}")
+
 # ============================================================================
-# STYLE – NO GRID
+# STYLE – NO GRID, WITH VISIBLE TICKS
 # ============================================================================
 sns.set_style("white")
 base_font = 30
@@ -83,6 +126,15 @@ plt.rcParams.update({
     'legend.title_fontsize': legend_font,
     'axes.titleweight': 'bold',
     'axes.grid': False,
+    # ----- ensure tick marks are visible -----
+    'xtick.bottom': True,
+    'ytick.left': True,
+    'xtick.top': False,
+    'ytick.right': False,
+    'xtick.direction': 'out',
+    'ytick.direction': 'out',
+    'axes.edgecolor': 'black',
+    'axes.linewidth': 1.5,
 })
 
 # ============================================================================
@@ -122,11 +174,28 @@ for idx_c, coast in enumerate(COAST_REGION_LEVELS):
             )
 
         # ------------------------------------------------------------------
-        # 2. REFERENCE LINES (only zero line and SPEI anomalies)
+        # 2. REFERENCE LINES (SPEI anomalies and zero)
         # ------------------------------------------------------------------
+        # Vertical lines at SPEI = -1 and +1
         ax.axvline(x=-1, color=REF_GRAY, linestyle='--', linewidth=1.0, alpha=0.85, zorder=2)
         ax.axvline(x=1,  color=REF_GRAY, linestyle='--', linewidth=1.0, alpha=0.85, zorder=2)
+        # Zero line (stronger)
         ax.axhline(y=0, color=ZERO_GRAY, linestyle='-', linewidth=1.1, alpha=0.9, zorder=2)
+
+        # ------------------------------------------------------------------
+        # 2b. WUE_T threshold reference lines, matching Malone logic
+        #     Fixed horizontal dotted lines at ±5%, ±10%, ±20%
+        #     Updated to be darker: color="#595959", alpha=0.75, lw=0.9
+        # ------------------------------------------------------------------
+        for yref in [-20, -10, -5, 5, 10, 20]:
+            ax.axhline(
+                y=yref,
+                color="#595959",   # close to ggplot gray35
+                linestyle="--",
+                linewidth=0.9,
+                alpha=0.75,
+                zorder=2.4
+            )
 
         # ------------------------------------------------------------------
         # 3. GAM CURVE
@@ -184,8 +253,9 @@ for idx_c, coast in enumerate(COAST_REGION_LEVELS):
                 transform=ax.transAxes, fontsize=tick_font+4,
                 fontweight='bold', va='top', ha='left')
 
+        # Use the display label for the row title
         if idx_t == 0:
-            ax.set_ylabel(coast, fontweight='bold', fontsize=base_font)
+            ax.set_ylabel(COAST_DISPLAY_LABELS[coast], fontweight='bold', fontsize=base_font)
         else:
             ax.set_ylabel('')
 
@@ -193,16 +263,36 @@ for idx_c, coast in enumerate(COAST_REGION_LEVELS):
         ax.xaxis.set_major_locator(plt.MaxNLocator(5, integer=True))
         ax.yaxis.set_major_locator(plt.MaxNLocator(5, integer=True))
 
+        # ----- make x and y tick marks visible -----
+        ax.tick_params(
+            axis='both',
+            which='major',
+            direction='out',
+            length=7,
+            width=1.5,
+            colors='black',
+            bottom=True,
+            left=True,
+            top=False,
+            right=False,
+            pad=6          # extra space between tick marks and labels
+        )
+
+        # make sure axis spines are visible and black
+        for spine in ax.spines.values():
+            spine.set_visible(True)
+            spine.set_color('black')
+            spine.set_linewidth(1.5)
+
         if idx_c == 0:
             ax.set_title(TIMESCALE_LABELS[timescale], fontweight='bold', fontsize=base_font+4)
 
 # ----------------------------------------------------------------------------
 # LAYOUT AND LEGEND
 # ----------------------------------------------------------------------------
-# Increase left margin to make room for the global y-axis label
 plt.subplots_adjust(left=0.12, right=0.78, top=0.95, bottom=0.08, wspace=0.3, hspace=0.4)
 
-# ---- ADD GLOBAL Y‑AXIS LABEL (centered on left, further out) ----
+# ---- ADD GLOBAL Y‑AXIS LABEL ----
 fig.text(
     0.01, 0.5,
     r'Upland WUE$_{T}$ Change (%)',

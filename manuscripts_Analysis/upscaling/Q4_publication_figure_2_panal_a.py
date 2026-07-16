@@ -30,7 +30,7 @@ OUT_FIG = OUT_DIR / "EDI_panel_A_maps.png"
 # ---------------------------------------------------------------------
 REGION_LABEL_POS = {
     "AK Coast": (-167.0, 73.0, "Alaska"),
-    "Pacific Coast": (-132.0, 50.0, "Pacific"),
+    "Pacific Coast": (-137.0, 41.0, "Pacific"),
     "Gulf Coast": (-101.0, 22.0, "Gulf"),
     "Atlantic Coast": (-82.0, 50.0, "Atlantic"),
 }
