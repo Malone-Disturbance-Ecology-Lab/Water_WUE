@@ -30,10 +30,10 @@ os.makedirs(figure_dir, exist_ok=True)
 # ============================================================================
 # Use consistent coast naming: "AK Coast" in code, display as "Alaska Coast"
 COAST_COLORS = {
-    "Atlantic Coast": "#2E8B57",
-    "Pacific Coast":  "#DC143C",
-    "Gulf Coast":     "#00CED1",
-    "AK Coast":       "#8B4513"
+    'Atlantic Coast': '#A50F15',   # dark red
+    'Pacific Coast':  '#0072B2',   # blue
+    'Gulf Coast':     '#4D4D4D',   # dark charcoal
+    'AK Coast':       '#009E73'    # bluish green
 }
 
 COAST_REGION_LEVELS = [

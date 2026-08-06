@@ -4,8 +4,8 @@ Recreate Supplementary_plot_02 with:
 - New coast colours
 - Shared y‑axis label (bold, closer to figure)
 - No main title / footnote
+- No panel labels
 - At least 5 y‑ticks per panel
-- Panel labels a)‑d) outside axes (top‑left)
 - Thicker, longer x‑axis tick marks
 - Bold tick labels and axis labels
 - Display in Spyder
@@ -30,6 +30,7 @@ annual_cum_file  = original_output / "Supplementary_table_03_annual_cumulative_S
 # ------------------------------------------------------------------
 # Settings – coast order, labels, and colours
 # ------------------------------------------------------------------
+# ORDER: Alaska, Pacific, Gulf, Atlantic
 coast_levels = ["AK Coast", "Pacific Coast", "Gulf Coast", "Atlantic Coast"]
 
 coast_labels = {
@@ -39,14 +40,13 @@ coast_labels = {
     "Atlantic Coast": "Atlantic Coast",
 }
 
+# Colours as per your latest request
 coast_colors = {
-    "AK Coast": "#8B4513",      # brown
-    "Pacific Coast": "#DC143C", # red
-    "Gulf Coast": "#00CED1",    # cyan
-    "Atlantic Coast": "#2E8B57" # green
+    'Pacific Coast': '#0072B2',   # blue
+    'Gulf Coast':   '#B3B300',    # olive/khaki
+    'Atlantic Coast': '#CC79A7',  # pink
+    'AK Coast':     '#009E73'     # teal
 }
-
-panel_labels = ['a)', 'b)', 'c)', 'd)']
 
 # ------------------------------------------------------------------
 # Read data
@@ -109,7 +109,7 @@ fig, axes = plt.subplots(
     nrows=4, ncols=1, figsize=(7.2, 8.2), sharex=True
 )
 
-for ax, coast, letter in zip(axes, coast_levels, panel_labels):
+for ax, coast in zip(axes, coast_levels):
     sub = monthly_cum[monthly_cum["coast_region"] == coast]
     ann = annual_cum[annual_cum["coast_region"] == coast]
 
@@ -138,10 +138,6 @@ for ax, coast, letter in zip(axes, coast_levels, panel_labels):
     ax.set_xlim(date_min, date_max)
     format_axis(ax)
 
-    # Panel label – placed above the axes, upper‑left
-    ax.text(0.0, 1.02, letter, transform=ax.transAxes,
-            fontsize=14, fontweight="bold", va="bottom", ha="left")
-
 # X‑axis label only for bottom panel – bold and large
 axes[-1].set_xlabel("Year", fontsize=14, fontweight='bold')
 
@@ -149,7 +145,7 @@ axes[-1].set_xlabel("Year", fontsize=14, fontweight='bold')
 # Shared y‑axis label – bold, closer to figure
 # ------------------------------------------------------------------
 fig.text(
-    0.08, 0.5,                       # moved closer (was 0.035)
+    0.08, 0.5,
     "Cumulative mean SPEI-3",
     va="center",
     ha="center",
@@ -158,11 +154,11 @@ fig.text(
     fontweight='bold'
 )
 
-# Adjust margins: left reduced to bring label closer
+# Adjust margins
 plt.subplots_adjust(
-    left=0.18,       # reduced from 0.18 to bring panels closer to y‑label
+    left=0.18,
     right=0.98,
-    top=0.94,        # room for panel labels above axes
+    top=0.94,
     bottom=0.08,
     hspace=0.45
 )

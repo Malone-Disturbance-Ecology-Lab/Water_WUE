@@ -55,10 +55,10 @@ ecosystem_colours = {
     "Saline": "#FFA500",
 }
 coast_colors = {
-    'Atlantic Coast': '#2E8B57',
-    'Gulf Coast':     '#00CED1',
-    'Pacific Coast':  '#DC143C',
-    'AK Coast':       '#8B4513'
+    'Atlantic Coast': '#A50F15',   # dark red
+    'Pacific Coast':  '#0072B2',   # blue
+    'Gulf Coast':     '#4D4D4D',   # dark charcoal
+    'AK Coast':       '#009E73'    # bluish green
 }
 coast_short = {
     'Atlantic Coast': 'Atlantic',
