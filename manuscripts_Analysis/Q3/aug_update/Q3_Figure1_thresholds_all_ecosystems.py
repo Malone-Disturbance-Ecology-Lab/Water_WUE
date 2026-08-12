@@ -5,9 +5,10 @@ Q3_figure_panel_A_updated_all_ecosystems.py
 Updated Panel A figure using reviewer outputs:
 - All ecosystems (Upland, Freshwater, Saline)
 - All months (month‑averaged curves)
-- Threshold levels: 5, 10, 20, 25, 50, 75%
+- Threshold selection: 5%, 10%, 20% + top two highest detected above 20%
 - No shaded ribbons (curves only)
 - Panel labels moved to left margin (a–d for rows)
+- Coast order: Alaska, Pacific, Gulf, Atlantic
 """
 
 import os
@@ -29,11 +30,12 @@ os.makedirs(figure_dir, exist_ok=True)
 # ============================================================================
 # CONSTANTS
 # ============================================================================
+# ---- Updated coast colors (manuscript palette) ----
 COAST_COLORS = {
-    'Atlantic Coast': '#A50F15',
-    'Pacific Coast':  '#0072B2',
-    'Gulf Coast':     '#4D4D4D',
-    'AK Coast':       '#009E73'
+    'AK Coast':       '#009E73',   # bluish green
+    'Pacific Coast':  '#0072B2',   # blue
+    'Gulf Coast':     '#4D4D4D',   # dark gray
+    'Atlantic Coast': '#A50F15'    # dark red
 }
 
 ECOSYSTEM_COLORS = {
@@ -44,18 +46,14 @@ ECOSYSTEM_COLORS = {
 
 ECOSYSTEM_CLASSES = ["Upland", "Freshwater", "Saline"]
 
-COAST_REGION_LEVELS = [
-    "Atlantic Coast",
-    "Pacific Coast",
-    "Gulf Coast",
-    "AK Coast"
-]
+# ---- Coast order (AK first, Atlantic last) ----
+COAST_REGION_LEVELS = ["AK Coast", "Pacific Coast", "Gulf Coast", "Atlantic Coast"]
 
 COAST_DISPLAY_LABELS = {
-    "Atlantic Coast": "Atlantic Coast",
-    "Pacific Coast": "Pacific Coast",
-    "Gulf Coast": "Gulf Coast",
-    "AK Coast": "Alaska Coast"
+    "AK Coast":       "Alaska Coast",
+    "Pacific Coast":  "Pacific Coast",
+    "Gulf Coast":     "Gulf Coast",
+    "Atlantic Coast": "Atlantic Coast"
 }
 
 # Row labels (for left margin)
@@ -64,13 +62,18 @@ ROW_LABELS = ['a', 'b', 'c', 'd']
 SELECTED_TIMESCALES = ["SPEI_1", "SPEI_3", "SPEI_48"]
 TIMESCALE_LABELS = {"SPEI_1": "SPEI-1", "SPEI_3": "SPEI-3", "SPEI_48": "SPEI-48"}
 
+# ---- Full marker map for all possible threshold levels ----
 THRESHOLD_MARKER_MAP = {
     "5%":  "o",
     "10%": "s",
+    "15%": "v",
     "20%": "^",
     "25%": "D",
-    "50%": "*",
-    "75%": "P"
+    "30%": "P",
+    "35%": "X",
+    "40%": "*",
+    "50%": "h",
+    "75%": "8"
 }
 
 REF_GRAY = "#9A9A9A"
@@ -85,22 +88,57 @@ def get_threshold_marker(threshold_pct):
 # ============================================================================
 print("Loading reviewer data (all ecosystems, all months, averaged)...")
 curve_file = os.path.join(input_dir, "Q3_reviewer_coast_threshold_prediction_curves_month_averaged_all_ecosystems.csv")
-marker_file = os.path.join(input_dir, "Q3_reviewer_threshold_markers_month_averaged_5_10_20_25_50_75_all_ecosystems.csv")
+marker_file = os.path.join(input_dir, "Q3_reviewer_threshold_markers_month_averaged_5_10_15_20_25_30_35_40_50_75_all_ecosystems.csv")
 
 curve_data = pd.read_csv(curve_file)
 marker_data = pd.read_csv(marker_file)
 
+# Ensure threshold_pct is string with '%' for marker mapping
 if 'threshold_pct' in marker_data.columns:
     if marker_data['threshold_pct'].dtype in ['int64', 'float64']:
         marker_data['threshold_pct'] = marker_data['threshold_pct'].astype(int).astype(str) + '%'
     elif not marker_data['threshold_pct'].astype(str).str.endswith('%').all():
         marker_data['threshold_pct'] = marker_data['threshold_pct'].astype(int).astype(str) + '%'
 
+# Filter to selected timescales
 curve_data = curve_data[curve_data['SPEI_timescale'].isin(SELECTED_TIMESCALES)]
 marker_data = marker_data[marker_data['SPEI_timescale'].isin(SELECTED_TIMESCALES)]
 
 print(f"Curve data: {len(curve_data)} rows")
-print(f"Marker data: {len(marker_data)} rows")
+print(f"Marker data (before selection): {len(marker_data)} rows")
+
+# ============================================================================
+# SELECT THRESHOLDS: 5%, 10%, 20% + top two highest above 20%
+# ============================================================================
+# Convert to numeric for selection
+marker_data["threshold_pct_num"] = (
+    marker_data["threshold_pct"]
+    .astype(str)
+    .str.replace("%", "", regex=False)
+    .astype(int)
+)
+
+detected_thresholds = sorted(marker_data["threshold_pct_num"].unique())
+base_thresholds = [5, 10, 20]
+above_20 = [t for t in detected_thresholds if t > 20]
+top_two_above_20 = sorted(above_20, reverse=True)[:2]
+
+selected_thresholds = sorted(set(base_thresholds + top_two_above_20))
+selected_threshold_labels = [f"{t}%" for t in selected_thresholds]
+
+print("All detected thresholds:", detected_thresholds)
+print("Selected thresholds for plotting:", selected_threshold_labels)
+
+# Filter marker_data to only selected thresholds
+marker_data = marker_data[marker_data["threshold_pct_num"].isin(selected_thresholds)].copy()
+# Restore threshold_pct as string with '%'
+marker_data["threshold_pct"] = marker_data["threshold_pct_num"].astype(str) + "%"
+
+print(f"Marker data after threshold selection: {len(marker_data)} rows")
+marker_counts = marker_data.groupby("threshold_pct").size()
+for lbl in selected_threshold_labels:
+    count = marker_counts.get(lbl, 0)
+    print(f"  {lbl}: {count} markers")
 
 # ============================================================================
 # STYLE – NO GRID, WITH VISIBLE TICKS
@@ -134,7 +172,7 @@ plt.rcParams.update({
 # ============================================================================
 fig, axes = plt.subplots(4, 3, figsize=(18, 16))
 
-# We'll add row labels in the left margin later, so adjust subplots to make room
+# Adjust subplots to make room for row labels
 plt.subplots_adjust(left=0.15, right=0.78, top=0.95, bottom=0.08, wspace=0.3, hspace=0.4)
 
 # Handles for legends
@@ -152,21 +190,23 @@ for idx_c, coast in enumerate(COAST_REGION_LEVELS):
         ax.set_facecolor("white")
 
         # ------------------------------------------------------------------
-        # REFERENCE LINES (SPEI anomalies, zero, and threshold lines)
+        # REFERENCE LINES (SPEI anomalies, zero, and selected threshold lines)
         # ------------------------------------------------------------------
         ax.axvline(x=-1, color=REF_GRAY, linestyle='--', linewidth=1.0, alpha=0.85, zorder=2)
         ax.axvline(x=1,  color=REF_GRAY, linestyle='--', linewidth=1.0, alpha=0.85, zorder=2)
         ax.axhline(y=0, color=ZERO_GRAY, linestyle='-', linewidth=1.1, alpha=0.9, zorder=2)
 
-        for yref in [-20, -10, -5, 5, 10, 20, 25]:
-            ax.axhline(
-                y=yref,
-                color="#595959",
-                linestyle="--",
-                linewidth=0.9,
-                alpha=0.75,
-                zorder=2.4
-            )
+        # ---- Horizontal reference lines for the selected thresholds ----
+        for thr in selected_thresholds:
+            for yref in [-thr, thr]:
+                ax.axhline(
+                    y=yref,
+                    color="#595959",
+                    linestyle="--",
+                    linewidth=0.9,
+                    alpha=0.75,
+                    zorder=2.4
+                )
 
         # ------------------------------------------------------------------
         # CURVES FOR EACH ECOSYSTEM
@@ -192,7 +232,7 @@ for idx_c, coast in enumerate(COAST_REGION_LEVELS):
             )
 
             # ------------------------------------------------------------------
-            # THRESHOLD MARKERS
+            # THRESHOLD MARKERS (only selected thresholds)
             # ------------------------------------------------------------------
             markers_sub = marker_data[
                 (marker_data['coast_region'] == coast) &
@@ -229,6 +269,7 @@ for idx_c, coast in enumerate(COAST_REGION_LEVELS):
                     zorder=6
                 )
 
+                # Collect legend handles for selected thresholds only
                 if thr_label not in marker_labels:
                     marker_labels.append(thr_label)
                     marker_handles.append(
@@ -251,7 +292,7 @@ for idx_c, coast in enumerate(COAST_REGION_LEVELS):
                 )
 
         # ------------------------------------------------------------------
-        # AXIS LABELS, TICKS (but NO panel labels inside)
+        # AXIS LABELS, TICKS
         # ------------------------------------------------------------------
         if idx_t == 0:
             ax.set_ylabel(COAST_DISPLAY_LABELS[coast], fontweight='bold', fontsize=base_font)
@@ -287,16 +328,11 @@ for idx_c, coast in enumerate(COAST_REGION_LEVELS):
 # ----------------------------------------------------------------------------
 # ADD ROW LABELS (a, b, c, d) IN LEFT MARGIN
 # ----------------------------------------------------------------------------
-# Get the positions of the left edge of each row in figure coordinates
-# We'll place labels at the vertical center of each row, slightly left of the subplot.
 for i, coast in enumerate(COAST_REGION_LEVELS):
-    # Get the first axes of the row (column 0)
     ax0 = axes[i, 0]
-    # Get the bounding box of the axes in figure coordinates
     bbox = ax0.get_position()
-    # x position: just left of the subplot, y: center of the subplot
-    x_pos = bbox.x0 - 0.025   # adjust as needed
-    y_pos = bbox.y0 + bbox.height / 2.0+0.1
+    x_pos = bbox.x0 - 0.025
+    y_pos = bbox.y0 + bbox.height / 2.0 + 0.1
     fig.text(
         x_pos, y_pos,
         ROW_LABELS[i] + ')',

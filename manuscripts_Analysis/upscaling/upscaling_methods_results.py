@@ -32,7 +32,15 @@ monthly_spatial_file = SPATIAL_DIR / "EDI_response_v2_upland_monthly_coast_summa
 annual_impact_file = SPATIAL_DIR / "EDI_response_communication_annual_impacted_area_by_coast_2000_2025.csv"
 validation_file = SPATIAL_DIR / "EDI_response_v2_regional_validation_Q3_Q4.csv"
 
-q4_curve_file = Q4_DIR / "EDI_Q3_aligned_prediction_scores_upland.csv"
+#q4_curve_file = Q4_DIR / "EDI_Q3_aligned_prediction_scores_upland.csv"
+
+Q3_FINAL_DIR = BASE / "Q3" / "Q3_august_update"
+
+q4_curve_file = (
+    Q3_FINAL_DIR
+    / "Q3_reviewer_coast_threshold_predictions_all_ecosystems_all_months.csv"
+)
+
 q4_monthly_scores_file = Q4_DIR / "EDI_Q3_aligned_monthly_scores.csv"
 
 q3_smooth_file = Q3_DIR / "Q3_WUE_T_SPEI_coast_threshold_GAM_smooth_terms.csv"

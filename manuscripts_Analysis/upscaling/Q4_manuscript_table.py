@@ -19,7 +19,13 @@ base_dir = Path(r"M:\Research\WUE_CUE\WUE_manuscript_version6\upscaling")
 monthly_file = base_dir / "EDI_response_v2_upland_monthly_coast_summary.csv"
 annual_file = base_dir / "EDI_response_v2_upland_annual_coast_summary.csv"
 impacted_file = base_dir / "EDI_response_communication_annual_impacted_area_by_coast_2000_2025.csv"
-resistance_file = base_dir / "spatial_performance_metric" / "spatial_resistance_analogue_two_panel_summary.csv"
+#resistance_file = base_dir / "spatial_performance_metric" / "spatial_resistance_analogue_two_panel_summary.csv"
+
+resistance_file = (
+    base_dir
+    / "talib_publication"
+    / "spatial_resistance_analogue_two_panel_summary.csv"
+)
 
 output_dir = base_dir / "talib_publication"
 output_dir.mkdir(parents=True, exist_ok=True)

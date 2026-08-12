@@ -1,23 +1,95 @@
+# Q3_reference_condition_sensitivity_diagnostic.py (UPDATED)
+# -----------------------------------------------------------------------------
+# DIAGNOSTIC FLAGS
+# -----------------------------------------------------------------------------
+SAVE_CSV = True
+SAVE_FIGURES = False
+SAVE_LOG = False
+# -----------------------------------------------------------------------------
 
+import os
+import subprocess
+import sys
+import shutil
+import pandas as pd
+import numpy as np
+
+print("=" * 70)
+print("Q3 REFERENCE-CONDITION SENSITIVITY DIAGNOSTIC (UPDATED)")
+print("=" * 70)
+
+# -----------------------------------------------------------------------------
+# PATHS
+# -----------------------------------------------------------------------------
+diagnostic_dir = r"M:\Research\WUE_CUE\Water_WUE\manuscripts_Analysis\Q3\sensitivity_conditions"
+output_dir = r"M:\Research\WUE_CUE\WUE_manuscript_version6\Q3\Q3_WUE_T_SPEI_sensitivity_outputs"
+results_dir = os.path.join(output_dir, "sensitivity_conditions_results")
+
+data_long_path = os.path.join(output_dir, "Q3_WUE_T_SPEI_model_data_long.csv")
+model_rds_path = os.path.join(output_dir, "Q3_WUE_T_SPEI_coast_threshold_gam_model.rds")
+smooth_terms_path = os.path.join(output_dir, "Q3_WUE_T_SPEI_coast_threshold_GAM_smooth_terms.csv")
+
+if not os.path.exists(model_rds_path):
+    raise FileNotFoundError(f"Model RDS not found: {model_rds_path}")
+if not os.path.exists(data_long_path):
+    raise FileNotFoundError(f"Data long CSV not found: {data_long_path}")
+
+print(f"Input model:  {model_rds_path}")
+print(f"Input data:   {data_long_path}")
+
+os.makedirs(diagnostic_dir, exist_ok=True)
+os.makedirs(results_dir, exist_ok=True)
+
+# -----------------------------------------------------------------------------
+# CLEANUP: remove old sensitivity CSVs before running
+# -----------------------------------------------------------------------------
+expected_outputs = [
+    "prediction_curves_all_reference_conditions.csv",
+    "threshold_summary_all_reference_conditions.csv",
+    "threshold_sensitivity_summary.csv",
+    "response_magnitude_all_reference_conditions.csv",
+    "reference_condition_sensitivity_summary.csv",
+    "observed_support_metadata.csv"
+]
+print("\nCleaning old sensitivity CSVs from results_dir...")
+for fname in expected_outputs:
+    fpath = os.path.join(results_dir, fname)
+    if os.path.exists(fpath):
+        os.remove(fpath)
+        print(f"  Removed: {fname}")
+
+# -----------------------------------------------------------------------------
+# CONVERT PATHS TO R‑SAFE FORWARD SLASHES
+# -----------------------------------------------------------------------------
+output_dir_r = output_dir.replace("\\", "/")
+results_dir_r = results_dir.replace("\\", "/")
+data_long_path_r = data_long_path.replace("\\", "/")
+model_rds_path_r = model_rds_path.replace("\\", "/")
+diagnostic_dir_r = diagnostic_dir.replace("\\", "/")
+
+# -----------------------------------------------------------------------------
+# BUILD THE R SCRIPT (UPDATED)
+# -----------------------------------------------------------------------------
+r_script_content = f'''
 # Diagnostic R script (UPDATED) – all months, full SPEI range, expanded thresholds
 library(mgcv)
 library(dplyr)
 library(tidyr)
 
-output_dir <- "M:/Research/WUE_CUE/WUE_manuscript_version6/Q3/Q3_WUE_T_SPEI_sensitivity_outputs"
-results_dir <- "M:/Research/WUE_CUE/WUE_manuscript_version6/Q3/Q3_WUE_T_SPEI_sensitivity_outputs/sensitivity_conditions_results"
-data_long_path <- "M:/Research/WUE_CUE/WUE_manuscript_version6/Q3/Q3_WUE_T_SPEI_sensitivity_outputs/Q3_WUE_T_SPEI_model_data_long.csv"
-model_rds_path <- "M:/Research/WUE_CUE/WUE_manuscript_version6/Q3/Q3_WUE_T_SPEI_sensitivity_outputs/Q3_WUE_T_SPEI_coast_threshold_gam_model.rds"
+output_dir <- "{output_dir_r}"
+results_dir <- "{results_dir_r}"
+data_long_path <- "{data_long_path_r}"
+model_rds_path <- "{model_rds_path_r}"
 
-cat("\nLoading model...\n")
+cat("\\nLoading model...\\n")
 smooth_coast_model <- readRDS(model_rds_path)
-cat("  Model loaded.\n")
-cat("  Model formula:\n")
+cat("  Model loaded.\\n")
+cat("  Model formula:\\n")
 print(formula(smooth_coast_model))
 
-cat("\nLoading data...\n")
+cat("\\nLoading data...\\n")
 data <- read.csv(data_long_path)
-cat("  Data loaded. Rows:", nrow(data), "\n")
+cat("  Data loaded. Rows:", nrow(data), "\\n")
 
 # Set factor levels exactly as in original workflow
 coast_levels <- c("Atlantic Coast", "Pacific Coast", "Gulf Coast", "AK Coast")
@@ -31,23 +103,23 @@ data$SPEI_timescale <- factor(data$SPEI_timescale, levels = spei_levels)
 data$month_f <- factor(data$month_f, levels = month_levels)
 data$site_name <- factor(data$site_name)
 
-cat("  Factor levels set.\n")
+cat("  Factor levels set.\\n")
 
 # ---- UPDATED: use ALL months present in the data ----
 months_to_use <- sort(unique(as.numeric(as.character(data$month_f))))
 months_to_use <- months_to_use[!is.na(months_to_use)]
 month_f_levels <- factor(months_to_use, levels = month_levels)
-cat("Months used:", as.character(month_f_levels), "\n")
+cat("Months used:", as.character(month_f_levels), "\\n")
 
 # ---- UPDATED: use full observed SPEI range ----
 spei_lower <- min(data$SPEI_value, na.rm = TRUE)
 spei_upper <- max(data$SPEI_value, na.rm = TRUE)
-cat("SPEI range:", round(spei_lower, 3), "to", round(spei_upper, 3), "\n")
+cat("SPEI range:", round(spei_lower, 3), "to", round(spei_upper, 3), "\\n")
 spei_seq <- seq(spei_lower, spei_upper, length.out = 200)
 
 site_ref <- levels(data$site_name)[1]
 
-cat("\nBuilding prediction grid...\n")
+cat("\\nBuilding prediction grid...\\n")
 grid <- expand.grid(
     coast_region = coast_levels,
     water_class = water_levels,
@@ -68,17 +140,17 @@ data$spei_coast <- interaction(data$SPEI_timescale, data$coast_region, sep = "__
 grid$spei_coast <- interaction(grid$SPEI_timescale, grid$coast_region, sep = "__", drop = TRUE)
 grid$spei_coast <- factor(grid$spei_coast, levels = levels(data$spei_coast))
 
-cat("  Grid size:", nrow(grid), "rows\n")
+cat("  Grid size:", nrow(grid), "rows\\n")
 
 # Predict (exclude site random effect)
-cat("\nPredicting from model...\n")
+cat("\\nPredicting from model...\\n")
 pred <- predict(smooth_coast_model, newdata = grid, type = "link",
                 se.fit = TRUE, exclude = "s(site_name)")
 grid$predicted_WUE_T <- as.numeric(pred$fit)
 grid$predicted_se <- as.numeric(pred$se.fit)
 grid$predicted_lower <- grid$predicted_WUE_T - 1.96 * grid$predicted_se
 grid$predicted_upper <- grid$predicted_WUE_T + 1.96 * grid$predicted_se
-cat("  Predictions done.\n")
+cat("  Predictions done.\\n")
 
 # Near-normal baselines
 baselines <- grid %>%
@@ -101,13 +173,13 @@ grid_with_baseline$predicted_upper_pct <-
     100 * (grid_with_baseline$predicted_upper - grid_with_baseline$predicted_near_normal_WUE_T) /
     grid_with_baseline$predicted_near_normal_WUE_T
 
-cat("  Percent changes computed.\n")
+cat("  Percent changes computed.\\n")
 
 # -------------------------------------------------------------------------
 # THRESHOLD DETECTION FUNCTION
 # -------------------------------------------------------------------------
 find_spei_threshold <- function(group_data, pct_column, threshold_pct,
-                                anomaly_side, impact_direction) {
+                                anomaly_side, impact_direction) {{
     pct_values <- group_data[[pct_column]]
     if (anomaly_side == "dry") side_filter <- group_data$SPEI_value < -1
     else side_filter <- group_data$SPEI_value > 1
@@ -117,12 +189,12 @@ find_spei_threshold <- function(group_data, pct_column, threshold_pct,
     if (length(threshold_values) == 0) return(NA_real_)
     if (anomaly_side == "dry") return(max(threshold_values, na.rm = TRUE))
     else return(min(threshold_values, na.rm = TRUE))
-}
+}}
 
 # -------------------------------------------------------------------------
 # COMPUTE THRESHOLDS FOR ALL COMBINATIONS – UPDATED THRESHOLD LEVELS
 # -------------------------------------------------------------------------
-cat("\nComputing thresholds...\n")
+cat("\\nComputing thresholds...\\n")
 
 threshold_levels <- c(5, 10, 15, 20, 25, 30, 35, 40, 50, 75)
 
@@ -149,16 +221,16 @@ groups <- split(grid_with_baseline,
                      grid_with_baseline$SPEI_timescale),
                 drop = TRUE)
 
-for (grp in groups) {
+for (grp in groups) {{
     if (nrow(grp) == 0) next
     coast <- as.character(grp$coast_region[1])
     water <- as.character(grp$water_class[1])
     month <- as.character(grp$month_f[1])
     timescale <- as.character(grp$SPEI_timescale[1])
-
-    for (tp in threshold_levels) {
-        for (anom in c("dry", "wet")) {
-            for (dir in c("decrease", "increase")) {
+    
+    for (tp in threshold_levels) {{
+        for (anom in c("dry", "wet")) {{
+            for (dir in c("decrease", "increase")) {{
                 idx <- which(all_threshold_combos$coast_region == coast &
                              all_threshold_combos$water_class == water &
                              all_threshold_combos$month_f == month &
@@ -167,28 +239,28 @@ for (grp in groups) {
                              all_threshold_combos$anomaly_side == anom &
                              all_threshold_combos$impact_direction == dir)
                 if (length(idx) == 0) next
-
+                
                 thresh_mean <- find_spei_threshold(grp, "predicted_pct_change", tp, anom, dir)
                 thresh_lower <- find_spei_threshold(grp, "predicted_lower_pct", tp, anom, dir)
                 thresh_upper <- find_spei_threshold(grp, "predicted_upper_pct", tp, anom, dir)
-
+                
                 # Only mean curve crossing counts as detected
-                if (!is.na(thresh_mean)) {
+                if (!is.na(thresh_mean)) {{
                     all_threshold_combos$threshold_detected[idx] <- TRUE
                     all_threshold_combos$SPEI_threshold[idx] <- thresh_mean
-
+                    
                     thresh_range <- c(thresh_mean, thresh_lower, thresh_upper)
                     thresh_range <- thresh_range[!is.na(thresh_range)]
-
+                    
                     all_threshold_combos$SPEI_threshold_lower[idx] <- min(thresh_range)
                     all_threshold_combos$SPEI_threshold_upper[idx] <- max(thresh_range)
-                }
-            }
-        }
-    }
-}
+                }}
+            }}
+        }}
+    }}
+}}
 
-cat("  Thresholds computed. Total combinations:", nrow(all_threshold_combos), "\n")
+cat("  Thresholds computed. Total combinations:", nrow(all_threshold_combos), "\\n")
 
 # -------------------------------------------------------------------------
 # SAVE CSVs (same names)
@@ -287,4 +359,111 @@ support <- full_grid %>%
     )
 write.csv(support, file.path(results_dir, "observed_support_metadata.csv"), row.names = FALSE)
 
-cat("\nCSVs saved to:", results_dir, "\n")
+cat("\\nCSVs saved to:", results_dir, "\\n")
+'''
+
+# -----------------------------------------------------------------------------
+# WRITE AND RUN THE R SCRIPT
+# -----------------------------------------------------------------------------
+r_script_path = os.path.join(diagnostic_dir, "diagnostic.R")
+with open(r_script_path, 'w', encoding='utf-8') as f:
+    f.write(r_script_content)
+
+rscript_exe = shutil.which("Rscript")
+if rscript_exe is None:
+    possible_path = r"C:\Program Files\R\R-4.4.2\bin\x64\Rscript.exe"
+    if os.path.exists(possible_path):
+        rscript_exe = possible_path
+    else:
+        raise RuntimeError("Rscript not found.")
+
+print(f"\nRunning R script: {r_script_path}")
+result = subprocess.run([rscript_exe, r_script_path], capture_output=True, text=True)
+
+if result.returncode != 0:
+    print("\nERROR: R script failed.")
+    print(result.stderr)
+    sys.exit(1)
+
+print(result.stdout)
+
+# -----------------------------------------------------------------------------
+# REQUIRED-OUTPUT CHECK
+# -----------------------------------------------------------------------------
+print("\nChecking for required sensitivity CSVs...")
+missing = []
+for fname in expected_outputs:
+    fpath = os.path.join(results_dir, fname)
+    if not os.path.exists(fpath):
+        missing.append(fname)
+if missing:
+    raise FileNotFoundError(
+        "Missing required sensitivity CSVs:\n" + "\n".join(missing)
+    )
+print("All six sensitivity CSVs are present.")
+
+# Rest of the interpretation (unchanged) ...
+print("\n=== TOP 10 STRONGEST MODEL-PREDICTED REFERENCE CONDITIONS ===")
+pred_curves = pd.read_csv(os.path.join(results_dir, "prediction_curves_all_reference_conditions.csv"))
+thresh_all = pd.read_csv(os.path.join(results_dir, "threshold_summary_all_reference_conditions.csv"))
+response_magnitude = pd.read_csv(os.path.join(results_dir, "response_magnitude_all_reference_conditions.csv"))
+sensitivity_summary = pd.read_csv(os.path.join(results_dir, "reference_condition_sensitivity_summary.csv"))
+threshold_sensitivity = pd.read_csv(os.path.join(results_dir, "threshold_sensitivity_summary.csv"))
+
+top10_response = response_magnitude.sort_values("max_abs_pct_change", ascending=False).head(10)
+print(top10_response.to_string())
+
+print("\n=== TOP 10 COAST × ECOSYSTEM × SPEI TIMESCALE COMBINATIONS ===")
+top10_sensitivity = sensitivity_summary.sort_values("mean_max_abs_pct_change", ascending=False).head(10)
+print(top10_sensitivity.to_string())
+
+print("\n=== THRESHOLD STABILITY (combinations with thresholds across most months) ===")
+threshold_stability = threshold_sensitivity[
+    threshold_sensitivity["n_months_with_threshold"] >= 6
+].sort_values(["n_months_with_threshold", "mean_SPEI_threshold"], ascending=[False, False])
+print(threshold_stability.to_string())
+
+# Smooth extraction (unchanged, just for info)
+print("\n=== DYNAMICALLY IDENTIFIED STRONGEST COAST-SPECIFIC SMOOTH ===")
+if os.path.exists(smooth_terms_path):
+    smooth_df = pd.read_csv(smooth_terms_path)
+    p_col = "p.value" if "p.value" in smooth_df.columns else "p-value" if "p-value" in smooth_df.columns else None
+    if p_col is not None:
+        coast_smooths = smooth_df[
+            smooth_df["smooth_term"].str.contains("spei_coast", na=False) &
+            ~smooth_df["smooth_term"].str.contains("site_name", na=False)
+        ].copy()
+        sig_smooths = coast_smooths[coast_smooths[p_col] < 0.05]
+        if not sig_smooths.empty:
+            focus_row = sig_smooths.loc[sig_smooths["F"].idxmax()]
+            term = focus_row["smooth_term"]
+            parts = term.split("__")
+            if len(parts) == 2:
+                focus_coast = parts[1].strip()
+                timescale_part = parts[0].replace("s(SPEI_value):spei_coast", "").strip()
+                focus_timescale = timescale_part
+            else:
+                focus_coast = "unknown"
+                focus_timescale = "unknown"
+            focus_F = focus_row["F"]
+            focus_p = focus_row[p_col]
+            print(f"  Strongest significant coast smooth: {focus_coast} at {focus_timescale}")
+            print(f"    F = {focus_F:.2f}, p = {focus_p:.3f}")
+            gulf_sig = sig_smooths[sig_smooths["smooth_term"].str.contains("Gulf Coast", na=False)]
+            if not gulf_sig.empty:
+                print("  Gulf Coast has significant smooth terms (see above).")
+            else:
+                print("  Gulf Coast has no significant smooth terms (p < 0.05).")
+        else:
+            print("  No significant coast-specific smooth (p < 0.05) found.")
+    else:
+        print("  No p-value column found in smooth terms CSV.")
+else:
+    print("  Smooth terms CSV not found.")
+
+print("\n=== MAIN DIAGNOSTIC INTERPRETATION (UPDATED) ===")
+print("The sensitivity analysis used a full prediction grid across all coast × ecosystem,")
+print("all months present in data, full observed SPEI range, and expanded thresholds.")
+print("This aligns with the revised main workflow.\n")
+print("Top responses and threshold stability are shown above.")
+print(f"Diagnostic completed successfully. Sensitivity CSVs written to: {results_dir}")

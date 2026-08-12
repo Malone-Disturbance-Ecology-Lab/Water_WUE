@@ -271,18 +271,18 @@ AXIS_LABEL_FS = 30
 SUBPLOT_TITLE_FS = 27
 PANEL_LABEL_FS = 33
 SHARED_YLABEL_FS = 30
-PERCENT_FS = 18
-SMALL_PERCENT_FS = 13
+PERCENT_FS = 20
+SMALL_PERCENT_FS = 15
 LEGEND_FS = 24
 LEGEND_TITLE_FS = 26
 COAST_LABEL_FS = 25
 MEAN_LABEL_FS = 24
 
 # ----- Figure setup with blank spacer rows -----
-fig = plt.figure(figsize=(14, 20))
+fig = plt.figure(figsize=(14, 22))  # increased height from 20 to 22
 
 # Eight rows:
-# rows 0–3 = Panel A
+# rows 0–3 = Panel A (now with increased height ratios)
 # row 4    = blank spacer
 # row 5    = Panel B
 # row 6    = blank spacer
@@ -290,13 +290,13 @@ fig = plt.figure(figsize=(14, 20))
 gs = gridspec.GridSpec(
     8, 1,
     height_ratios=[
-        1.0, 1.0, 1.0, 1.0,   # Panel A (4 subplots)
-        0.50,                  # spacer
-        2.15,                  # Panel B
-        0.55,                  # spacer
-        2.65                   # Panel C
+        1.25, 1.25, 1.25, 1.25,   # Panel A – increased from 1.0 to 1.25 each
+        0.50,                     # spacer
+        2.15,                     # Panel B
+        0.55,                     # spacer
+        2.65                      # Panel C
     ],
-    hspace=0.20,
+    hspace=0.30,                  # increased from 0.20 to 0.30
     left=0.18,
     right=0.84,
     bottom=0.06,
@@ -345,7 +345,7 @@ for i, coast in enumerate(COAST_ORDER):
 # ---- Draw canvas so subplot positions are final ----
 fig.canvas.draw()
 
-# ---- Shared y‑axis label for Panel A ----
+# ---- Shared y‑axis label for Panel A (moved further left) ----
 panel_a_positions = [ax.get_position() for ax in ax_time]
 panel_a_top = max(pos.y1 for pos in panel_a_positions)
 panel_a_bottom = min(pos.y0 for pos in panel_a_positions)
@@ -353,7 +353,7 @@ panel_a_left = min(pos.x0 for pos in panel_a_positions)
 panel_a_center_y = (panel_a_top + panel_a_bottom) / 2
 
 fig.text(
-    panel_a_left - 0.060,
+    panel_a_left - 0.090,          # was -0.060, now further left
     panel_a_center_y,
     'Cumulative mean SPEI-3',
     rotation='vertical',
@@ -384,7 +384,10 @@ for i, cls in enumerate(CLASS_ORDER):
             continue
 
         center_x = bottom[j] + val / 2
-        label = f'{val:.1f}%'
+        # ************** MODIFICATION: round to whole number **************
+        label = f'{val:.0f}%'
+        # ***************************************************************
+
         coast_for_bar = COAST_ORDER[j]
 
         # ----- Which segments must be placed inside the bar (even if narrow) -----
@@ -407,12 +410,10 @@ for i, cls in enumerate(CLASS_ORDER):
             use_fontsize = PERCENT_FS
             inside_color = 'white'
         else:
-            # Standard inside labels (only when bar is wide enough)
             use_fontsize = PERCENT_FS
-            # Make text white for red, pink, and both blue classes
             if cls in ['≤ -1.5', '-1.5 to -1.0', '1.0 to 1.5', '≥ 1.5']:
                 inside_color = 'white'
-            else:  # neutral grey
+            else:
                 inside_color = 'black'
 
         # ----- Place label inside if it's forced or bar width is ≥5% -----
@@ -427,7 +428,7 @@ for i, cls in enumerate(CLASS_ORDER):
                 zorder=5
             )
         else:
-            # ----- Narrow segment and not forced: place outside with annotation -----
+            # ----- Narrow segment: place outside with annotation -----
             off_y = 18 if stagger_count[j] % 2 == 0 else -18
             vertical_alignment = 'bottom' if stagger_count[j] % 2 == 0 else 'top'
             stagger_count[j] += 1
@@ -555,12 +556,12 @@ ax_c.spines['bottom'].set_visible(True)
 ax_c.tick_params(axis='y', length=0, pad=8)
 ax_c.tick_params(axis='x', length=5, width=1)
 
-# ---- Mean labels in Panel C ----
+# ---- Mean labels in Panel C (moved further right) ----
 for coast in COAST_ORDER:
     sub = site_df[site_df['coastline'] == coast]
     mean_val = sub['drought_event_exposure_percent'].mean()
     y_pos = coast_y[coast]
-    ax_c.text(1.015, y_pos, f'Mean = {mean_val:.1f}%',
+    ax_c.text(1.08, y_pos, f'Mean = {mean_val:.1f}%',   # was 1.015, now 1.08
               transform=ax_c.get_yaxis_transform(),
               va='center', ha='left', fontsize=MEAN_LABEL_FS, fontweight='bold',
               color=COAST_COLORS[coast], clip_on=False)

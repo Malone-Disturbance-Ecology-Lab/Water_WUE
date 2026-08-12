@@ -1,400 +1,411 @@
-# -*- coding: utf-8 -*-
 """
-Q3_figure_panel_A_updated_all_ecosystems.py
+Q3_WUE_T_SPEI_reviewer_all_ecosystem_thresholds.py
+==================================================
+Lean reviewer-output script.
 
-Updated Panel A figure using reviewer outputs:
-- All ecosystems (Upland, Freshwater, Saline)
-- All months (month‑averaged curves)
-- Thresholds plotted: 5%, 10%, 20% + top two highest detected above 20%
-- No shaded ribbons (curves only)
-- Panel labels moved to left margin (a–d for rows)
+- Loads the saved coast-threshold GAM model (RDS) and long data (CSV).
+- Generates predictions for all coast_region × water_class × month_f × SPEI_timescale × SPEI_value.
+- Writes four output files:
+  1. Full prediction file (month‑specific)
+  2. Month‑averaged prediction curves
+  3. Month‑specific threshold markers (5,10,15,20,25,30,35,40,50,75%)
+  4. Month‑averaged threshold markers (from averaged curve)
+
+All outputs go to:
+    M:\Research\WUE_CUE\WUE_manuscript_version6\Q3\Q3_august_update
+
+No old Upland/July files are created.
 """
 
 import os
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
+import subprocess
 import warnings
 warnings.filterwarnings('ignore')
+print("="*60)
+print("Q3: REVIEWER – All Ecosystems, All Months (Lean)")
+print("="*60)
 
 # ============================================================================
 # PATHS
 # ============================================================================
 base_dir = r"M:\Research\WUE_CUE\WUE_manuscript_version6\Q3"
-input_dir = os.path.join(base_dir, "Q3_august_update")
-figure_dir = os.path.join(base_dir, "Q3_WUE_T_SPEI_sensitivity_figures", "talib_manuscript")
-os.makedirs(figure_dir, exist_ok=True)
+output_dir = os.path.join(base_dir, "Q3_august_update")
+temp_dir = os.path.join(output_dir, "temp")
+os.makedirs(output_dir, exist_ok=True)
+os.makedirs(temp_dir, exist_ok=True)
+
+# Input files (from original outputs)
+data_long_path = os.path.join(base_dir, "Q3_WUE_T_SPEI_sensitivity_outputs",
+                              "Q3_WUE_T_SPEI_model_data_long.csv")
+model_rds_path = os.path.join(base_dir, "Q3_WUE_T_SPEI_sensitivity_outputs",
+                              "Q3_WUE_T_SPEI_coast_threshold_gam_model.rds")
+
+print(f"\nData long path:   {data_long_path}")
+print(f"Model RDS path:   {model_rds_path}")
+print(f"Output directory: {output_dir}")
+
+# ---- R‑safe path variables ----
+data_long_path_r = data_long_path.replace("\\", "/")
+model_rds_path_r = model_rds_path.replace("\\", "/")
+output_dir_r = output_dir.replace("\\", "/")
 
 # ============================================================================
-# CONSTANTS
+# CREATE R SCRIPT
 # ============================================================================
-COAST_COLORS = {
-    'Atlantic Coast': '#A50F15',
-    'Pacific Coast':  '#0072B2',
-    'Gulf Coast':     '#4D4D4D',
-    'AK Coast':       '#009E73'
-}
+r_script_content = f'''
+# Reviewer script – all ecosystems, all months
+# Loads saved model and data, generates predictions & thresholds.
 
-ECOSYSTEM_COLORS = {
-    'Upland':      '#800080',
-    'Freshwater':  '#0000FF',
-    'Saline':      '#FFA500'
-}
+library(mgcv)
+library(dplyr)
+library(tidyr)
 
-ECOSYSTEM_CLASSES = ["Upland", "Freshwater", "Saline"]
+# ---- paths ----
+data_long_path <- "{data_long_path_r}"
+model_rds_path <- "{model_rds_path_r}"
+output_dir <- "{output_dir_r}"
 
-COAST_REGION_LEVELS = [
-    "Atlantic Coast",
-    "Pacific Coast",
-    "Gulf Coast",
-    "AK Coast"
-]
+write_table <- function(x, filename) {{
+    write.csv(x, file.path(output_dir, filename), row.names = FALSE)
+}}
 
-COAST_DISPLAY_LABELS = {
-    "Atlantic Coast": "Atlantic Coast",
-    "Pacific Coast": "Pacific Coast",
-    "Gulf Coast": "Gulf Coast",
-    "AK Coast": "Alaska Coast"
-}
+# ---- load data and model ----
+cat("Loading data...\\n")
+data <- read.csv(data_long_path)
+cat("Loading model...\\n")
+smooth_coast_model <- readRDS(model_rds_path)
 
-# Row labels (for left margin)
-ROW_LABELS = ['a', 'b', 'c', 'd']
+# ---- ensure factors ----
+data$site_name <- factor(data$site_name)
+data$water_class <- factor(data$water_class, levels = c("Upland", "Freshwater", "Saline"))
+data$coast_region <- factor(data$coast_region, levels = c("Atlantic Coast", "Pacific Coast", "Gulf Coast", "AK Coast"))
+data$month_f <- as.factor(data$month_f)
+data$SPEI_timescale <- factor(data$SPEI_timescale,
+                              levels = c("SPEI_1", "SPEI_3", "SPEI_6", "SPEI_12", "SPEI_24", "SPEI_36", "SPEI_48"))
+data$spei_coast <- interaction(data$SPEI_timescale, data$coast_region, sep = "__", drop = TRUE)
 
-SELECTED_TIMESCALES = ["SPEI_1", "SPEI_3", "SPEI_48"]
-TIMESCALE_LABELS = {"SPEI_1": "SPEI-1", "SPEI_3": "SPEI-3", "SPEI_48": "SPEI-48"}
+# ---- prediction grid: all combinations ----
+cat("Creating prediction grid...\\n")
+spei_lower <- min(data$SPEI_value, na.rm = TRUE)
+spei_upper <- max(data$SPEI_value, na.rm = TRUE)
 
-# ---- full marker map for all possible threshold levels ----
-THRESHOLD_MARKER_MAP = {
-    "5%":  "o",
-    "10%": "s",
-    "15%": "v",
-    "20%": "^",
-    "25%": "D",
-    "30%": "P",
-    "35%": "X",
-    "40%": "*",
-    "50%": "h",
-    "75%": "8"
-}
+cat("Prediction SPEI range:", round(spei_lower, 3), "to", round(spei_upper, 3), "\n")
 
-REF_GRAY = "#9A9A9A"
-ZERO_GRAY = "#707070"
-
-def get_threshold_marker(threshold_pct):
-    label = str(threshold_pct).strip()
-    return THRESHOLD_MARKER_MAP.get(label, "o")
-
-# ============================================================================
-# LOAD DATA
-# ============================================================================
-print("Loading reviewer data (all ecosystems, all months, averaged)...")
-curve_file = os.path.join(input_dir, "Q3_reviewer_coast_threshold_prediction_curves_month_averaged_all_ecosystems.csv")
-marker_file = os.path.join(input_dir, "Q3_reviewer_threshold_markers_month_averaged_5_10_15_20_25_30_35_40_50_75_all_ecosystems.csv")
-
-curve_data = pd.read_csv(curve_file)
-marker_data = pd.read_csv(marker_file)
-
-# Ensure threshold_pct is string with '%' for marker mapping
-if 'threshold_pct' in marker_data.columns:
-    if marker_data['threshold_pct'].dtype in ['int64', 'float64']:
-        marker_data['threshold_pct'] = marker_data['threshold_pct'].astype(int).astype(str) + '%'
-    elif not marker_data['threshold_pct'].astype(str).str.endswith('%').all():
-        marker_data['threshold_pct'] = marker_data['threshold_pct'].astype(int).astype(str) + '%'
-
-# Filter to selected timescales
-curve_data = curve_data[curve_data['SPEI_timescale'].isin(SELECTED_TIMESCALES)]
-marker_data = marker_data[marker_data['SPEI_timescale'].isin(SELECTED_TIMESCALES)]
-
-print(f"Curve data: {len(curve_data)} rows")
-print(f"Marker data (before threshold selection): {len(marker_data)} rows")
-
-# ============================================================================
-# DETERMINE WHICH THRESHOLDS TO PLOT
-# ============================================================================
-# Extract unique detected threshold percentages (as integers)
-detected_thresholds = marker_data['threshold_pct'].str.replace('%', '').astype(int).unique()
-detected_thresholds = sorted(detected_thresholds)
-print(f"\nAll detected threshold levels in marker data: {detected_thresholds}")
-
-# Base thresholds always plotted
-base_thresholds = [5, 10, 20]
-
-# Thresholds above 20%
-above_20 = [t for t in detected_thresholds if t > 20]
-top_two_above_20 = sorted(above_20, reverse=True)[:2]  # highest two
-
-# Final selection
-selected_thresholds = sorted(set(base_thresholds + top_two_above_20))
-print(f"Selected thresholds for plotting: {selected_thresholds}")
-
-# Convert to string labels for filtering and legends
-selected_labels = [f"{t}%" for t in selected_thresholds]
-
-# Filter marker_data to only selected thresholds
-marker_data = marker_data[marker_data['threshold_pct'].isin(selected_labels)]
-
-print(f"Marker data after threshold selection: {len(marker_data)} rows")
-
-# Count markers per selected threshold for console summary
-marker_counts = marker_data.groupby('threshold_pct').size()
-print("\nNumber of markers per selected threshold:")
-for lbl in selected_labels:
-    count = marker_counts.get(lbl, 0)
-    print(f"  {lbl}: {count}")
-
-# ============================================================================
-# STYLE – NO GRID, WITH VISIBLE TICKS
-# ============================================================================
-sns.set_style("white")
-base_font = 30
-tick_font = 28
-legend_font = 26
-plt.rcParams.update({
-    'font.size': base_font,
-    'axes.labelsize': base_font,
-    'axes.titlesize': base_font + 4,
-    'xtick.labelsize': tick_font,
-    'ytick.labelsize': tick_font,
-    'legend.fontsize': legend_font,
-    'legend.title_fontsize': legend_font,
-    'axes.titleweight': 'bold',
-    'axes.grid': False,
-    'xtick.bottom': True,
-    'ytick.left': True,
-    'xtick.top': False,
-    'ytick.right': False,
-    'xtick.direction': 'out',
-    'ytick.direction': 'out',
-    'axes.edgecolor': 'black',
-    'axes.linewidth': 1.5,
-})
-
-# ============================================================================
-# CREATE PANEL A – 4 ROWS x 3 COLUMNS
-# ============================================================================
-fig, axes = plt.subplots(4, 3, figsize=(18, 16))
-
-# Adjust subplots to make room for row labels
-plt.subplots_adjust(left=0.15, right=0.78, top=0.95, bottom=0.08, wspace=0.3, hspace=0.4)
-
-# Handles for legends
-eco_handles = []
-eco_labels = []
-marker_handles = []
-marker_labels = []
-
-for idx_c, coast in enumerate(COAST_REGION_LEVELS):
-    for idx_t, timescale in enumerate(SELECTED_TIMESCALES):
-        ax = axes[idx_c, idx_t]
-
-        ax.grid(False)
-        ax.minorticks_off()
-        ax.set_facecolor("white")
-
-        # ------------------------------------------------------------------
-        # REFERENCE LINES (SPEI anomalies, zero, and threshold lines)
-        # ------------------------------------------------------------------
-        ax.axvline(x=-1, color=REF_GRAY, linestyle='--', linewidth=1.0, alpha=0.85, zorder=2)
-        ax.axvline(x=1,  color=REF_GRAY, linestyle='--', linewidth=1.0, alpha=0.85, zorder=2)
-        ax.axhline(y=0, color=ZERO_GRAY, linestyle='-', linewidth=1.1, alpha=0.9, zorder=2)
-
-        # ---- horizontal reference lines for the selected thresholds ----
-        for thr in selected_thresholds:
-            for yref in [-thr, thr]:
-                ax.axhline(
-                    y=yref,
-                    color="#595959",
-                    linestyle="--",
-                    linewidth=0.9,
-                    alpha=0.75,
-                    zorder=2.4
-                )
-
-        # ------------------------------------------------------------------
-        # CURVES FOR EACH ECOSYSTEM
-        # ------------------------------------------------------------------
-        for ecosystem in ECOSYSTEM_CLASSES:
-            sub = curve_data[
-                (curve_data['coast_region'] == coast) &
-                (curve_data['SPEI_timescale'] == timescale) &
-                (curve_data['water_class'] == ecosystem)
-            ]
-            if len(sub) == 0:
-                continue
-            sub = sub.sort_values("SPEI_value")
-            color = ECOSYSTEM_COLORS[ecosystem]
-
-            ax.plot(
-                sub['SPEI_value'],
-                sub['mean_pct'],
-                color=color,
-                linewidth=1.8,
-                label=ecosystem,
-                zorder=3
-            )
-
-            # ------------------------------------------------------------------
-            # THRESHOLD MARKERS (only for selected thresholds)
-            # ------------------------------------------------------------------
-            markers_sub = marker_data[
-                (marker_data['coast_region'] == coast) &
-                (marker_data['SPEI_timescale'] == timescale) &
-                (marker_data['water_class'] == ecosystem)
-            ]
-            for _, row in markers_sub.iterrows():
-                thr_label = row['threshold_pct']
-                marker = get_threshold_marker(thr_label)
-                x_pos = row['SPEI_threshold']
-                y_pos = row['pct_change_threshold']
-                x_low = row['SPEI_threshold_lower']
-                x_high = row['SPEI_threshold_upper']
-
-                # Horizontal bar indicating uncertainty range
-                if not np.isnan(x_low) and not np.isnan(x_high):
-                    ax.hlines(
-                        y=y_pos,
-                        xmin=x_low,
-                        xmax=x_high,
-                        color=color,
-                        linewidth=1.5,
-                        alpha=0.7,
-                        zorder=5
-                    )
-
-                # Marker point
-                ax.scatter(
-                    x=x_pos,
-                    y=y_pos,
-                    color=color,
-                    s=120,
-                    marker=marker,
-                    edgecolors='white',
-                    linewidths=0.7,
-                    zorder=6
-                )
-
-                # Collect legend handles for each unique threshold label
-                if thr_label not in marker_labels:
-                    marker_labels.append(thr_label)
-                    marker_handles.append(
-                        plt.Line2D(
-                            [0], [0],
-                            marker=marker,
-                            color='w',
-                            markerfacecolor='gray',
-                            markersize=14,
-                            label=thr_label
-                        )
-                    )
-
-        # Collect ecosystem legend handles
-        for eco in ECOSYSTEM_CLASSES:
-            if eco not in eco_labels:
-                eco_labels.append(eco)
-                eco_handles.append(
-                    plt.Line2D([0], [0], color=ECOSYSTEM_COLORS[eco], lw=3, label=eco)
-                )
-
-        # ------------------------------------------------------------------
-        # AXIS LABELS, TICKS
-        # ------------------------------------------------------------------
-        if idx_t == 0:
-            ax.set_ylabel(COAST_DISPLAY_LABELS[coast], fontweight='bold', fontsize=base_font)
-        else:
-            ax.set_ylabel('')
-
-        ax.set_xlabel('')
-        ax.xaxis.set_major_locator(plt.MaxNLocator(5, integer=True))
-        ax.yaxis.set_major_locator(plt.MaxNLocator(5, integer=True))
-
-        ax.tick_params(
-            axis='both',
-            which='major',
-            direction='out',
-            length=7,
-            width=1.5,
-            colors='black',
-            bottom=True,
-            left=True,
-            top=False,
-            right=False,
-            pad=6
-        )
-
-        for spine in ax.spines.values():
-            spine.set_visible(True)
-            spine.set_color('black')
-            spine.set_linewidth(1.5)
-
-        if idx_c == 0:
-            ax.set_title(TIMESCALE_LABELS[timescale], fontweight='bold', fontsize=base_font+4)
-
-# ----------------------------------------------------------------------------
-# ADD ROW LABELS (a, b, c, d) IN LEFT MARGIN
-# ----------------------------------------------------------------------------
-for i, coast in enumerate(COAST_REGION_LEVELS):
-    ax0 = axes[i, 0]
-    bbox = ax0.get_position()
-    x_pos = bbox.x0 - 0.025   # adjust as needed
-    y_pos = bbox.y0 + bbox.height / 2.0 + 0.1   # shifted up slightly
-    fig.text(
-        x_pos, y_pos,
-        ROW_LABELS[i] + ')',
-        fontsize=tick_font + 4,
-        fontweight='bold',
-        va='center',
-        ha='right',
-        transform=fig.transFigure
-    )
-
-# ----------------------------------------------------------------------------
-# GLOBAL Y-AXIS LABEL
-# ----------------------------------------------------------------------------
-fig.text(
-    0.01, 0.5,
-    r'WUE$_{T}$ Change (%)',
-    ha='center',
-    va='center',
-    rotation=90,
-    fontsize=base_font
+spei_sequence <- seq(
+    spei_lower,
+    spei_upper,
+    length.out = 200
 )
 
-# ----------------------------------------------------------------------------
-# LEGENDS (ecosystem and threshold markers)
-# ----------------------------------------------------------------------------
-if eco_handles:
-    fig.legend(
-        handles=eco_handles,
-        labels=eco_labels,
-        title='Ecosystem',
-        loc='center left',
-        bbox_to_anchor=(0.82, 0.65),
-        framealpha=0.9,
-        edgecolor='black',
-        fontsize=legend_font,
-        title_fontsize=legend_font
+# Get all levels
+water_classes <- levels(data$water_class)
+coast_regions <- levels(data$coast_region)
+spei_timescales <- levels(data$SPEI_timescale)
+months <- levels(data$month_f)   # all months present (already growing‑season filtered)
+
+prediction_grid <- expand.grid(
+    SPEI_timescale = spei_timescales,
+    coast_region = coast_regions,
+    water_class = water_classes,
+    month_f = months,
+    SPEI_value = spei_sequence,
+    site_name = levels(data$site_name)[1]   # dummy site for random effect
+)
+
+# ---- explicitly set factor levels ----
+prediction_grid$SPEI_timescale <- factor(prediction_grid$SPEI_timescale, levels = levels(data$SPEI_timescale))
+prediction_grid$coast_region <- factor(prediction_grid$coast_region, levels = levels(data$coast_region))
+prediction_grid$water_class <- factor(prediction_grid$water_class, levels = levels(data$water_class))
+prediction_grid$month_f <- factor(prediction_grid$month_f, levels = levels(data$month_f))
+prediction_grid$site_name <- factor(prediction_grid$site_name, levels = levels(data$site_name))
+
+prediction_grid$spei_coast <- interaction(prediction_grid$SPEI_timescale,
+                                          prediction_grid$coast_region,
+                                          sep = "__", drop = TRUE)
+prediction_grid$spei_coast <- factor(prediction_grid$spei_coast,
+                                     levels = levels(data$spei_coast))
+
+# ---- predict ----
+cat("Predicting...\\n")
+pred <- predict(smooth_coast_model, newdata = prediction_grid,
+                type = "link", se.fit = TRUE, exclude = "s(site_name)")
+prediction_grid$predicted_WUE_T <- as.numeric(pred$fit)
+prediction_grid$predicted_se <- as.numeric(pred$se.fit)
+prediction_grid$predicted_lower <- prediction_grid$predicted_WUE_T - 1.96 * prediction_grid$predicted_se
+prediction_grid$predicted_upper <- prediction_grid$predicted_WUE_T + 1.96 * prediction_grid$predicted_se
+
+# ---- near‑normal baseline (per group) ----
+cat("Computing baseline...\\n")
+baseline <- prediction_grid[
+    prediction_grid$SPEI_value >= -1 & prediction_grid$SPEI_value <= 1,
+] |>
+    group_by(SPEI_timescale, coast_region, water_class, month_f) |>
+    summarise(predicted_near_normal_WUE_T = mean(predicted_WUE_T), .groups = "drop")
+
+# ---- percentage changes ----
+prediction_impact <- left_join(prediction_grid, baseline,
+                               by = c("SPEI_timescale", "coast_region", "water_class", "month_f"))
+prediction_impact$predicted_change <- prediction_impact$predicted_WUE_T -
+                                       prediction_impact$predicted_near_normal_WUE_T
+prediction_impact$predicted_pct_change <- 100 * prediction_impact$predicted_change /
+                                           prediction_impact$predicted_near_normal_WUE_T
+prediction_impact$predicted_lower_pct <- 100 * (prediction_impact$predicted_lower -
+                                                prediction_impact$predicted_near_normal_WUE_T) /
+                                          prediction_impact$predicted_near_normal_WUE_T
+prediction_impact$predicted_upper_pct <- 100 * (prediction_impact$predicted_upper -
+                                                prediction_impact$predicted_near_normal_WUE_T) /
+                                          prediction_impact$predicted_near_normal_WUE_T
+
+# ---- 1. Full prediction file (month‑specific) ----
+write_table(prediction_impact,
+            "Q3_reviewer_coast_threshold_predictions_all_ecosystems_all_months.csv")
+
+# ---- 2. Month‑averaged prediction curves ----
+curve_avg <- prediction_impact |>
+    group_by(coast_region, water_class, SPEI_timescale, SPEI_value) |>
+    summarise(
+        mean_pct = mean(predicted_pct_change, na.rm = TRUE),
+        lower_pct = mean(predicted_lower_pct, na.rm = TRUE),
+        upper_pct = mean(predicted_upper_pct, na.rm = TRUE),
+        n_months = n_distinct(month_f),
+        .groups = "drop"
     )
+write_table(curve_avg,
+            "Q3_reviewer_coast_threshold_prediction_curves_month_averaged_all_ecosystems.csv")
 
-if marker_handles:
-    fig.legend(
-        handles=marker_handles,
-        labels=marker_labels,
-        title='Threshold Change (%)',
-        loc='center left',
-        bbox_to_anchor=(0.82, 0.35),
-        framealpha=0.9,
-        edgecolor='black',
-        fontsize=legend_font,
-        title_fontsize=legend_font
+# ---- Helper: find SPEI threshold ----
+find_spei_threshold <- function(group_data, pct_column, threshold_pct,
+                                anomaly_side, impact_direction) {{
+    pct_values <- group_data[[pct_column]]
+    if (anomaly_side == "dry") {{
+        side_filter <- group_data$SPEI_value < -1
+    }} else {{
+        side_filter <- group_data$SPEI_value > 1
+    }}
+    if (impact_direction == "decrease") {{
+        direction_filter <- pct_values <= -threshold_pct
+    }} else {{
+        direction_filter <- pct_values >= threshold_pct
+    }}
+    threshold_values <- group_data$SPEI_value[side_filter & direction_filter]
+    if (length(threshold_values) == 0) return(NA_real_)
+    if (anomaly_side == "dry") {{
+        return(max(threshold_values, na.rm = TRUE))
+    }} else {{
+        return(min(threshold_values, na.rm = TRUE))
+    }}
+}}
+
+# ---- 3. Month‑specific threshold markers ----
+cat("Computing month‑specific thresholds...\\n")
+threshold_levels <- c(5, 10, 15, 20, 25, 30, 35, 40, 50, 75)
+
+markers_month <- do.call(
+    rbind,
+    lapply(
+        split(prediction_impact,
+              list(prediction_impact$SPEI_timescale,
+                   prediction_impact$coast_region,
+                   prediction_impact$water_class,
+                   prediction_impact$month_f), drop = TRUE),
+        function(group) {{
+            do.call(
+                rbind,
+                lapply(threshold_levels, function(thr) {{
+                    # Mean curve crossings
+                    dry_dec <- group$SPEI_value[group$SPEI_value < -1 & group$predicted_pct_change <= -thr]
+                    dry_inc <- group$SPEI_value[group$SPEI_value < -1 & group$predicted_pct_change >= thr]
+                    wet_dec <- group$SPEI_value[group$SPEI_value > 1 & group$predicted_pct_change <= -thr]
+                    wet_inc <- group$SPEI_value[group$SPEI_value > 1 & group$predicted_pct_change >= thr]
+
+                    data.frame(
+                        SPEI_timescale = group$SPEI_timescale[1],
+                        coast_region = group$coast_region[1],
+                        water_class = group$water_class[1],
+                        month_f = group$month_f[1],
+                        threshold_pct = thr,
+                        impact_direction = c("decrease", "increase", "decrease", "increase"),
+                        anomaly_side = c("dry", "dry", "wet", "wet"),
+                        SPEI_threshold = c(
+                            ifelse(length(dry_dec) > 0, max(dry_dec, na.rm = TRUE), NA_real_),
+                            ifelse(length(dry_inc) > 0, max(dry_inc, na.rm = TRUE), NA_real_),
+                            ifelse(length(wet_dec) > 0, min(wet_dec, na.rm = TRUE), NA_real_),
+                            ifelse(length(wet_inc) > 0, min(wet_inc, na.rm = TRUE), NA_real_)
+                        ),
+                        pct_change_threshold = c(-thr, thr, -thr, thr)
+                    )
+                }})
+            )
+        }}
     )
+)
+# Remove NA thresholds
+markers_month <- markers_month[!is.na(markers_month$SPEI_threshold), ]
 
-plt.suptitle('')
+# Compute lower/upper uncertainty thresholds
+markers_month$SPEI_threshold_lower <- NA_real_
+markers_month$SPEI_threshold_upper <- NA_real_
 
-# ----------------------------------------------------------------------------
-# SAVE
-# ----------------------------------------------------------------------------
-output_path = os.path.join(figure_dir, "Q3_panel_A_coast_GAM_thresholds_all_ecosystems.png")
-fig.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
-plt.show()
-print(f"Updated Panel A saved to: {output_path}")
+for (i in seq_len(nrow(markers_month))) {{
+    row <- markers_month[i, ]
+    sub <- prediction_impact[
+        prediction_impact$SPEI_timescale == row$SPEI_timescale &
+        prediction_impact$coast_region == row$coast_region &
+        prediction_impact$water_class == row$water_class &
+        prediction_impact$month_f == row$month_f,
+    ]
+    lower <- find_spei_threshold(sub, "predicted_lower_pct",
+                                 row$threshold_pct, row$anomaly_side, row$impact_direction)
+    upper <- find_spei_threshold(sub, "predicted_upper_pct",
+                                 row$threshold_pct, row$anomaly_side, row$impact_direction)
+    range_vals <- c(row$SPEI_threshold, lower, upper)
+    range_vals <- range_vals[!is.na(range_vals)]
+    markers_month$SPEI_threshold_lower[i] <- min(range_vals)
+    markers_month$SPEI_threshold_upper[i] <- max(range_vals)
+}}
+
+markers_month$threshold_pct <- factor(markers_month$threshold_pct,
+                                      levels = threshold_levels,
+                                      labels = paste0(threshold_levels, "%"))
+
+write_table(markers_month,
+            "Q3_reviewer_threshold_markers_month_specific_5_10_15_20_25_30_35_40_50_75_all_ecosystems.csv")
+
+# ---- 4. Month‑averaged threshold markers (from averaged curve) ----
+cat("Computing month‑averaged thresholds...\\n")
+markers_avg <- do.call(
+    rbind,
+    lapply(
+        split(curve_avg,
+              list(curve_avg$SPEI_timescale,
+                   curve_avg$coast_region,
+                   curve_avg$water_class), drop = TRUE),
+        function(group) {{
+            do.call(
+                rbind,
+                lapply(threshold_levels, function(thr) {{
+                    dry_dec <- group$SPEI_value[group$SPEI_value < -1 & group$mean_pct <= -thr]
+                    dry_inc <- group$SPEI_value[group$SPEI_value < -1 & group$mean_pct >= thr]
+                    wet_dec <- group$SPEI_value[group$SPEI_value > 1 & group$mean_pct <= -thr]
+                    wet_inc <- group$SPEI_value[group$SPEI_value > 1 & group$mean_pct >= thr]
+
+                    data.frame(
+                        SPEI_timescale = group$SPEI_timescale[1],
+                        coast_region = group$coast_region[1],
+                        water_class = group$water_class[1],
+                        threshold_pct = thr,
+                        impact_direction = c("decrease", "increase", "decrease", "increase"),
+                        anomaly_side = c("dry", "dry", "wet", "wet"),
+                        SPEI_threshold = c(
+                            ifelse(length(dry_dec) > 0, max(dry_dec, na.rm = TRUE), NA_real_),
+                            ifelse(length(dry_inc) > 0, max(dry_inc, na.rm = TRUE), NA_real_),
+                            ifelse(length(wet_dec) > 0, min(wet_dec, na.rm = TRUE), NA_real_),
+                            ifelse(length(wet_inc) > 0, min(wet_inc, na.rm = TRUE), NA_real_)
+                        ),
+                        pct_change_threshold = c(-thr, thr, -thr, thr)
+                    )
+                }})
+            )
+        }}
+    )
+)
+markers_avg <- markers_avg[!is.na(markers_avg$SPEI_threshold), ]
+
+# Compute lower/upper from averaged curve uncertainty
+markers_avg$SPEI_threshold_lower <- NA_real_
+markers_avg$SPEI_threshold_upper <- NA_real_
+
+for (i in seq_len(nrow(markers_avg))) {{
+    row <- markers_avg[i, ]
+    sub <- curve_avg[
+        curve_avg$SPEI_timescale == row$SPEI_timescale &
+        curve_avg$coast_region == row$coast_region &
+        curve_avg$water_class == row$water_class,
+    ]
+    lower <- find_spei_threshold(sub, "lower_pct",
+                                 row$threshold_pct, row$anomaly_side, row$impact_direction)
+    upper <- find_spei_threshold(sub, "upper_pct",
+                                 row$threshold_pct, row$anomaly_side, row$impact_direction)
+    range_vals <- c(row$SPEI_threshold, lower, upper)
+    range_vals <- range_vals[!is.na(range_vals)]
+    markers_avg$SPEI_threshold_lower[i] <- min(range_vals)
+    markers_avg$SPEI_threshold_upper[i] <- max(range_vals)
+}}
+
+markers_avg$threshold_pct <- factor(markers_avg$threshold_pct,
+                                    levels = threshold_levels,
+                                    labels = paste0(threshold_levels, "%"))
+
+write_table(markers_avg,
+            "Q3_reviewer_threshold_markers_month_averaged_5_10_15_20_25_30_35_40_50_75_all_ecosystems.csv")
+
+# ---- console summary ----
+cat("\\n=== Summary of month‑averaged threshold crossings ===\\n")
+summary_avg <- markers_avg |>
+    group_by(coast_region, water_class, SPEI_timescale, threshold_pct) |>
+    summarise(n_crossings = n(), .groups = "drop")
+print(summary_avg)
+
+cat("\\n=== All reviewer outputs written to:", output_dir, "\\n")
+'''
+
+# ============================================================================
+# SAVE R SCRIPT AND RUN
+# ============================================================================
+r_script_file = os.path.join(temp_dir, "run_reviewer.R")
+with open(r_script_file, 'w', encoding='utf-8') as f:
+    f.write(r_script_content)
+
+print(f"\nR script saved to: {r_script_file}")
+
+# Add R to PATH if needed
+r_path = r"C:\Program Files\R\R-4.4.2\bin\x64"
+if r_path not in os.environ['PATH']:
+    os.environ['PATH'] = os.environ['PATH'] + os.pathsep + r_path
+
+print("\nRunning R script...")
+result = subprocess.run(
+    ["Rscript", r_script_file],
+    capture_output=True,
+    text=True
+)
+
+if result.returncode != 0:
+    print("R script had errors:")
+    print(result.stderr)
+    raise RuntimeError("R execution failed")
+else:
+    print("R script completed successfully.")
+    if result.stdout:
+        print(result.stdout)
+
+# ============================================================================
+# VERIFY OUTPUTS (only the four new files)
+# ============================================================================
+print("\n" + "="*60)
+print("Verifying reviewer outputs")
+print("="*60)
+
+expected_files = [
+    "Q3_reviewer_coast_threshold_predictions_all_ecosystems_all_months.csv",
+    "Q3_reviewer_coast_threshold_prediction_curves_month_averaged_all_ecosystems.csv",
+    "Q3_reviewer_threshold_markers_month_specific_5_10_15_20_25_30_35_40_50_75_all_ecosystems.csv",
+    "Q3_reviewer_threshold_markers_month_averaged_5_10_15_20_25_30_35_40_50_75_all_ecosystems.csv",
+]
+
+missing = []
+for f in expected_files:
+    if not os.path.exists(os.path.join(output_dir, f)):
+        missing.append(f)
+
+if missing:
+    raise FileNotFoundError("Missing output files:\n" + "\n".join(missing))
+else:
+    print(f"All {len(expected_files)} reviewer outputs successfully created.")
+    print("\nFiles saved to:")
+    for f in expected_files:
+        print(f"  {os.path.join(output_dir, f)}")
+
+print("\n" + "="*60)
+print("REVIEWER SCRIPT COMPLETE")
+print("="*60)

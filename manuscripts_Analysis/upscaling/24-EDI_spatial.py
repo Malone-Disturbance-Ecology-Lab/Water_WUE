@@ -82,13 +82,20 @@ OUTPUT_DIR  = r"M:\Research\WUE_CUE\WUE_manuscript_version6\upscaling"
 Q3_DIR      = r"M:\Research\WUE_CUE\WUE_manuscript_version6\Q3\Q3_WUE_T_SPEI_sensitivity_outputs"
 Q4_DIR      = r"M:\Research\WUE_CUE\WUE_manuscript_version6\Q4\Q4_Ecological_Impacts_outputs"
 
+# New final Q3 prediction directory with month-specific curves
+Q3_FINAL_DIR = r"M:\Research\WUE_CUE\WUE_manuscript_version6\Q3\Q3_august_update"
+
 SPATIAL_START_YEAR = int(os.environ.get("EDI_START_YEAR", "2000"))
 SPATIAL_END_YEAR = int(os.environ.get("EDI_END_YEAR", "2025"))
 EVENT_THRESHOLD_PCT = float(os.environ.get("EDI_EVENT_THRESHOLD_PCT", "5.0"))
 
 # Required response curves from Q4 directory
 RESPONSE_CURVES = os.path.join(Q4_DIR, "EDI_response_prediction_curves.csv")
-Q3_ALIGNED_CURVES = os.path.join(Q4_DIR, "EDI_Q3_aligned_prediction_scores_upland.csv")
+# Upland Q3 aligned curves now come from the final month-specific GAM predictions
+Q3_ALIGNED_CURVES = os.path.join(
+    Q3_FINAL_DIR,
+    "Q3_reviewer_coast_threshold_predictions_all_ecosystems_all_months.csv"
+)
 
 # Required slope summary from Q3 directory
 Q3_SLOPE_SUMMARY = os.path.join(Q3_DIR, "Q3_WUE_T_SPEI_coast_region_slope_summary.csv")
@@ -374,30 +381,43 @@ def load_response_curves(path):
 
 
 def load_q3_aligned_upland_curves(path, spei_timescale="SPEI_3"):
+    """
+    Load the final Q3 month-specific Upland SPEI-3 GAM prediction curves.
+    Returns a dictionary keyed by (coast_region, month) with fields:
+        spei, pct, lower, upper.
+    """
     curves = {}
     with open(path, newline="") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            if row.get("SPEI_timescale") != spei_timescale:
-                continue
+            # Filter for Upland and SPEI-3 only
             if row.get("water_class") != "Upland":
                 continue
+            if row.get("SPEI_timescale") != spei_timescale:
+                continue
+            # Extract month (month_f is a float)
+            try:
+                month = int(float(row["month_f"]))
+            except (ValueError, KeyError):
+                continue
             coast_region = row["coast_region"]
-            curves.setdefault(coast_region, {"spei": [], "pct": [], "lower": [], "upper": []})
-            curves[coast_region]["spei"].append(float(row["SPEI_value"]))
-            curves[coast_region]["pct"].append(float(row["predicted_pct_change"]))
-            curves[coast_region]["lower"].append(float(row["predicted_lower_pct"]))
-            curves[coast_region]["upper"].append(float(row["predicted_upper_pct"]))
+            key = (coast_region, month)
+
+            curves.setdefault(key, {"spei": [], "pct": [], "lower": [], "upper": []})
+            curves[key]["spei"].append(float(row["SPEI_value"]))
+            curves[key]["pct"].append(float(row["predicted_pct_change"]))
+            curves[key]["lower"].append(float(row["predicted_lower_pct"]))
+            curves[key]["upper"].append(float(row["predicted_upper_pct"]))
 
     out = {}
-    for coast_region, vals in curves.items():
+    for (coast_region, month), vals in curves.items():
         order = np.argsort(vals["spei"])
         spei = np.array(vals["spei"], dtype=np.float64)[order]
         pct = np.array(vals["pct"], dtype=np.float64)[order]
         lower = np.array(vals["lower"], dtype=np.float64)[order]
         upper = np.array(vals["upper"], dtype=np.float64)[order]
         uniq, idx = np.unique(spei, return_index=True)
-        out[coast_region] = {
+        out[(coast_region, month)] = {
             "spei": uniq,
             "pct": pct[idx],
             "lower": lower[idx],
@@ -416,20 +436,30 @@ def predict_response_pct(spei, curve, field="pct"):
     return pred
 
 
-def predict_q3_coast_response_pct(spei, coast_id, region_names, curves, field="pct"):
+def predict_q3_coast_response_pct(
+    spei, coast_id, region_names, curves, month, field="pct"
+):
+    """
+    Predict WUE_T percent change using Q3 coast- and month-specific curves.
+    The 'curves' dictionary keys are (coast_region, month).
+    """
     pred = np.full(spei.shape, np.nan, dtype=np.float64)
+    month_int = int(month)
     for rid, name in enumerate(region_names):
-        if name not in curves:
+        key = (name, month_int)
+        if key not in curves:
+            # Missing curve; skip (will leave pred as NaN for this coast)
             continue
+        curve = curves[key]
         pix = (coast_id == rid) & np.isfinite(spei)
         if not np.any(pix):
             continue
         pred[pix] = np.interp(
             spei[pix],
-            curves[name]["spei"],
-            curves[name][field],
-            left=curves[name][field][0],
-            right=curves[name][field][-1],
+            curve["spei"],
+            curve[field],
+            left=curve[field][0],
+            right=curve[field][-1],
         )
     return pred
 
@@ -527,7 +557,18 @@ def main():
         q3_upland_curves = load_q3_aligned_upland_curves(Q3_ALIGNED_CURVES, spei_timescale="SPEI_3")
     except FileNotFoundError:
         sys.exit(f"Required file not found: {Q3_ALIGNED_CURVES}\n"
-                 f"Please ensure EDI_Q3_aligned_prediction_scores_upland.csv exists in {Q4_DIR}")
+                 f"Please ensure Q3_reviewer_coast_threshold_predictions_all_ecosystems_all_months.csv exists in {Q3_FINAL_DIR}")
+    
+    # Safety check: ensure every coast has curves for April–October
+    missing = []
+    for coast in REGION_NAMES:
+        for month in range(4, 11):
+            if (coast, month) not in q3_upland_curves:
+                missing.append(f"{coast}, month {month}")
+    if missing:
+        raise RuntimeError(
+            f"Missing Q3 Upland SPEI-3 prediction curves for: {', '.join(missing)}"
+        )
     
     water_classes = list(response_curves.keys())
     print("Loaded legacy ecosystem response curves:")
@@ -538,12 +579,15 @@ def main():
             f"  {water_class}: SPEI {spei_x.min():.2f} to {spei_x.max():.2f}; "
             f"WUE_T change {pct_y.min():.2f}% to {pct_y.max():.2f}%"
         )
-    print("Loaded Q3-aligned coast-specific upland SPEI-3 curves:")
-    for coast_region, curve in q3_upland_curves.items():
-        print(
-            f"  {coast_region}: SPEI {curve['spei'].min():.2f} to {curve['spei'].max():.2f}; "
-            f"WUE_T change {curve['pct'].min():.2f}% to {curve['pct'].max():.2f}%"
-        )
+    print("Loaded Q3-aligned coast- and month-specific Upland SPEI-3 curves:")
+    # Print only months 4–10 to reduce output
+    for (coast_region, month), curve in sorted(q3_upland_curves.items()):
+        if 4 <= month <= 10:
+            print(
+                f"  {coast_region}, month {month}: "
+                f"SPEI {curve['spei'].min():.2f} to {curve['spei'].max():.2f}; "
+                f"WUE_T change {curve['pct'].min():.2f}% to {curve['pct'].max():.2f}%"
+            )
 
     # ---- Find input files ---------------------------------------------------
     files = sorted(glob.glob(os.path.join(SPEI3_DIR, "SPEI3_*_US_OCEAN_COAST_80km.nc")),
@@ -678,8 +722,14 @@ def main():
         # Response-based EDI scenarios by ecosystem class.
         for water_class in water_classes:
             if water_class == "Upland":
+                # Use month-specific Q3 curves
                 pct_change = predict_q3_coast_response_pct(
-                    spei, coast_id, region_names, q3_upland_curves, field="pct"
+                    spei,
+                    coast_id,
+                    region_names,
+                    q3_upland_curves,
+                    month=month,
+                    field="pct"
                 )
             else:
                 pct_change = predict_response_pct(spei, response_curves[water_class])
@@ -690,10 +740,20 @@ def main():
 
             if water_class == "Upland":
                 lower = predict_q3_coast_response_pct(
-                    spei, coast_id, region_names, q3_upland_curves, field="lower"
+                    spei,
+                    coast_id,
+                    region_names,
+                    q3_upland_curves,
+                    month=month,
+                    field="lower"
                 )
                 upper = predict_q3_coast_response_pct(
-                    spei, coast_id, region_names, q3_upland_curves, field="upper"
+                    spei,
+                    coast_id,
+                    region_names,
+                    q3_upland_curves,
+                    month=month,
+                    field="upper"
                 )
                 good = ~bad
                 v2_count[good] += 1
