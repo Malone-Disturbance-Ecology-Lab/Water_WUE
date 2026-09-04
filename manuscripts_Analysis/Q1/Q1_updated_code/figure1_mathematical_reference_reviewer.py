@@ -4,9 +4,9 @@ Combined Q1 panels: A (a–c), B (d–f), and G/H (g–h)
 Updated with:
 - mathematical reference line in d–f
 - panel labels outside axes (top-left)
-- brackets with significance stars for post-hoc comparisons (g: Upland-Freshwater *; h: Alaska-Atlantic **, Pacific-Atlantic *)
-- increased row spacing and bracket separation to avoid overlap
-- original panel-specific y-axis scaling retained
+- brackets with significance stars for post-hoc comparisons
+- increased row spacing and bracket separation
+- bbox_inches='tight' to prevent cut-off when saving
 """
 
 import os
@@ -288,19 +288,18 @@ def add_significance_bracket(ax, x1, x2, y, star, color='black', linewidth=1.5, 
             fontweight='bold', color=color)
 
 # ------------------------------------------------------------------------------
-# Create figure with increased row spacing
+# Create figure with increased row spacing and larger top margin
 # ------------------------------------------------------------------------------
 fig_height = 6 + 7 + 6 + 0.5 * 2
 fig = plt.figure(figsize=(24, fig_height))
 
-# Increase hspace from 0.40 to 0.50 to give more room between rows
 outer = fig.add_gridspec(
     3, 1,
     height_ratios=[6, 7, 6],
     hspace=0.50,
     left=0.12,
     right=0.95,
-    top=0.96,
+    top=0.97,        # increased from 0.96 to give more room at top
     bottom=0.06
 )
 
@@ -500,9 +499,9 @@ ax_h.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
 add_panel_label(ax_h, "h)")
 
 # ------------------------------------------------------------------------------
-# Save figure
+# Save figure with bbox_inches='tight' to prevent cut-off
 # ------------------------------------------------------------------------------
-fig.savefig(fig_output, dpi=600, facecolor='white')
+fig.savefig(fig_output, dpi=600, bbox_inches='tight', facecolor='white')
 print(f"\nCombined figure saved to: {fig_output}")
 
 # ------------------------------------------------------------------------------
