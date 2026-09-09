@@ -257,7 +257,7 @@ def main():
     # Panel a: Pixel-level
     add_violin_with_jitter(ax1, df_pixel, 'resistance', coast_order,
                            CUSTOM_COLORS,
-                           ylabel='Resistance analogue from pixel means',
+                           ylabel='Resistance analogue from grid-cell means',
                            panel_label='a)',
                            sample_n=500)
 
