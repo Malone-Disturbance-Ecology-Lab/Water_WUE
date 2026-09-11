@@ -35,11 +35,13 @@ os.makedirs(figure_dir, exist_ok=True)
 # CONSTANTS – EXACT COAST COLORS FROM PANEL A
 # ============================================================================
 COAST_COLORS = {
-    "Atlantic Coast": "#2E8B57",
-    "Pacific Coast":  "#DC143C",
-    "Gulf Coast":     "#00CED1",
-    "AK Coast":       "#8B4513"
+    "Atlantic Coast": "#A50F15",
+    "Pacific Coast":  "#0072B2",
+    "Gulf Coast":     "#4D4D4D",
+    "AK Coast":       "#009E73"
 }
+
+
 COAST_REGION_LEVELS = ["Atlantic Coast", "Pacific Coast", "Gulf Coast", "AK Coast"]
 SELECTED_TIMESCALES = ["SPEI_1", "SPEI_3", "SPEI_48"]
 
