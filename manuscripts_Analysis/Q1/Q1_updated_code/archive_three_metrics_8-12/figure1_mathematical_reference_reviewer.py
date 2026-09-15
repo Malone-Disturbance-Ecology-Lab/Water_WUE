@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Combined Q1 panels — UPDATED 4-panel layout (a–d) after WUE_E removal.
-All four panels are equal width and equal height (clean 2x2 grid).
-
-Panels:
-  a) WUE_ET - WUE_T mean ± 95% CI by ecosystem
-  b) WUE_ET - WUE_T GAM vs T:ET (3 ecosystem curves) + mathematical reference line
-  c) WUE_T by ecosystem (violin + omnibus Kruskal + post-hoc bracket)   [was g]
-  d) T:ET by coast (mean ± CI + omnibus Kruskal + post-hoc brackets)    [was h]
-
-Only WUE_ET - WUE_T is modeled/plotted now.
-Panels c/d statistical content is UNCHANGED from the previous g/h panels
-(same data, same tests, same brackets) — only the panel letter changed.
+Combined Q1 panels: A (a–c), B (d–f), and G/H (g–h)
+Updated with:
+- mathematical reference line in d–f
+- panel labels outside axes (top-left)
+- brackets with significance stars for post-hoc comparisons
+- increased row spacing and bracket separation
+- bbox_inches='tight' to prevent cut-off when saving
 """
 
 import os
@@ -28,7 +23,7 @@ base_dir = r"M:\Research\WUE_CUE\WUE_manuscript_version6\Q1\Q1_updated_results"
 output_dir = os.path.join(base_dir, "outputs")
 figure_dir = os.path.join(base_dir, "figures", "talib_manuscript")
 os.makedirs(figure_dir, exist_ok=True)
-fig_output = os.path.join(figure_dir, "Q1_combined_panels_A_B_C_D_final.png")
+fig_output = os.path.join(figure_dir, "Q1_combined_panels_A_B_G_H_with_brackets_final.png")
 
 monthly_data_path = r"\\corellia.environment.yale.edu\MaloneLab\Research\WUE_CUE\data_products\WUE_CUE_monthly_merged_indices_clean.csv"
 
@@ -36,11 +31,11 @@ monthly_data_path = r"\\corellia.environment.yale.edu\MaloneLab\Research\WUE_CUE
 # Load data
 # ------------------------------------------------------------------------------
 summary_file = os.path.join(output_dir, "Q1_final_near_normal_summary_by_difference_type.csv")
+df_summary = pd.read_csv(summary_file)
+
 smooth_file = os.path.join(output_dir, "Q1_final_smooth_gam_predictions_TET.csv")
 gam_comp_file = os.path.join(output_dir, "Q1_final_gam_model_comparison.csv")
 edf_file = os.path.join(output_dir, "Q1_final_smooth_gam_smooth_terms.csv")
-
-df_summary = pd.read_csv(summary_file)
 df_smooth = pd.read_csv(smooth_file)
 gam_comp = pd.read_csv(gam_comp_file)
 edf_df = pd.read_csv(edf_file)
@@ -78,11 +73,13 @@ coast_short = {
 
 diff_label_mapping = {
     "WUE_ET - WUE_T": r"WUE$_{ET}$ – WUE$_{T}$ (g C kg$^{-1}$ H$_2$O$^{-1}$)",
+    "WUE_ET - WUE_E": r"WUE$_{ET}$ – WUE$_{E}$ (g C kg$^{-1}$ H$_2$O$^{-1}$)",
+    "WUE_E - WUE_T": r"WUE$_{E}$ – WUE$_{T}$ (g C kg$^{-1}$ H$_2$O$^{-1}$)",
 }
-diff_labels = ["WUE_ET - WUE_T"]
+diff_labels = list(diff_label_mapping.keys())
 
 # ------------------------------------------------------------------------------
-# Data preparation for panel a (summary)
+# Data preparation for Panel A
 # ------------------------------------------------------------------------------
 df_summary = df_summary[df_summary["difference_label"].isin(diff_labels)]
 df_summary["difference_label"] = pd.Categorical(df_summary["difference_label"],
@@ -91,7 +88,7 @@ df_summary["water_class"] = pd.Categorical(df_summary["water_class"],
                                            categories=ecosystem_order, ordered=True)
 
 # ------------------------------------------------------------------------------
-# Data preparation for panel b (smooth GAM)
+# Data preparation for Panel B (smooth GAM)
 # ------------------------------------------------------------------------------
 df_smooth = df_smooth[df_smooth["difference_label"].isin(diff_labels)]
 df_smooth["difference_label"] = pd.Categorical(df_smooth["difference_label"],
@@ -100,7 +97,7 @@ df_smooth["ecosystem_label"] = pd.Categorical(df_smooth["ecosystem_label"],
                                               categories=ecosystem_order, ordered=True)
 
 # ------------------------------------------------------------------------------
-# Data preparation for panels c/d (capping, ordering) — UNCHANGED
+# Data preparation for Panels g/h (capping, ordering)
 # ------------------------------------------------------------------------------
 def cap_by_group(df, group_col, value_col, percentile=99):
     capped = df.copy()
@@ -115,18 +112,18 @@ def cap_by_group(df, group_col, value_col, percentile=99):
 
 wue_monthly = cap_by_group(wue_monthly, 'water_class', 'WUE_T', 99)
 
-eco_order_cd = ["Upland", "Freshwater", "Saline"]
+eco_order_gh = ["Upland", "Freshwater", "Saline"]
 
 coast_means_order = tet_site.groupby('coast_region')['mean_TET'].mean().sort_values()
 coast_order = coast_means_order.index.tolist()
 
-wue_monthly['water_class'] = pd.Categorical(wue_monthly['water_class'], categories=eco_order_cd, ordered=True)
-wue_site['water_class'] = pd.Categorical(wue_site['water_class'], categories=eco_order_cd, ordered=True)
+wue_monthly['water_class'] = pd.Categorical(wue_monthly['water_class'], categories=eco_order_gh, ordered=True)
+wue_site['water_class'] = pd.Categorical(wue_site['water_class'], categories=eco_order_gh, ordered=True)
 tet_monthly['coast_region'] = pd.Categorical(tet_monthly['coast_region'], categories=coast_order, ordered=True)
 tet_site['coast_region'] = pd.Categorical(tet_site['coast_region'], categories=coast_order, ordered=True)
 
-# Omnibus tests — UNCHANGED
-eco_groups = [wue_site[wue_site['water_class'] == e]['mean_WUE_T'].dropna().values for e in eco_order_cd]
+# Omnibus tests
+eco_groups = [wue_site[wue_site['water_class'] == e]['mean_WUE_T'].dropna().values for e in eco_order_gh]
 h_eco, p_eco = kruskal(*eco_groups)
 p_text_eco = f"p = {p_eco:.4f}" if p_eco >= 0.001 else "p < 0.001"
 
@@ -134,9 +131,9 @@ coast_groups = [tet_site[tet_site['coast_region'] == c]['mean_TET'].dropna().val
 h_coast, p_coast = kruskal(*coast_groups)
 p_text_coast = f"p = {p_coast:.3f}" if p_coast >= 0.001 else "p < 0.001"
 
-# Group statistics for plotting — UNCHANGED
-eco_medians = wue_monthly.groupby('water_class', observed=False)['WUE_T'].median().reindex(eco_order_cd)
-eco_means = wue_site.groupby('water_class', observed=False)['mean_WUE_T'].mean().reindex(eco_order_cd)
+# Group statistics for plotting
+eco_medians = wue_monthly.groupby('water_class', observed=False)['WUE_T'].median().reindex(eco_order_gh)
+eco_means = wue_site.groupby('water_class', observed=False)['mean_WUE_T'].mean().reindex(eco_order_gh)
 
 coast_stats = tet_site.groupby('coast_region', observed=False)['mean_TET'].agg(['mean', 'std', 'count']).reindex(coast_order)
 coast_means = coast_stats['mean']
@@ -144,7 +141,7 @@ coast_sem = coast_stats['std'] / np.sqrt(coast_stats['count'])
 coast_ci = 1.96 * coast_sem
 
 # ------------------------------------------------------------------------------
-# Mathematical reference curve (single difference only)
+# Compute mathematical reference curves
 # ------------------------------------------------------------------------------
 print("\nLoading monthly data for reference calculation...")
 monthly = pd.read_csv(monthly_data_path)
@@ -181,12 +178,21 @@ if n_nn != 1202:
 
 tet_range = (df_smooth['Trans_ratio'].min(), df_smooth['Trans_ratio'].max())
 tet_seq = np.linspace(tet_range[0], tet_range[1], 200)
-ref_curves = {
-    "WUE_ET - WUE_T": (tet_seq, mean_wue_et * (1 - 1.0 / tet_seq))
-}
+ref_curves = {}
+for diff_label in diff_labels:
+    r = tet_seq
+    if diff_label == "WUE_ET - WUE_T":
+        ref = mean_wue_et * (1 - 1/r)
+    elif diff_label == "WUE_ET - WUE_E":
+        ref = mean_wue_et * (1 - 1/(1-r))
+    elif diff_label == "WUE_E - WUE_T":
+        ref = mean_wue_et * (1/(1-r) - 1/r)
+    else:
+        raise ValueError(f"Unknown diff label: {diff_label}")
+    ref_curves[diff_label] = (tet_seq, ref)
 
 # ------------------------------------------------------------------------------
-# Print removed statistics to console — UNCHANGED
+# Print removed statistics to console
 # ------------------------------------------------------------------------------
 print("\n" + "="*60)
 print("GAM STATISTICS (removed from figure, now printed to console)")
@@ -217,6 +223,8 @@ else:
             ecosystem = match.group(2)
             diff_map = {
                 "WUE_ET_minus_WUE_T": "WUE_ET - WUE_T",
+                "WUE_ET_minus_WUE_E": "WUE_ET - WUE_E",
+                "WUE_E_minus_WUE_T": "WUE_E - WUE_T",
             }
             diff_label = diff_map.get(diff_type_raw, diff_type_raw)
         else:
@@ -252,254 +260,246 @@ else:
 print("="*60 + "\n")
 
 # ------------------------------------------------------------------------------
-# Font settings — GLOBAL BUMP
+# Font settings
 # ------------------------------------------------------------------------------
 plt.rcParams.update({
-    "font.size": 30,
-    "axes.labelsize": 32,
-    "xtick.labelsize": 30,
-    "ytick.labelsize": 30,
+    "font.size": 28,
+    "axes.labelsize": 28,
+    "xtick.labelsize": 26,
+    "ytick.labelsize": 26,
 })
 
 # ------------------------------------------------------------------------------
-# Bracket helper
-#   Star is now placed with a POINT-based offset so it sits consistently
-#   close to its own bracket line in every panel, regardless of y-axis range.
-#   Tune the gap with star_offset_pts (points above the line):
-#     0 = touching, 2 = very close, 3 = attached (default), 5 = small gap.
+# Function to draw a bracket with significance star
 # ------------------------------------------------------------------------------
-def add_significance_bracket(ax, x1, x2, y, star, color='black', linewidth=1.5,
-                             star_size=24, star_offset_pts=3):
-    # horizontal bar
+def add_significance_bracket(ax, x1, x2, y, star, color='black', linewidth=1.5, star_size=20):
+    """
+    Draw a horizontal bracket with a star above it.
+    x1, x2: positions of the two groups (in data coordinates)
+    y: vertical position of the bracket (in data coordinates)
+    star: string, e.g. '*', '**'
+    """
     ax.plot([x1, x2], [y, y], color=color, linewidth=linewidth, clip_on=False)
-    # end ticks (small vertical caps) — still in data units
     tick_len = 0.02 * (ax.get_ylim()[1] - ax.get_ylim()[0])
     ax.plot([x1, x1], [y - tick_len/2, y + tick_len/2], color=color, linewidth=linewidth, clip_on=False)
     ax.plot([x2, x2], [y - tick_len/2, y + tick_len/2], color=color, linewidth=linewidth, clip_on=False)
-    # star — anchored on the line, offset in POINTS (consistent across panels)
     mid_x = (x1 + x2) / 2
-    ax.annotate(star, xy=(mid_x, y), xytext=(0, star_offset_pts),
-                textcoords='offset points', ha='center', va='bottom',
-                fontsize=star_size, fontweight='bold', color=color,
-                annotation_clip=False)
+    ax.text(mid_x, y + tick_len, star, ha='center', va='bottom', fontsize=star_size,
+            fontweight='bold', color=color)
 
 # ------------------------------------------------------------------------------
-# Create figure — clean 2x2 grid, EQUAL panel sizes
+# Create figure with increased row spacing and larger top margin
 # ------------------------------------------------------------------------------
-fig = plt.figure(figsize=(24, 17))
+fig_height = 6 + 7 + 6 + 0.5 * 2
+fig = plt.figure(figsize=(24, fig_height))
 
 outer = fig.add_gridspec(
-    2, 2,
-    hspace=0.42,
-    wspace=0.24,
-    left=0.09,
-    right=0.96,
-    top=0.95,
-    bottom=0.07
+    3, 1,
+    height_ratios=[6, 7, 6],
+    hspace=0.50,
+    left=0.12,
+    right=0.95,
+    top=0.97,        # increased from 0.96 to give more room at top
+    bottom=0.06
 )
 
-ax_a = fig.add_subplot(outer[0, 0])
-ax_b = fig.add_subplot(outer[0, 1])
-ax_c = fig.add_subplot(outer[1, 0])
-ax_d = fig.add_subplot(outer[1, 1])
+gs_top = outer[0].subgridspec(1, 3, wspace=0.30)
+gs_mid = outer[1].subgridspec(1, 3, wspace=0.35)
+gs_bot = outer[2].subgridspec(1, 2, wspace=0.30)
+
+axes_a = [fig.add_subplot(gs_top[0, i]) for i in range(3)]
+axes_b = [fig.add_subplot(gs_mid[0, i]) for i in range(3)]
+ax_g = fig.add_subplot(gs_bot[0, 0])
+ax_h = fig.add_subplot(gs_bot[0, 1])
 
 def add_panel_label(ax, label):
     pos = ax.get_position()
     x0, y0, x1, y1 = pos.x0, pos.y0, pos.x1, pos.y1
-    fig.text(x0 - 0.015, y1 + 0.01, label, fontsize=36, fontweight='bold',
+    fig.text(x0 - 0.015, y1 + 0.01, label, fontsize=32, fontweight='bold',
              va='bottom', ha='left')
 
 # ------------------------------------------------------------------------------
-# Panel a: WUE_ET - WUE_T mean ± 95% CI by ecosystem
+# Panel A (a, b, c) – no changes
 # ------------------------------------------------------------------------------
-diff_label = diff_labels[0]  # "WUE_ET - WUE_T"
-subset = df_summary[df_summary["difference_label"] == diff_label]
-x_positions = np.arange(len(ecosystem_order))
-means, cis = [], []
-for eco in ecosystem_order:
-    row = subset[subset["water_class"] == eco]
-    if len(row) > 0:
-        means.append(row["mean_difference"].values[0])
-        cis.append(row["ci95_difference"].values[0])
-    else:
-        means.append(np.nan)
-        cis.append(np.nan)
-
-for j, eco in enumerate(ecosystem_order):
-    if not np.isnan(means[j]):
-        ax_a.errorbar(x_positions[j], means[j], yerr=cis[j], fmt='o',
-                      color=ecosystem_colours[eco], capsize=8, elinewidth=3,
-                      markersize=16, markeredgecolor='none', capthick=3)
-
-ax_a.axhline(0, color='red', linestyle='--', linewidth=3, alpha=0.8)
-ax_a.set_xticks(x_positions)
-tick_labels = ax_a.set_xticklabels(ecosystem_order, fontsize=30)
-for tick, eco in zip(tick_labels, ecosystem_order):
-    tick.set_color(ecosystem_colours[eco])
-ax_a.set_ylabel(diff_label_mapping[diff_label], fontsize=32, labelpad=12)
-ax_a.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
-for spine in ax_a.spines.values():
-    spine.set_color('black')
-    spine.set_linewidth(2)
-ax_a.tick_params(axis='both', colors='black', width=2, length=8, labelsize=30)
-add_panel_label(ax_a, "a)")
+for i, diff_label in enumerate(diff_labels):
+    ax = axes_a[i]
+    subset = df_summary[df_summary["difference_label"] == diff_label]
+    x_positions = np.arange(len(ecosystem_order))
+    means, cis = [], []
+    for eco in ecosystem_order:
+        row = subset[subset["water_class"] == eco]
+        if len(row) > 0:
+            means.append(row["mean_difference"].values[0])
+            cis.append(row["ci95_difference"].values[0])
+        else:
+            means.append(np.nan)
+            cis.append(np.nan)
+    for j, eco in enumerate(ecosystem_order):
+        if not np.isnan(means[j]):
+            ax.errorbar(x_positions[j], means[j], yerr=cis[j], fmt='o',
+                        color=ecosystem_colours[eco], capsize=8, elinewidth=3,
+                        markersize=12, markeredgecolor='none', capthick=3)
+    ax.axhline(0, color='red', linestyle='--', linewidth=3, alpha=0.8)
+    ax.set_xticks(x_positions)
+    tick_labels = ax.set_xticklabels(ecosystem_order, fontsize=26)
+    for tick, eco in zip(tick_labels, ecosystem_order):
+        tick.set_color(ecosystem_colours[eco])
+    ax.set_ylabel(diff_label_mapping[diff_label], fontsize=24, labelpad=10)
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    for spine in ax.spines.values():
+        spine.set_color('black')
+        spine.set_linewidth(2)
+    ax.tick_params(axis='both', colors='black', width=2, length=8)
+    add_panel_label(ax, f"{chr(97+i)})")
 
 # ------------------------------------------------------------------------------
-# Panel b: WUE_ET - WUE_T GAM vs T:ET + mathematical reference line
-# Legend at bottom-right
+# Panel B (d, e, f) – with reference line
 # ------------------------------------------------------------------------------
-subset = df_smooth[df_smooth["difference_label"] == diff_label]
+for i, diff_label in enumerate(diff_labels):
+    ax = axes_b[i]
+    subset = df_smooth[df_smooth["difference_label"] == diff_label]
+    for eco in ecosystem_order:
+        eco_sub = subset[subset["ecosystem_label"] == eco]
+        if eco_sub.empty:
+            continue
+        eco_sub = eco_sub.sort_values("Trans_ratio")
+        x = eco_sub["Trans_ratio"].values
+        y = eco_sub["prediction"].values
+        lower = eco_sub["lower"].values
+        upper = eco_sub["upper"].values
+        color = ecosystem_colours[eco]
+        ax.fill_between(x, lower, upper, color=color, alpha=0.15)
+        ax.plot(x, y, color=color, linewidth=3, label=eco)
+    x_ref, y_ref = ref_curves[diff_label]
+    ax.plot(x_ref, y_ref, color='black', linestyle='--', linewidth=3, label='Reference')
+    ax.axhline(0, color='red', linestyle='--', linewidth=3, alpha=0.8)
+    ax.set_xlabel("T:ET ratio", fontsize=28)
+    ax.set_ylabel(diff_label_mapping[diff_label], fontsize=28, labelpad=10)
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    for spine in ax.spines.values():
+        spine.set_color('black')
+        spine.set_linewidth(2)
+    ax.tick_params(axis='both', colors='black', width=2, length=8)
+    add_panel_label(ax, f"{chr(100 + i)})")
 
-for eco in ecosystem_order:
-    eco_sub = subset[subset["ecosystem_label"] == eco]
-    if eco_sub.empty:
-        continue
-    eco_sub = eco_sub.sort_values("Trans_ratio")
-    x = eco_sub["Trans_ratio"].values
-    y = eco_sub["prediction"].values
-    lower = eco_sub["lower"].values
-    upper = eco_sub["upper"].values
-    color = ecosystem_colours[eco]
-    ax_b.fill_between(x, lower, upper, color=color, alpha=0.15)
-    ax_b.plot(x, y, color=color, linewidth=3, label=eco)
-
-x_ref, y_ref = ref_curves[diff_label]
-ax_b.plot(x_ref, y_ref, color='black', linestyle='--', linewidth=3, label='Reference')
-ax_b.axhline(0, color='red', linestyle='--', linewidth=3, alpha=0.8)
-
-ax_b.set_xlabel("T:ET ratio", fontsize=32, labelpad=10)
-ax_b.set_ylabel(diff_label_mapping[diff_label], fontsize=32, labelpad=12)
-ax_b.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
-for spine in ax_b.spines.values():
-    spine.set_color('black')
-    spine.set_linewidth(2)
-ax_b.tick_params(axis='both', colors='black', width=2, length=8, labelsize=30)
-add_panel_label(ax_b, "b)")
-
-# Legend → bottom-right, larger font
-leg = ax_b.legend(loc='lower right', fontsize=26,
-                  frameon=True, edgecolor='black', title='',
-                  borderpad=0.6, labelspacing=0.5)
+# Shared legend for d-f
+leg = axes_b[2].legend(loc='upper left', bbox_to_anchor=(1.02, 1), fontsize=24,
+                       frameon=True, edgecolor='black', title='')
 leg.get_frame().set_linewidth(1.5)
 
 # ------------------------------------------------------------------------------
-# Panel c: WUE_T by ecosystem (violin + bracket) — statistics UNCHANGED
+# Panel g: Ecosystem – violin plot with bracket for Upland-Freshwater
 # ------------------------------------------------------------------------------
-ax_c_ = ax_c
-positions = np.arange(len(eco_order_cd))
-data_violin = [wue_monthly[wue_monthly['water_class'] == e]['WUE_T_capped'].dropna().values for e in eco_order_cd]
+positions = np.arange(len(eco_order_gh))
+data_violin = [wue_monthly[wue_monthly['water_class'] == e]['WUE_T_capped'].dropna().values for e in eco_order_gh]
 
-violin_parts = ax_c_.violinplot(data_violin, positions=positions, showmeans=False, showmedians=False, widths=0.8)
+violin_parts = ax_g.violinplot(data_violin, positions=positions, showmeans=False, showmedians=False, widths=0.8)
 for i, pc in enumerate(violin_parts['bodies']):
-    pc.set_facecolor(ecosystem_colours[eco_order_cd[i]])
-    pc.set_edgecolor(ecosystem_colours[eco_order_cd[i]])
+    pc.set_facecolor(ecosystem_colours[eco_order_gh[i]])
+    pc.set_edgecolor(ecosystem_colours[eco_order_gh[i]])
     pc.set_alpha(0.7)
 
-for i, eco in enumerate(eco_order_cd):
+for i, eco in enumerate(eco_order_gh):
     vals = wue_monthly[wue_monthly['water_class'] == eco]['WUE_T_capped'].dropna().values
     x_jitter = np.random.normal(i, 0.06, size=len(vals))
-    ax_c_.scatter(x_jitter, vals, alpha=0.5, s=20, color=ecosystem_colours[eco],
-                  edgecolors='none')
+    ax_g.scatter(x_jitter, vals, alpha=0.5, s=20, color=ecosystem_colours[eco],
+                 edgecolors='none')
 
-ax_c_.set_xlim(-0.5, len(eco_order_cd) - 0.5)
+ax_g.set_xlim(-0.5, len(eco_order_gh) - 0.5)
 max_data = max([np.max(vals) for vals in data_violin]) if data_violin else 1
 max_label = eco_means.max() if not eco_means.empty else 1
-ylim_top = max(max_data, max_label) * 1.20   # a bit more room for the bracket
-ax_c_.set_ylim(0, ylim_top)
-ax_c_.locator_params(axis='y', nbins=3)
+ylim_top = max(max_data, max_label) * 1.15
+ax_g.set_ylim(0, ylim_top)
+ax_g.locator_params(axis='y', nbins=3)
 
-for i, eco in enumerate(eco_order_cd):
+# Medians and means
+for i, eco in enumerate(eco_order_gh):
     med = eco_medians[eco]
-    ax_c_.plot([i - 0.15, i + 0.15], [med, med],
-               color='black', linewidth=2.5, solid_capstyle='butt')
+    ax_g.plot([i - 0.15, i + 0.15], [med, med],
+              color='black', linewidth=2.5, solid_capstyle='butt')
 
-ymin_c, ymax_c = ax_c_.get_ylim()
-for i, eco in enumerate(eco_order_cd):
+ymin_g, ymax_g = ax_g.get_ylim()
+for i, eco in enumerate(eco_order_gh):
     mean_val = eco_means[eco]
-    ax_c_.text(i, ymax_c - 0.03 * (ymax_c - ymin_c), f"{mean_val:.2f}",
-               ha='center', va='top', fontsize=28, color='black', fontweight='bold')
+    ax_g.text(i, ymax_g - 0.02 * (ymax_g - ymin_g), f"{mean_val:.2f}",
+              ha='center', va='top', fontsize=24, color='black', fontweight='bold')
 
-ax_c_.text(0.45, 0.80, p_text_eco, transform=ax_c_.transAxes,
-           fontsize=28, ha='right', va='top',
-           bbox=dict(boxstyle="round,pad=0.4", facecolor='white', edgecolor='black',
-                     linewidth=1.2, alpha=0.9))
+# Omnibus p-value box
+ax_g.text(0.45, 0.80, p_text_eco, transform=ax_g.transAxes,
+          fontsize=24, ha='right', va='top',
+          bbox=dict(boxstyle="round,pad=0.4", facecolor='white', edgecolor='black', linewidth=1.2, alpha=0.9))
 
-bracket_y_c = ymax_c + 0.03 * (ymax_c - ymin_c)
-add_significance_bracket(ax_c_, x1=0, x2=1, y=bracket_y_c, star='*',
-                         color='black', linewidth=1.5, star_size=24,
-                         star_offset_pts=3)
+# Bracket for Upland-Freshwater with '*'
+bracket_y_g = ymax_g + 0.03 * (ymax_g - ymin_g)
+add_significance_bracket(ax_g, x1=0, x2=1, y=bracket_y_g, star='*', color='black', linewidth=1.5, star_size=22)
 
-ax_c_.set_xticks(positions)
-ax_c_.set_xticklabels(eco_order_cd, fontsize=30)
-for tick, eco in zip(ax_c_.get_xticklabels(), eco_order_cd):
+ax_g.set_xticks(positions)
+ax_g.set_xticklabels(eco_order_gh)
+for tick, eco in zip(ax_g.get_xticklabels(), eco_order_gh):
     tick.set_color(ecosystem_colours[eco])
 
-ax_c_.set_ylabel('WUE$_T$ (g C kg$^{-1}$ H$_2$O$^{-1}$)', fontsize=32, labelpad=12)
-for spine in ax_c_.spines.values():
+ax_g.set_ylabel('WUE$_T$ (g C kg$^{-1}$ H$_2$O$^{-1}$)', fontsize=28, labelpad=10)
+for spine in ax_g.spines.values():
     spine.set_color('black')
     spine.set_linewidth(2)
-ax_c_.tick_params(axis='both', colors='black', width=2, length=8, labelsize=30)
-ax_c_.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
-add_panel_label(ax_c_, "c)")
+ax_g.tick_params(axis='both', colors='black', width=2, length=8)
+ax_g.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+add_panel_label(ax_g, "g)")
 
 # ------------------------------------------------------------------------------
-# Panel d: T:ET by coast (mean ± CI + brackets) — statistics UNCHANGED
+# Panel h: Coast – mean ± CI with brackets (separated vertically)
 # ------------------------------------------------------------------------------
-ax_d_ = ax_d
-x_pos_d = np.arange(len(coast_order))
+x_pos_h = np.arange(len(coast_order))
 
 for i, coast in enumerate(coast_order):
     vals = tet_site[tet_site['coast_region'] == coast]['mean_TET'].dropna().values
     x_jitter = np.random.normal(i, 0.06, size=len(vals))
-    ax_d_.scatter(x_jitter, vals, alpha=0.5, s=30, color=coast_colors[coast],
-                  edgecolors='none')
+    ax_h.scatter(x_jitter, vals, alpha=0.5, s=30, color=coast_colors[coast],
+                 edgecolors='none')
 
 for i, coast in enumerate(coast_order):
-    ax_d_.errorbar(i, coast_means[coast], yerr=coast_ci[coast],
-                   fmt='o', color=coast_colors[coast],
-                   markersize=18, capsize=10, elinewidth=3,
-                   markeredgecolor='black', markeredgewidth=1.2)
+    ax_h.errorbar(i, coast_means[coast], yerr=coast_ci[coast],
+                  fmt='o', color=coast_colors[coast],
+                  markersize=16, capsize=10, elinewidth=3,
+                  markeredgecolor='black', markeredgewidth=1.2)
 
-ymin_d, ymax_d = 0.2, 0.8
-ax_d_.set_ylim(ymin_d, ymax_d)
+ymin_h, ymax_h = 0.2, 0.8
+ax_h.set_ylim(ymin_h, ymax_h)
 for i, coast in enumerate(coast_order):
-    ax_d_.text(i, ymax_d - 0.1*(ymax_d-ymin_d), f"{coast_means[coast]:.2f}",
-               ha='center', va='bottom', fontsize=28, color='black', fontweight='bold')
+    ax_h.text(i, ymax_h - 0.1*(ymax_h-ymin_h), f"{coast_means[coast]:.2f}",
+              ha='center', va='bottom', fontsize=24, color='black', fontweight='bold')
 
-ax_d_.set_xticks(x_pos_d)
-ax_d_.set_xticklabels([coast_short[c] for c in coast_order], fontsize=30)
-for tick, coast in zip(ax_d_.get_xticklabels(), coast_order):
+ax_h.set_xticks(x_pos_h)
+ax_h.set_xticklabels([coast_short[c] for c in coast_order])
+for tick, coast in zip(ax_h.get_xticklabels(), coast_order):
     tick.set_color(coast_colors[coast])
 
-ax_d_.axhline(0.5, color='gray', linestyle='--', linewidth=2, alpha=0.6)
-ax_d_.set_ylabel('T:ET ratio', fontsize=32, labelpad=12)
+ax_h.axhline(0.5, color='gray', linestyle='--', linewidth=2, alpha=0.6)
+ax_h.set_ylabel('T:ET ratio', fontsize=28, labelpad=10)
 
-ax_d_.text(0.97, 0.05, p_text_coast, transform=ax_d_.transAxes,
-           fontsize=28, ha='right', va='bottom',
-           bbox=dict(boxstyle="round,pad=0.4", facecolor='white', edgecolor='black',
-                     linewidth=1.2, alpha=0.9))
+# Omnibus p-value box
+ax_h.text(0.97, 0.05, p_text_coast, transform=ax_h.transAxes,
+          fontsize=24, ha='right', va='bottom',
+          bbox=dict(boxstyle="round,pad=0.4", facecolor='white', edgecolor='black', linewidth=1.2, alpha=0.9))
 
-# ---- Brackets with BIGGER vertical separation so they no longer collide ----
-bracket_y_d_upper = ymax_d + 0.13 * (ymax_d - ymin_d)   # Alaska vs Atlantic  (**)
-bracket_y_d_lower = ymax_d + 0.03 * (ymax_d - ymin_d)   # Pacific vs Atlantic (*)
+# Brackets for coast comparisons – separated vertically
+# Alaska–Atlantic (**) – upper bracket
+bracket_y_h = ymax_h + 0.10 * (ymax_h - ymin_h)
+add_significance_bracket(ax_h, x1=0, x2=3, y=bracket_y_h, star='**', color='black', linewidth=1.5, star_size=22)
 
-add_significance_bracket(ax_d_, x1=0, x2=3, y=bracket_y_d_upper, star='**',
-                         color='black', linewidth=1.5, star_size=26,
-                         star_offset_pts=3)
+# Pacific–Atlantic (*) – lower bracket
+bracket_y_h2 = ymax_h + 0.05 * (ymax_h - ymin_h)
+add_significance_bracket(ax_h, x1=1, x2=3, y=bracket_y_h2, star='*', color='black', linewidth=1.5, star_size=22)
 
-add_significance_bracket(ax_d_, x1=1, x2=3, y=bracket_y_d_lower, star='*',
-                         color='black', linewidth=1.5, star_size=26,
-                         star_offset_pts=3)
-
-for spine in ax_d_.spines.values():
+for spine in ax_h.spines.values():
     spine.set_color('black')
     spine.set_linewidth(2)
-ax_d_.tick_params(axis='both', colors='black', width=2, length=8, labelsize=30)
-ax_d_.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
-add_panel_label(ax_d_, "d)")
+ax_h.tick_params(axis='both', colors='black', width=2, length=8)
+ax_h.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+add_panel_label(ax_h, "h)")
 
 # ------------------------------------------------------------------------------
-# Save figure
+# Save figure with bbox_inches='tight' to prevent cut-off
 # ------------------------------------------------------------------------------
 fig.savefig(fig_output, dpi=600, bbox_inches='tight', facecolor='white')
 print(f"\nCombined figure saved to: {fig_output}")
@@ -507,11 +507,11 @@ print(f"\nCombined figure saved to: {fig_output}")
 # ------------------------------------------------------------------------------
 # Suggested caption wording
 # ------------------------------------------------------------------------------
-print("\nSuggested Figure 3 caption wording for panel b:")
-print("Panel b shows the GAM-predicted relationship between T:ET and the observed")
-print("WUE_ET − WUE_T difference, with shaded bands indicating 95% confidence intervals.")
-print("The black dashed line shows the mathematically expected WUE difference across")
-print("T:ET when WUE_ET is held at its overall mean under near-normal conditions.")
-print("\nPost-hoc comparisons (Holm-adjusted) — unchanged:")
-print("Panel c: * Upland vs Freshwater (p = 0.0173)")
-print("Panel d: ** Alaska vs Atlantic (p = 0.0090), * Pacific vs Atlantic (p = 0.0107)")
+print("\nSuggested Figure 3 caption wording for panels d–f:")
+print("Panels d–f show GAM-predicted relationships between T:ET and the observed")
+print("WUE-metric differences, with shaded bands indicating 95% confidence intervals.")
+print("Black dashed lines show the mathematically expected WUE difference across T:ET")
+print("when WUE_ET is held at its overall mean under near-normal conditions.")
+print("\nPost-hoc comparisons (Holm-adjusted):")
+print("Panel g: * Upland vs Freshwater (p = 0.0173)")
+print("Panel h: ** Alaska vs Atlantic (p = 0.0090), * Pacific vs Atlantic (p = 0.0107)")

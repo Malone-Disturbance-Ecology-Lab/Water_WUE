@@ -6,16 +6,10 @@ FINAL DECISION: All panels use near-normal hydroclimatic conditions (SPEI_1 >= -
 Main models: Mixed Model (Panel B) and Smooth GAM (Panel C)
 Linear GAM retained only for Panel D model comparison
 
-UPDATED: WUE_E removed from modeled responses.
-  Only response modeled: WUE_difference = WUE_ET - WUE_T = WUE - WUE_tra
-  Data filtering unchanged (WUE_eva nonmissing requirement preserved to keep the
-  same Q1 observation set). difference_type / difference_label kept as constant
-  metadata columns in outputs for downstream compatibility.
-
 PANEL STRUCTURE:
-  Panel A: Near-normal mean WUE_ET-WUE_T difference by ecosystem
-  Panel B: Near-normal mixed model WUE_ET-WUE_T response by ecosystem
-  Panel C: Near-normal smooth GAM WUE_ET-WUE_T response by ecosystem
+  Panel A: Near-normal mean WUE metric differences by ecosystem
+  Panel B: Near-normal mixed model T:ET response by ecosystem
+  Panel C: Near-normal smooth GAM T:ET response by ecosystem
   Panel D: Linear GAM vs Smooth GAM model comparison
 
 DIRECTORY STRUCTURE:
@@ -57,7 +51,6 @@ for dir_path in [output_dir, figure_dir, temp_dir]:
 
 print("="*60)
 print("Q1 FINAL - Near-Normal SPEI-1 Workflow (Mixed Model Panel B)")
-print("         WUE_ET - WUE_T ONLY (WUE_E removed from models)")
 print("="*60)
 print(f"\nOutput directory: {output_dir}")
 print(f"Figure directory: {figure_dir}")
@@ -72,6 +65,7 @@ print("\n" + "="*60)
 print("STEP 0: Cleaning temp directory at start")
 print("="*60)
 
+# Clean temp directory BEFORE creating new temp files
 for f in os.listdir(temp_dir):
     path = os.path.join(temp_dir, f)
     if os.path.isfile(path):
@@ -91,15 +85,15 @@ def save_plot(fig, filename, width=10, height=7):
 def theme_wue_manuscript():
     """Malone-style manuscript theme for Python plots"""
     plt.rcParams.update({
-        'font.size': 20,
-        'axes.labelsize': 22,
-        'axes.titlesize': 26,
+        'font.size': 27,
+        'axes.labelsize': 27,
+        'axes.titlesize': 33,
         'axes.titleweight': 'bold',
-        'xtick.labelsize': 18,
-        'ytick.labelsize': 18,
-        'legend.fontsize': 18,
-        'legend.title_fontsize': 20,
-        'figure.titlesize': 32,
+        'xtick.labelsize': 23,
+        'ytick.labelsize': 23,
+        'legend.fontsize': 24,
+        'legend.title_fontsize': 26,
+        'figure.titlesize': 42,
         'axes.spines.top': False,
         'axes.spines.right': False,
         'axes.grid': True,
@@ -130,7 +124,7 @@ for col in monthly.select_dtypes(include='object').columns:
     )
     monthly[col] = monthly[col].replace({"": np.nan, "nan": np.nan, "NaN": np.nan})
 
-# Required columns -- UNCHANGED (WUE_eva still required to preserve Q1 sample)
+# Required columns (including SPEI_1 for filtering)
 required_cols = [
     "site_name", "Year", "month", "water_class", "Trans_ratio",
     "WUE", "WUE_tra", "WUE_eva", "SPEI_1"
@@ -142,7 +136,7 @@ if missing_cols:
 
 ecosystem_classes = ["Upland", "Freshwater", "Saline"]
 
-# Filter - EXACT SAME AS BEFORE (WUE_eva kept to preserve Q1 sample)
+# Filter - exact Malone (keep SPEI_1 for later filtering in R)
 model_base = monthly.dropna(subset=required_cols).copy()
 
 model_base = model_base[
@@ -158,18 +152,17 @@ model_base = model_base[
 ].copy()
 
 print(f"  After filtering: {len(model_base)} rows")
-print(f"  (WUE_eva nonmissing requirement preserved to keep same Q1 sample)")
 
 # ============================================================================
-# CHECK FOR DUPLICATES
+# CHECK FOR DUPLICATES (IMPORTANT FOR R reshape())
 # ============================================================================
 
 dup_count = model_base.duplicated(subset=["site_name", "Year", "month"]).sum()
 print(f"\nDuplicate site-Year-month rows: {dup_count}")
 if dup_count > 0:
-    print("  WARNING: duplicate site-Year-month rows present")
+    print("  WARNING: R reshape() with idvar=c('site_name','Year','month') may behave unexpectedly")
 else:
-    print("  No duplicates found")
+    print("  No duplicates found - safe for R reshape()")
 
 # ============================================================================
 # STEP 2: SAVE WIDE DATA FOR R (IN TEMP FOLDER)
@@ -180,39 +173,37 @@ model_base.to_csv(temp_model_base_file, index=False)
 print(f"\nWIDE data saved to: {temp_model_base_file}")
 print(f"  Shape: {model_base.shape} (rows, columns)")
 
+# Record original input path for summary
 original_input_path = monthly_data_path.replace("\\", "/")
 
 # ============================================================================
-# STEP 3: CREATE R SCRIPT - UPDATED FOR WUE_ET - WUE_T ONLY
+# STEP 3: CREATE R SCRIPT - FINAL WORKFLOW WITH MIXED MODEL PANEL B
 # ============================================================================
 
 print("\n" + "="*60)
-print("STEP 2: Creating R Script (WUE_ET - WUE_T only)")
+print("STEP 2: Creating R Script for Final Workflow (Mixed Model Panel B)")
 print("="*60)
 
+# Use forward slashes for R
 output_dir_r = output_dir.replace("\\", "/")
 temp_model_base_file_r = temp_model_base_file.replace("\\", "/")
 
 r_script_content = f'''
-# Q1 FINAL - Near-Normal SPEI-1 Workflow
-# UPDATED: Only WUE_ET - WUE_T (= WUE - WUE_tra) is modeled.
-# WUE_eva is still required nonmissing to preserve the same Q1 sample,
-# but it does NOT enter any model as a response.
+# Q1 FINAL - Near-Normal SPEI-1 Workflow with Mixed Model Panel B
+# R handles: reshaping to long, near-normal filtering, mixed model, GAM models, predictions
 #
 # PANEL B (near-normal SPEI-1 only):
-#   Mixed Model: WUE_difference ~ water_class * Trans_ratio_z_NN +
-#                (1 | site_name) + (1 | month_f)
-#   Reduced:     WUE_difference ~ water_class + Trans_ratio_z_NN +
+#   Mixed Model: WUE_difference ~ difference_type * water_class * Trans_ratio_z_NN +
 #                (1 | site_name) + (1 | month_f)
 #
 # PANEL C (near-normal SPEI-1 only):
-#   Smooth GAM:  WUE_difference ~ water_class +
-#                s(Trans_ratio, by = diff_ecosystem, k = 6) +
-#                s(site_name, bs = "re") + s(month_f, bs = "re")
+#   Smooth GAM: WUE_difference ~ difference_type * water_class +
+#               s(Trans_ratio, by = diff_ecosystem, k = 6) +
+#               s(site_name, bs = "re") + s(month_f, bs = "re")
 #
 # PANEL D (near-normal SPEI-1 only, model comparison):
-#   Linear GAM:  WUE_difference ~ water_class * Trans_ratio +
-#                s(site_name, bs = "re") + s(month_f, bs = "re")
+#   Linear GAM: WUE_difference ~ difference_type * water_class * Trans_ratio +
+#               s(site_name, bs = "re") + s(month_f, bs = "re")
 
 suppressPackageStartupMessages({{
   if (!requireNamespace("mgcv", quietly = TRUE)) {{
@@ -240,48 +231,57 @@ sig <- function(p) {{
   )
 }}
 
-# Load WIDE data (Python cleaned)
+# Load WIDE data (Python cleaned, NOT reshaped yet)
 model_base <- read.csv("{temp_model_base_file_r}", stringsAsFactors = FALSE)
 
 # Define ecosystem classes
 ecosystem_classes <- c("Upland", "Freshwater", "Saline")
+ecosystem_colors <- c(Upland = "#800080", Freshwater = "#0000FF", Saline = "#FFA500")
 
-# Only ONE difference remains
-diff_type_single  <- "WUE_ET_minus_WUE_T"
-diff_label_single <- "WUE_ET - WUE_T"
+# Difference labels
+diff_labels <- c(
+  WUE_ET_minus_WUE_T = "WUE_ET - WUE_T",
+  WUE_ET_minus_WUE_E = "WUE_ET - WUE_E",
+  WUE_E_minus_WUE_T = "WUE_E - WUE_T"
+)
+difference_cols <- c("WUE_ET_minus_WUE_T", "WUE_ET_minus_WUE_E", "WUE_E_minus_WUE_T")
+diff_label_levels <- unname(diff_labels[difference_cols])
 
 # ---------------------------------------------------------------------------
-# BUILD ANALYSIS DATA (single response, no reshape needed)
+# RESHAPE TO LONG FORMAT - R DOES THIS ONCE
 # ---------------------------------------------------------------------------
 
-model_base$WUE_difference    <- model_base$WUE - model_base$WUE_tra
-model_base$difference_type   <- diff_type_single
-model_base$difference_label  <- diff_label_single
+model_base$WUE_ET_minus_WUE_T <- model_base$WUE - model_base$WUE_tra
+model_base$WUE_ET_minus_WUE_E <- model_base$WUE - model_base$WUE_eva
+model_base$WUE_E_minus_WUE_T <- model_base$WUE_eva - model_base$WUE_tra
 
-# Complete cases and finite checks (same columns as before minus the removed diffs)
-keep_cols <- c("site_name", "Year", "month", "Trans_ratio",
-               "WUE_difference", "SPEI_1")
-diff_data <- model_base[complete.cases(model_base[, keep_cols]), ]
+diff_data <- reshape(
+  model_base,
+  varying = difference_cols,
+  v.names = "WUE_difference",
+  timevar = "difference_type",
+  times = difference_cols,
+  idvar = c("site_name", "Year", "month"),
+  direction = "long"
+)
+
+# Clean up and set factors
+diff_data <- diff_data[complete.cases(diff_data[, c("site_name", "Year", "month", "Trans_ratio", "WUE_difference", "SPEI_1")]), ]
 diff_data <- diff_data[is.finite(diff_data$WUE_difference), ]
+diff_data$site_name <- factor(diff_data$site_name)
+diff_data$month_f <- factor(diff_data$month, levels = 1:12)
+diff_data$water_class <- factor(diff_data$water_class, levels = ecosystem_classes)
+diff_data$difference_type <- factor(diff_data$difference_type, levels = difference_cols)
+diff_data$diff_ecosystem <- interaction(diff_data$difference_type, diff_data$water_class, sep = "__", drop = TRUE)
+diff_data$difference_label <- factor(diff_labels[as.character(diff_data$difference_type)], levels = diff_label_levels)
 
-# Factors
-diff_data$site_name        <- factor(diff_data$site_name)
-diff_data$month_f          <- factor(diff_data$month, levels = 1:12)
-diff_data$water_class      <- factor(diff_data$water_class, levels = ecosystem_classes)
-diff_data$difference_type  <- factor(diff_data$difference_type, levels = diff_type_single)
-diff_data$difference_label <- factor(diff_data$difference_label, levels = diff_label_single)
-diff_data$diff_ecosystem   <- interaction(diff_data$difference_type,
-                                          diff_data$water_class,
-                                          sep = "__", drop = TRUE)
-
-cat("\\nR analysis data prepared:")
-cat("\\n  Rows:", nrow(diff_data))
-cat("\\n  Sites:", length(unique(diff_data$site_name)))
-cat("\\n  Months:", length(unique(diff_data$month_f)))
-cat("\\n  Unique difference_label:", paste(unique(as.character(diff_data$difference_label)), collapse=", "), "\\n")
+cat("\nR reshape complete:")
+cat("\n  Long data rows:", nrow(diff_data))
+cat("\n  Sites:", length(unique(diff_data$site_name)))
+cat("\n  Months:", length(unique(diff_data$month_f)), "\n")
 
 # ---------------------------------------------------------------------------
-# FILTER TO NEAR-NORMAL SPEI-1 (FINAL Q1 DECISION - UNCHANGED)
+# FILTER TO NEAR-NORMAL SPEI-1 (FINAL Q1 DECISION)
 # ---------------------------------------------------------------------------
 
 q1_data <- diff_data[
@@ -290,25 +290,26 @@ q1_data <- diff_data[
   diff_data$SPEI_1 <= 1,
 ]
 
+# Drop unused factor levels to avoid prediction issues
 q1_data <- droplevels(q1_data)
-q1_data$diff_ecosystem <- interaction(q1_data$difference_type,
-                                      q1_data$water_class,
-                                      sep = "__", drop = TRUE)
+q1_data$diff_ecosystem <- interaction(
+  q1_data$difference_type,
+  q1_data$water_class,
+  sep = "__",
+  drop = TRUE
+)
 
-# Standardized Trans_ratio (mixed model only)
+# For mixed model only: standardized Trans_ratio
 q1_data$Trans_ratio_z_NN <- as.numeric(scale(q1_data$Trans_ratio))
 
-cat("\\nNear-normal SPEI-1 subset (SPEI_1 >= -1 & SPEI_1 <= 1):")
-cat("\\n  Rows:", nrow(q1_data))
-cat("\\n  Sites:", length(unique(q1_data$site_name)))
-cat("\\n  Months:", length(unique(q1_data$month_f)))
-cat("\\n  diff_ecosystem levels:", paste(levels(q1_data$diff_ecosystem), collapse=", "), "\\n")
+cat("\nNear-normal SPEI-1 subset (SPEI_1 >= -1 & SPEI_1 <= 1):")
+cat("\n  Rows:", nrow(q1_data))
+cat("\n  Sites:", length(unique(q1_data$site_name)))
+cat("\n  Months:", length(unique(q1_data$month_f)), "\n")
 
 # =============================================================================
 # PANEL A: SUMMARY STATISTICS (near-normal SPEI-1 only)
 # =============================================================================
-# Keep difference_type and difference_label as constant metadata columns so
-# downstream scripts that expect them still work. Now 3 rows (one per ecosystem).
 
 summary_by_difference <- q1_data |>
   dplyr::group_by(difference_type, difference_label, water_class) |>
@@ -329,29 +330,30 @@ write.csv(
 )
 
 # =============================================================================
-# PANEL B: NEAR-NORMAL MIXED MODEL (WUE_ET - WUE_T only)
+# PANEL B: NEAR-NORMAL MIXED MODEL (Main Panel B)
 # =============================================================================
 
-cat("\\n----------------------------------------------------------------")
-cat("\\nPANEL B: Fitting near-normal mixed model (WUE_ET - WUE_T only)...")
+cat("\n----------------------------------------------------------------")
+cat("\nPANEL B: Fitting near-normal mixed model...")
 
+# Fit mixed model with interaction
 q1_nn_mixed <- lme4::lmer(
-  WUE_difference ~ water_class * Trans_ratio_z_NN +
+  WUE_difference ~ difference_type * water_class * Trans_ratio_z_NN +
     (1 | site_name) + (1 | month_f),
   data = q1_data,
   REML = FALSE
 )
 
-# Reduced (additive) model for interaction check
+# Additive model for interaction check
 q1_nn_mixed_additive <- lme4::lmer(
-  WUE_difference ~ water_class + Trans_ratio_z_NN +
+  WUE_difference ~ difference_type + water_class + Trans_ratio_z_NN +
     (1 | site_name) + (1 | month_f),
   data = q1_data,
   REML = FALSE
 )
 
-saveRDS(q1_nn_mixed,
-        file.path("{output_dir_r}", "Q1_final_near_normal_mixed_difference_TET_model.rds"))
+# Save RDS
+saveRDS(q1_nn_mixed, file.path("{output_dir_r}", "Q1_final_near_normal_mixed_difference_TET_model.rds"))
 
 # Fixed effects
 mixed_fixed <- as.data.frame(summary(q1_nn_mixed)$coefficients)
@@ -393,20 +395,19 @@ write.csv(
   row.names = FALSE
 )
 
-# Fitted values / residuals
-q1_data$mixed_fitted   <- fitted(q1_nn_mixed)
+# Fitted values
+q1_data$mixed_fitted <- fitted(q1_nn_mixed)
 q1_data$mixed_residual <- residuals(q1_nn_mixed)
 write.csv(
-  q1_data[, c("site_name", "Year", "month", "water_class",
-              "difference_type", "difference_label",
-              "Trans_ratio", "Trans_ratio_z_NN", "SPEI_1",
-              "WUE_difference", "mixed_fitted", "mixed_residual")],
+  q1_data[, c("site_name", "Year", "month", "water_class", "difference_type",
+              "Trans_ratio", "Trans_ratio_z_NN", "SPEI_1", "WUE_difference",
+              "mixed_fitted", "mixed_residual")],
   file.path("{output_dir_r}", "Q1_final_near_normal_mixed_fitted_residuals.csv"),
   row.names = FALSE
 )
 
 # ---------------------------------------------------------------------------
-# MIXED MODEL PREDICTIONS (Panel B) - single response, 3 ecosystem curves
+# MIXED MODEL PREDICTIONS (Panel B)
 # ---------------------------------------------------------------------------
 
 tet_sequence <- seq(
@@ -414,36 +415,36 @@ tet_sequence <- seq(
   quantile(q1_data$Trans_ratio, 0.95),
   length.out = 100
 )
+
 tet_mean_NN <- mean(q1_data$Trans_ratio)
-tet_sd_NN   <- sd(q1_data$Trans_ratio)
+tet_sd_NN <- sd(q1_data$Trans_ratio)
 
 mixed_grid <- expand.grid(
+  difference_type = levels(q1_data$difference_type),
   water_class = levels(q1_data$water_class),
   Trans_ratio = tet_sequence,
-  site_name   = levels(q1_data$site_name)[1],
-  month_f     = levels(q1_data$month_f)[1],
+  site_name = levels(q1_data$site_name)[1],
+  month_f = levels(q1_data$month_f)[1],
   KEEP.OUT.ATTRS = FALSE,
   stringsAsFactors = FALSE
 )
-mixed_grid$water_class       <- factor(mixed_grid$water_class, levels = levels(q1_data$water_class))
-mixed_grid$site_name         <- factor(mixed_grid$site_name, levels = levels(q1_data$site_name))
-mixed_grid$month_f           <- factor(mixed_grid$month_f, levels = levels(q1_data$month_f))
-mixed_grid$Trans_ratio_z_NN  <- (mixed_grid$Trans_ratio - tet_mean_NN) / tet_sd_NN
-
-# Constant metadata columns for downstream compatibility
-mixed_grid$difference_type   <- diff_type_single
-mixed_grid$difference_label  <- diff_label_single
-mixed_grid$ecosystem_label   <- as.character(mixed_grid$water_class)
+mixed_grid$difference_type <- factor(mixed_grid$difference_type, levels = levels(q1_data$difference_type))
+mixed_grid$water_class <- factor(mixed_grid$water_class, levels = levels(q1_data$water_class))
+mixed_grid$site_name <- factor(mixed_grid$site_name, levels = levels(q1_data$site_name))
+mixed_grid$month_f <- factor(mixed_grid$month_f, levels = levels(q1_data$month_f))
+mixed_grid$Trans_ratio_z_NN <- (mixed_grid$Trans_ratio - tet_mean_NN) / tet_sd_NN
+mixed_grid$difference_label <- factor(diff_labels[as.character(mixed_grid$difference_type)], levels = diff_label_levels)
+mixed_grid$ecosystem_label <- as.character(mixed_grid$water_class)
 
 # Fixed-effect predictions
 mixed_grid$prediction <- predict(q1_nn_mixed, newdata = mixed_grid, re.form = NA)
 
-# SE from fixed-effect covariance
+# SE using fixed-effect covariance matrix
 fixed_terms <- stats::delete.response(stats::terms(lme4::nobars(formula(q1_nn_mixed))))
 fixed_model_matrix <- stats::model.matrix(fixed_terms, mixed_grid)
 fixed_vcov <- as.matrix(stats::vcov(q1_nn_mixed))
 fixed_model_matrix <- fixed_model_matrix[, colnames(fixed_vcov), drop = FALSE]
-mixed_grid$se    <- sqrt(diag(fixed_model_matrix %*% fixed_vcov %*% t(fixed_model_matrix)))
+mixed_grid$se <- sqrt(diag(fixed_model_matrix %*% fixed_vcov %*% t(fixed_model_matrix)))
 mixed_grid$lower <- mixed_grid$prediction - 1.96 * mixed_grid$se
 mixed_grid$upper <- mixed_grid$prediction + 1.96 * mixed_grid$se
 
@@ -453,16 +454,16 @@ write.csv(
   row.names = FALSE
 )
 
-cat(" Mixed model complete!\\n")
+cat(" Mixed model complete!\n")
 
 # =============================================================================
-# PANEL C: SMOOTH GAM (WUE_ET - WUE_T only)
+# PANEL C: SMOOTH GAM (Main Panel C)
 # =============================================================================
 
-cat("\\nPANEL C: Fitting smooth GAM (WUE_ET - WUE_T only)...")
+cat("\nPANEL C: Fitting smooth GAM...")
 
 q1_smooth_gam <- mgcv::gam(
-  WUE_difference ~ water_class +
+  WUE_difference ~ difference_type * water_class +
     s(Trans_ratio, by = diff_ecosystem, k = 6) +
     s(site_name, bs = "re") +
     s(month_f, bs = "re"),
@@ -471,49 +472,49 @@ q1_smooth_gam <- mgcv::gam(
   select = TRUE
 )
 
-# Smooth-term table
+# Save smooth-term table for edf and p-values
 smooth_terms <- as.data.frame(summary(q1_smooth_gam)$s.table)
 smooth_terms$term <- rownames(smooth_terms)
 rownames(smooth_terms) <- NULL
 smooth_terms <- smooth_terms[, c("term", setdiff(names(smooth_terms), "term"))]
+
+# Add significance symbols for smooth-term p-values
 p_col_smooth <- grep("p-value", names(smooth_terms), value = TRUE)[1]
 if (!is.na(p_col_smooth)) {{
   smooth_terms$signif <- sig(smooth_terms[[p_col_smooth]])
 }}
+
 write.csv(
   smooth_terms,
   file.path("{output_dir_r}", "Q1_final_smooth_gam_smooth_terms.csv"),
   row.names = FALSE
 )
 
-# Smooth GAM predictions (3 ecosystem curves)
+# SMOOTH GAM PREDICTIONS (Panel C)
 smooth_grid <- expand.grid(
+  difference_type = levels(q1_data$difference_type),
   water_class = levels(q1_data$water_class),
   Trans_ratio = tet_sequence,
-  site_name   = levels(q1_data$site_name)[1],
-  month_f     = levels(q1_data$month_f)[1],
+  site_name = levels(q1_data$site_name)[1],
+  month_f = levels(q1_data$month_f)[1],
   KEEP.OUT.ATTRS = FALSE,
   stringsAsFactors = FALSE
 )
-smooth_grid$water_class      <- factor(smooth_grid$water_class, levels = levels(q1_data$water_class))
-smooth_grid$site_name        <- factor(smooth_grid$site_name, levels = levels(q1_data$site_name))
-smooth_grid$month_f          <- factor(smooth_grid$month_f, levels = levels(q1_data$month_f))
-smooth_grid$difference_type  <- factor(diff_type_single, levels = levels(q1_data$difference_type))
-smooth_grid$difference_label <- diff_label_single
-smooth_grid$ecosystem_label  <- as.character(smooth_grid$water_class)
-smooth_grid$diff_ecosystem   <- interaction(smooth_grid$difference_type,
-                                            smooth_grid$water_class,
-                                            sep = "__", drop = TRUE)
-smooth_grid$diff_ecosystem   <- factor(smooth_grid$diff_ecosystem,
-                                       levels = levels(q1_data$diff_ecosystem))
+smooth_grid$difference_type <- factor(smooth_grid$difference_type, levels = levels(q1_data$difference_type))
+smooth_grid$water_class <- factor(smooth_grid$water_class, levels = levels(q1_data$water_class))
+smooth_grid$site_name <- factor(smooth_grid$site_name, levels = levels(q1_data$site_name))
+smooth_grid$month_f <- factor(smooth_grid$month_f, levels = levels(q1_data$month_f))
+smooth_grid$difference_label <- factor(diff_labels[as.character(smooth_grid$difference_type)], levels = diff_label_levels)
+smooth_grid$ecosystem_label <- as.character(smooth_grid$water_class)
+smooth_grid$diff_ecosystem <- interaction(smooth_grid$difference_type, smooth_grid$water_class, sep = "__", drop = TRUE)
+smooth_grid$diff_ecosystem <- factor(smooth_grid$diff_ecosystem, levels = levels(q1_data$diff_ecosystem))
 
-smooth_pred <- predict(q1_smooth_gam, newdata = smooth_grid,
-                       type = "link", se.fit = TRUE,
-                       exclude = c("s(site_name)", "s(month_f)"))
+smooth_pred <- predict(q1_smooth_gam, newdata = smooth_grid, type = "link", se.fit = TRUE, 
+                        exclude = c("s(site_name)", "s(month_f)"))
 smooth_grid$prediction <- as.numeric(smooth_pred$fit)
-smooth_grid$se         <- as.numeric(smooth_pred$se.fit)
-smooth_grid$lower      <- smooth_grid$prediction - 1.96 * smooth_grid$se
-smooth_grid$upper      <- smooth_grid$prediction + 1.96 * smooth_grid$se
+smooth_grid$se <- as.numeric(smooth_pred$se.fit)
+smooth_grid$lower <- smooth_grid$prediction - 1.96 * smooth_grid$se
+smooth_grid$upper <- smooth_grid$prediction + 1.96 * smooth_grid$se
 
 write.csv(
   smooth_grid,
@@ -521,44 +522,45 @@ write.csv(
   row.names = FALSE
 )
 
-cat(" Smooth GAM complete!\\n")
+cat(" Smooth GAM complete!\n")
 
 # =============================================================================
-# LINEAR GAM (Panel D comparison only)
+# LINEAR GAM (For Panel D model comparison only - NOT plotted as main panel)
 # =============================================================================
 
-cat("\\nPANEL D: Fitting linear GAM for model comparison...")
+cat("\nPANEL D: Fitting linear GAM for model comparison...")
 
 q1_linear_gam <- mgcv::gam(
-  WUE_difference ~ water_class * Trans_ratio +
+  WUE_difference ~ difference_type * water_class * Trans_ratio +
     s(site_name, bs = "re") +
     s(month_f, bs = "re"),
   data = q1_data,
   method = "ML"
 )
 
+# LINEAR GAM PREDICTIONS (Diagnostic only - not used in main figure)
 linear_grid <- expand.grid(
+  difference_type = levels(q1_data$difference_type),
   water_class = levels(q1_data$water_class),
   Trans_ratio = tet_sequence,
-  site_name   = levels(q1_data$site_name)[1],
-  month_f     = levels(q1_data$month_f)[1],
+  site_name = levels(q1_data$site_name)[1],
+  month_f = levels(q1_data$month_f)[1],
   KEEP.OUT.ATTRS = FALSE,
   stringsAsFactors = FALSE
 )
-linear_grid$water_class      <- factor(linear_grid$water_class, levels = levels(q1_data$water_class))
-linear_grid$site_name        <- factor(linear_grid$site_name, levels = levels(q1_data$site_name))
-linear_grid$month_f          <- factor(linear_grid$month_f, levels = levels(q1_data$month_f))
-linear_grid$difference_type  <- diff_type_single
-linear_grid$difference_label <- diff_label_single
-linear_grid$ecosystem_label  <- as.character(linear_grid$water_class)
+linear_grid$difference_type <- factor(linear_grid$difference_type, levels = levels(q1_data$difference_type))
+linear_grid$water_class <- factor(linear_grid$water_class, levels = levels(q1_data$water_class))
+linear_grid$site_name <- factor(linear_grid$site_name, levels = levels(q1_data$site_name))
+linear_grid$month_f <- factor(linear_grid$month_f, levels = levels(q1_data$month_f))
+linear_grid$difference_label <- factor(diff_labels[as.character(linear_grid$difference_type)], levels = diff_label_levels)
+linear_grid$ecosystem_label <- as.character(linear_grid$water_class)
 
-linear_pred <- predict(q1_linear_gam, newdata = linear_grid,
-                       type = "link", se.fit = TRUE,
+linear_pred <- predict(q1_linear_gam, newdata = linear_grid, type = "link", se.fit = TRUE, 
                        exclude = c("s(site_name)", "s(month_f)"))
 linear_grid$prediction <- as.numeric(linear_pred$fit)
-linear_grid$se         <- as.numeric(linear_pred$se.fit)
-linear_grid$lower      <- linear_grid$prediction - 1.96 * linear_grid$se
-linear_grid$upper      <- linear_grid$prediction + 1.96 * linear_grid$se
+linear_grid$se <- as.numeric(linear_pred$se.fit)
+linear_grid$lower <- linear_grid$prediction - 1.96 * linear_grid$se
+linear_grid$upper <- linear_grid$prediction + 1.96 * linear_grid$se
 
 write.csv(
   linear_grid,
@@ -574,10 +576,8 @@ gam_comparison <- data.frame(
   model = c("q1_linear_gam", "q1_smooth_gam"),
   AIC = c(AIC(q1_linear_gam), AIC(q1_smooth_gam)),
   BIC = c(BIC(q1_linear_gam), BIC(q1_smooth_gam)),
-  deviance_explained = c(summary(q1_linear_gam)$dev.expl,
-                         summary(q1_smooth_gam)$dev.expl),
-  adjusted_r_squared = c(summary(q1_linear_gam)$r.sq,
-                         summary(q1_smooth_gam)$r.sq),
+  deviance_explained = c(summary(q1_linear_gam)$dev.expl, summary(q1_smooth_gam)$dev.expl),
+  adjusted_r_squared = c(summary(q1_linear_gam)$r.sq, summary(q1_smooth_gam)$r.sq),
   scale = c(summary(q1_linear_gam)$scale, summary(q1_smooth_gam)$scale)
 )
 gam_comparison$delta_AIC <- gam_comparison$AIC - min(gam_comparison$AIC)
@@ -587,62 +587,57 @@ write.csv(
   row.names = FALSE
 )
 
-cat(" Model comparison complete!\\n")
+cat(" Model comparison complete!\n")
 
 # =============================================================================
 # MODEL SUMMARY
 # =============================================================================
 
 sink(file.path("{output_dir_r}", "Q1_final_model_summary.txt"))
-cat("Q1 FINAL - Near-Normal SPEI-1 Workflow (WUE_ET - WUE_T ONLY)\\n")
-cat("===============================================================\\n")
-cat("NOTE: WUE_E has been removed from modeled responses.\\n")
-cat("      Data filtering is UNCHANGED (WUE_eva still required nonmissing).\\n")
-cat("      Only response modeled: WUE_difference = WUE - WUE_tra.\\n\\n")
-cat("Original input:", "{original_input_path}", "\\n")
-cat("R model input:", "{temp_model_base_file_r}", "\\n")
-cat("Output:", "{output_dir_r}", "\\n\\n")
-cat("Full data rows (after cleaning):", nrow(diff_data), "\\n")
-cat("Near-normal SPEI-1 rows (q1_data):", nrow(q1_data), "\\n")
-cat("Sites in q1_data:", length(unique(q1_data$site_name)), "\\n")
-cat("Months in q1_data:", length(unique(q1_data$month_f)), "\\n\\n")
-cat("Unique difference_label:", paste(unique(as.character(q1_data$difference_label)), collapse=", "), "\\n")
-cat("Ecosystem classes:", paste(levels(q1_data$water_class), collapse = ", "), "\\n\\n")
-cat("diff_ecosystem levels:", paste(levels(q1_data$diff_ecosystem), collapse = ", "), "\\n\\n")
-cat("----------------------------------------------------------------\\n")
-cat("PANEL A: Summary Statistics (3 rows, one per ecosystem)\\n")
-print(summary_by_difference)
-cat("\\n----------------------------------------------------------------\\n")
-cat("PANEL B: Near-Normal Mixed Model (WUE_ET - WUE_T only)\\n")
-cat("Formula:\\n")
+cat("Q1 FINAL - Near-Normal SPEI-1 Workflow with Mixed Model Panel B\n")
+cat("===============================================================\n")
+cat("Original input:", "{original_input_path}", "\n")
+cat("R model input:", "{temp_model_base_file_r}", "\n")
+cat("Output:", "{output_dir_r}", "\n\n")
+cat("Full data rows (after cleaning):", nrow(diff_data), "\n")
+cat("Near-normal SPEI-1 rows (q1_data):", nrow(q1_data), "\n")
+cat("Sites in q1_data:", length(unique(q1_data$site_name)), "\n")
+cat("Months in q1_data:", length(unique(q1_data$month_f)), "\n\n")
+cat("Ecosystem classes:", paste(levels(q1_data$water_class), collapse = ", "), "\n\n")
+cat("Difference types:", paste(levels(q1_data$difference_type), collapse = ", "), "\n\n")
+cat("----------------------------------------------------------------\n")
+cat("PANEL A: Summary Statistics\n")
+cat("  Near-normal mean WUE metric differences by ecosystem\n")
+cat("  Saved to: Q1_final_near_normal_summary_by_difference_type.csv\n\n")
+cat("----------------------------------------------------------------\n")
+cat("PANEL B: Near-Normal Mixed Model\n")
+cat("Formula:\n")
 print(formula(q1_nn_mixed))
-cat("\\nMixed Model Summary:\\n")
+cat("\nMixed Model Summary:\n")
 print(summary(q1_nn_mixed))
-cat("\\nMixed Drop1 LRT:\\n")
+cat("\nMixed Drop1 LRT:\n")
 print(mixed_lrt)
-cat("\\nMixed Additive vs Interaction Comparison:\\n")
+cat("\nMixed Additive vs Interaction Comparison:\n")
 print(mixed_comparison)
-cat("\\n----------------------------------------------------------------\\n")
-cat("PANEL C: Smooth GAM (WUE_ET - WUE_T only)\\n")
-cat("Formula:\\n")
+cat("\n----------------------------------------------------------------\n")
+cat("PANEL C: Smooth GAM\n")
+cat("Formula:\n")
 print(formula(q1_smooth_gam))
-cat("\\nSmooth GAM Summary:\\n")
+cat("\nSmooth GAM Summary:\n")
 print(summary(q1_smooth_gam))
-cat("\\nSmooth terms (expect 3 ecosystem smooths + site + month):\\n")
-print(smooth_terms)
-cat("\\n----------------------------------------------------------------\\n")
-cat("PANEL D: Linear GAM vs Smooth GAM Comparison\\n")
-cat("Linear GAM formula (for comparison only):\\n")
+cat("\n----------------------------------------------------------------\n")
+cat("PANEL D: Linear GAM vs Smooth GAM Comparison\n")
+cat("Linear GAM formula (for comparison only):\n")
 print(formula(q1_linear_gam))
-cat("\\nLinear GAM Summary:\\n")
+cat("\nLinear GAM Summary:\n")
 print(summary(q1_linear_gam))
-cat("\\nModel Comparison:\\n")
+cat("\nModel Comparison:\n")
 print(gam_comparison)
-cat("\\nSmooth GAM has lower AIC than linear GAM:",
-    ifelse(gam_comparison$AIC[2] < gam_comparison$AIC[1], "YES", "NO"), "\\n")
+cat("\nSmooth GAM has lower AIC than linear GAM:",
+    ifelse(gam_comparison$AIC[2] < gam_comparison$AIC[1], "YES", "NO"), "\n")
 sink()
 
-cat("\\nR analysis complete! All outputs saved to:", "{output_dir_r}", "\\n")
+cat("\nR analysis complete! All outputs saved to:", "{output_dir_r}", "\n")
 '''
 
 # Save R script in temp folder
@@ -665,6 +660,7 @@ print("\n" + "="*60)
 print("STEP 3: Cleaning old outputs and figures")
 print("="*60)
 
+# Clean R outputs (main outputs)
 expected_r_outputs = [
     # Panel A
     "Q1_final_near_normal_summary_by_difference_type.csv",
@@ -691,6 +687,7 @@ for f in expected_r_outputs:
         os.remove(path)
         print(f"  Removed old output: {f}")
 
+# Clean figure files
 expected_figures = [
     "Q1_final_plot_07_manuscript_multipanel.png",
 ]
@@ -709,6 +706,7 @@ print("\n" + "="*60)
 print("STEP 4: Running R Modeling")
 print("="*60)
 
+# Add R to PATH
 r_path = r"C:\Program Files\R\R-4.4.2\bin\x64"
 if r_path not in os.environ['PATH']:
     os.environ['PATH'] = os.environ['PATH'] + os.pathsep + r_path
@@ -720,6 +718,7 @@ except Exception as e:
     print(f"R not found! Error: {e}")
     exit()
 
+# Verify temp files still exist before running R
 print("\nVerifying temp files still exist before R execution:")
 print(f"  temp_model_base_for_R.csv exists: {os.path.exists(temp_model_base_file)}")
 print(f"  run_final_models.R exists: {os.path.exists(r_script_file)}")
@@ -771,119 +770,159 @@ print("\n" + "="*60)
 print("STEP 6: Creating Final Python Figure from R Outputs")
 print("="*60)
 
-summary_df  = pd.read_csv(os.path.join(output_dir, "Q1_final_near_normal_summary_by_difference_type.csv"))
-mixed_pred  = pd.read_csv(os.path.join(output_dir, "Q1_final_near_normal_mixed_predictions_TET.csv"))
+# Load R outputs
+print("\nLoading R output CSVs...")
+summary_df = pd.read_csv(os.path.join(output_dir, "Q1_final_near_normal_summary_by_difference_type.csv"))
+mixed_pred = pd.read_csv(os.path.join(output_dir, "Q1_final_near_normal_mixed_predictions_TET.csv"))
 smooth_pred = pd.read_csv(os.path.join(output_dir, "Q1_final_smooth_gam_predictions_TET.csv"))
 smooth_terms = pd.read_csv(os.path.join(output_dir, "Q1_final_smooth_gam_smooth_terms.csv"))
-gam_comp    = pd.read_csv(os.path.join(output_dir, "Q1_final_gam_model_comparison.csv"))
+gam_comp = pd.read_csv(os.path.join(output_dir, "Q1_final_gam_model_comparison.csv"))
 
+# Define ecosystem colors
 ecosystem_colors = {"Upland": "#800080", "Freshwater": "#0000FF", "Saline": "#FFA500"}
 ecosystem_classes = ["Upland", "Freshwater", "Saline"]
-diff_label_single = "WUE_ET - WUE_T"
+diff_label_levels = ["WUE_ET - WUE_T", "WUE_ET - WUE_E", "WUE_E - WUE_T"]
 
 print(f"  Summary: {len(summary_df)} rows")
 print(f"  Mixed predictions: {len(mixed_pred)} rows")
 print(f"  Smooth GAM predictions: {len(smooth_pred)} rows")
 print(f"  Smooth GAM terms: {len(smooth_terms)} rows")
 
+# Apply theme
 theme_wue_manuscript()
 
 # ============================================================================
-# FINAL INTERNAL FIGURE (simplified to 2x2 since only one WUE difference)
+# FINAL MANUSCRIPT MULTI-PANEL FIGURE
+# Panel A: Mean WUE Metric Differences under Near-Normal SPEI-1
+# Panel B: Near-Normal Mixed Model T:ET Response
+# Panel C: Near-Normal Smooth GAM T:ET Response
+# Panel D: Linear vs Smooth GAM Model Comparison
 # ============================================================================
 
-print("\nCreating Final Internal Multi-Panel Figure (2x2)...")
+print("\nCreating Final Manuscript Multi-Panel Figure...")
 
-fig = plt.figure(figsize=(20, 18))
-outer = gridspec.GridSpec(2, 2, hspace=0.32, wspace=0.28,
-                          top=0.93, bottom=0.06, left=0.07, right=0.97)
+fig = plt.figure(figsize=(24, 25))
+outer = gridspec.GridSpec(4, 1, height_ratios=[0.9, 1.25, 1.25, 0.8],
+                          hspace=0.35, top=0.95, bottom=0.05)
 
-ax_a = fig.add_subplot(outer[0, 0])
-ax_b = fig.add_subplot(outer[0, 1])
-ax_c = fig.add_subplot(outer[1, 0])
-ax_d = fig.add_subplot(outer[1, 1])
+# Row A: Summary (Panel A)
+gs_a = gridspec.GridSpecFromSubplotSpec(1, 3, subplot_spec=outer[0], wspace=0.25)
+axes_a = [fig.add_subplot(gs_a[0, i]) for i in range(3)]
 
-# ===== Panel A: Mean WUE metric difference (WUE_ET - WUE_T) =====
-for ecosystem in ecosystem_classes:
-    eco_subset = summary_df[summary_df['water_class'] == ecosystem]
-    if len(eco_subset) > 0:
-        ax_a.errorbar(ecosystem, eco_subset['mean_difference'].values[0],
-                      yerr=eco_subset['ci95_difference'].values[0],
-                      fmt='o', color=ecosystem_colors[ecosystem], capsize=6,
-                      markersize=14, elinewidth=3)
-ax_a.axhline(y=0, color='gray', linestyle='-', linewidth=1.5, alpha=0.5)
-ax_a.set_title(diff_label_single, fontsize=24, fontweight='bold')
-ax_a.set_xlabel('Ecosystem')
-ax_a.set_ylabel('Mean WUE metric difference')
-ax_a.tick_params(axis='x', rotation=20)
-ax_a.grid(True, alpha=0.3)
-ax_a.text(-0.14, 1.05, 'A', transform=ax_a.transAxes,
-          fontsize=34, fontweight='bold', va='top')
+# Row B: Near-normal mixed model predictions (Panel B)
+gs_b = gridspec.GridSpecFromSubplotSpec(1, 3, subplot_spec=outer[1], wspace=0.25)
+axes_b = [fig.add_subplot(gs_b[0, i]) for i in range(3)]
+
+# Row C: Smooth GAM predictions (Panel C)
+gs_c = gridspec.GridSpecFromSubplotSpec(1, 3, subplot_spec=outer[2], wspace=0.25)
+axes_c = [fig.add_subplot(gs_c[0, i]) for i in range(3)]
+
+# Row D: Model comparison (Panel D)
+gs_d = gridspec.GridSpecFromSubplotSpec(1, 1, subplot_spec=outer[3])
+ax_d = fig.add_subplot(gs_d[0, 0])
+
+# ===== Panel A: Mean WUE Metric Differences =====
+for idx, diff_type in enumerate(diff_label_levels):
+    ax = axes_a[idx]
+    subset = summary_df[summary_df['difference_label'] == diff_type]
+    for ecosystem in ecosystem_classes:
+        eco_subset = subset[subset['water_class'] == ecosystem]
+        if len(eco_subset) > 0:
+            ax.errorbar(ecosystem, eco_subset['mean_difference'].values[0],
+                       yerr=eco_subset['ci95_difference'].values[0],
+                       fmt='o', color=ecosystem_colors[ecosystem], capsize=5,
+                       markersize=10, elinewidth=2.5)
+    ax.axhline(y=0, color='gray', linestyle='-', linewidth=1.5, alpha=0.5)
+    ax.set_title(diff_type, fontsize=22, fontweight='bold')
+    ax.set_xlabel('Ecosystem', fontsize=18)
+    if idx == 0: 
+        ax.set_ylabel('Mean WUE metric difference', fontsize=18)
+    ax.tick_params(axis='x', rotation=25, labelsize=16)
+    ax.tick_params(axis='y', labelsize=16)
+    ax.grid(True, alpha=0.3)
+axes_a[0].text(-0.15, 1.05, 'A', transform=axes_a[0].transAxes, 
+               fontsize=38, fontweight='bold', va='top')
 
 # ===== Panel B: Near-Normal Mixed Model =====
-for ecosystem in ecosystem_classes:
-    eco_subset = mixed_pred[mixed_pred['ecosystem_label'] == ecosystem]
-    if len(eco_subset) > 0:
-        ax_b.fill_between(eco_subset['Trans_ratio'], eco_subset['lower'], eco_subset['upper'],
-                          color=ecosystem_colors[ecosystem], alpha=0.15)
-        ax_b.plot(eco_subset['Trans_ratio'], eco_subset['prediction'],
-                  color=ecosystem_colors[ecosystem], linewidth=2.8, label=ecosystem)
-ax_b.axhline(y=0, color='gray', linestyle='-', linewidth=1.5, alpha=0.5)
-ax_b.set_title(f'Mixed model: {diff_label_single}', fontsize=22, fontweight='bold')
-ax_b.set_xlabel('T:ET ratio (Trans_ratio)')
-ax_b.set_ylabel('Predicted WUE metric difference')
-ax_b.grid(True, alpha=0.3)
-ax_b.legend(loc='best', frameon=True)
-ax_b.text(-0.14, 1.05, 'B', transform=ax_b.transAxes,
-          fontsize=34, fontweight='bold', va='top')
+for idx, diff_type in enumerate(diff_label_levels):
+    ax = axes_b[idx]
+    subset = mixed_pred[mixed_pred['difference_label'] == diff_type]
+    for ecosystem in ecosystem_classes:
+        eco_subset = subset[subset['ecosystem_label'] == ecosystem]
+        if len(eco_subset) > 0:
+            ax.fill_between(eco_subset['Trans_ratio'], eco_subset['lower'], eco_subset['upper'],
+                           color=ecosystem_colors[ecosystem], alpha=0.15)
+            ax.plot(eco_subset['Trans_ratio'], eco_subset['prediction'],
+                   color=ecosystem_colors[ecosystem], linewidth=2.5, label=ecosystem)
+    ax.axhline(y=0, color='gray', linestyle='-', linewidth=1.5, alpha=0.5)
+    ax.set_title(diff_type, fontsize=22, fontweight='bold')
+    ax.set_xlabel('T:ET ratio (Trans_ratio)', fontsize=18)
+    if idx == 0: 
+        ax.set_ylabel('Predicted WUE metric difference', fontsize=18)
+    ax.tick_params(labelsize=16)
+    ax.grid(True, alpha=0.3)
+    if idx == 2: 
+        ax.legend(loc='best', fontsize=16, frameon=True)
+axes_b[0].text(-0.15, 1.05, 'B', transform=axes_b[0].transAxes, 
+               fontsize=38, fontweight='bold', va='top')
 
 # ===== Panel C: Smooth GAM =====
-for ecosystem in ecosystem_classes:
-    eco_subset = smooth_pred[smooth_pred['ecosystem_label'] == ecosystem]
-    if len(eco_subset) > 0:
-        ax_c.fill_between(eco_subset['Trans_ratio'], eco_subset['lower'], eco_subset['upper'],
-                          color=ecosystem_colors[ecosystem], alpha=0.15)
-        ax_c.plot(eco_subset['Trans_ratio'], eco_subset['prediction'],
-                  color=ecosystem_colors[ecosystem], linewidth=2.8, label=ecosystem)
-ax_c.axhline(y=0, color='gray', linestyle='-', linewidth=1.5, alpha=0.5)
-ax_c.set_title(f'Smooth GAM: {diff_label_single}', fontsize=22, fontweight='bold')
-ax_c.set_xlabel('T:ET ratio (Trans_ratio)')
-ax_c.set_ylabel('Predicted WUE metric difference')
-ax_c.grid(True, alpha=0.3)
-ax_c.legend(loc='best', frameon=True)
-ax_c.text(-0.14, 1.05, 'C', transform=ax_c.transAxes,
-          fontsize=34, fontweight='bold', va='top')
+for idx, diff_type in enumerate(diff_label_levels):
+    ax = axes_c[idx]
+    subset = smooth_pred[smooth_pred['difference_label'] == diff_type]
+    for ecosystem in ecosystem_classes:
+        eco_subset = subset[subset['ecosystem_label'] == ecosystem]
+        if len(eco_subset) > 0:
+            ax.fill_between(eco_subset['Trans_ratio'], eco_subset['lower'], eco_subset['upper'],
+                           color=ecosystem_colors[ecosystem], alpha=0.15)
+            ax.plot(eco_subset['Trans_ratio'], eco_subset['prediction'],
+                   color=ecosystem_colors[ecosystem], linewidth=2.5, label=ecosystem)
+    ax.axhline(y=0, color='gray', linestyle='-', linewidth=1.5, alpha=0.5)
+    ax.set_title(diff_type, fontsize=22, fontweight='bold')
+    ax.set_xlabel('T:ET ratio (Trans_ratio)', fontsize=18)
+    if idx == 0: 
+        ax.set_ylabel('Predicted WUE metric difference', fontsize=18)
+    ax.tick_params(labelsize=16)
+    ax.grid(True, alpha=0.3)
+    if idx == 2: 
+        ax.legend(loc='best', fontsize=16, frameon=True)
+axes_c[0].text(-0.15, 1.05, 'C', transform=axes_c[0].transAxes, 
+               fontsize=38, fontweight='bold', va='top')
 
 # ===== Panel D: Model Comparison =====
 models = ['Linear GAM', 'Smooth GAM']
-deviance = [gam_comp.loc[0, 'deviance_explained'] * 100,
+deviance = [gam_comp.loc[0, 'deviance_explained'] * 100, 
             gam_comp.loc[1, 'deviance_explained'] * 100]
-bars = ax_d.bar(models, deviance, color=['#8DA0CB', '#66C2A5'],
+bars = ax_d.bar(models, deviance, color=['#8DA0CB', '#66C2A5'], 
                 edgecolor='#4D4D4D', linewidth=2)
 for bar, val in zip(bars, deviance):
     ax_d.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
-              f'{val:.1f}%', ha='center', va='bottom', fontsize=18, fontweight='bold')
-ax_d.set_ylabel('Deviance explained (%)')
-ax_d.set_title('Linear vs Smooth GAM', fontsize=22, fontweight='bold')
+             f'{val:.1f}%', ha='center', va='bottom', fontsize=20, fontweight='bold')
+ax_d.set_ylabel('Deviance explained (%)', fontsize=22)
+ax_d.set_title('Linear vs Smooth GAM Model Comparison', fontsize=25, fontweight='bold')
 ax_d.set_ylim(0, 95)
+ax_d.tick_params(labelsize=18)
 ax_d.grid(True, alpha=0.3, axis='y')
 
+# Calculate AIC improvement conditionally
 aic_linear = gam_comp.loc[gam_comp['model'] == 'q1_linear_gam', 'AIC'].values[0]
 aic_smooth = gam_comp.loc[gam_comp['model'] == 'q1_smooth_gam', 'AIC'].values[0]
 aic_improvement = aic_linear - aic_smooth
+
 if aic_improvement > 0:
     aic_text = f"Smooth GAM improves AIC by {aic_improvement:.1f}"
 else:
     aic_text = f"Smooth GAM does not improve AIC (ΔAIC = {aic_improvement:.1f})"
 
-ax_d.text(0.5, -0.14, aic_text,
-          transform=ax_d.transAxes, ha='center', va='center', fontsize=16)
-ax_d.text(-0.10, 1.05, 'D', transform=ax_d.transAxes,
-          fontsize=34, fontweight='bold', va='top')
+ax_d.text(0.5, -0.12, aic_text,
+          transform=ax_d.transAxes, ha='center', va='center', fontsize=18)
 
-fig.suptitle('Q1 WUE_ET - WUE_T Models (Near-Normal SPEI-1)',
-             fontsize=34, fontweight='bold', y=0.98)
-save_plot(fig, "Q1_final_plot_07_manuscript_multipanel.png", width=20, height=18)
+ax_d.text(-0.08, 1.05, 'D', transform=ax_d.transAxes, 
+          fontsize=38, fontweight='bold', va='top')
+
+fig.suptitle('Q1 WUE Metric Difference Models (Near-Normal SPEI-1)', 
+             fontsize=42, fontweight='bold', y=0.98)
+save_plot(fig, "Q1_final_plot_07_manuscript_multipanel.png", width=24, height=25)
 
 print("  Main figure saved: Q1_final_plot_07_manuscript_multipanel.png")
 
@@ -915,59 +954,56 @@ print("\n" + "="*60)
 print("STEP 8: Creating README")
 print("="*60)
 
-readme_content = """# Q1 Final Results - Near-Normal SPEI-1 Workflow (WUE_ET - WUE_T ONLY)
+readme_content = """# Q1 Final Results - Near-Normal SPEI-1 Workflow (Mixed Model Panel B)
 
-This is the UPDATED Q1 analysis for the WUE manuscript.
+This is the FINAL Q1 analysis for the WUE manuscript. 
 
-## Key Update
-**WUE_E has been removed from the modeled analysis and reported results.**
-- Only response modeled: `WUE_difference = WUE_ET - WUE_T = WUE - WUE_tra`
-- Data filtering is UNCHANGED. `WUE_eva` is still required to be nonmissing
-  to preserve the exact same Q1 observation set (for direct comparability).
-
-## Key Decision (unchanged)
-**All panels use near-normal hydroclimatic conditions only:**
+## Key Decision
+**All four main panels use near-normal hydroclimatic conditions only:**
 - SPEI_1 >= -1 & SPEI_1 <= 1
 
 ## Panel Structure
-- **Panel A**: Near-normal mean WUE_ET - WUE_T difference by ecosystem (3 rows)
-- **Panel B**: Near-normal mixed model WUE_ET - WUE_T response by ecosystem
-- **Panel C**: Near-normal smooth GAM WUE_ET - WUE_T response by ecosystem (3 smooths)
+- **Panel A**: Near-normal mean WUE metric differences by ecosystem
+- **Panel B**: Near-normal mixed model T:ET response by ecosystem
+- **Panel C**: Near-normal smooth GAM T:ET response by ecosystem
 - **Panel D**: Linear vs Smooth GAM model comparison
-
-## Compatibility Notes
-- `difference_type` and `difference_label` remain in output CSVs as constant
-  metadata columns (`"WUE_ET_minus_WUE_T"` / `"WUE_ET - WUE_T"`), so downstream
-  scripts that expect these columns do not fail.
-- All output filenames are preserved exactly.
-- `diff_ecosystem` levels follow the existing pattern:
-  - `WUE_ET_minus_WUE_T__Upland`
-  - `WUE_ET_minus_WUE_T__Freshwater`
-  - `WUE_ET_minus_WUE_T__Saline`
 
 ## Directory Structure
 - `outputs/` - CSV files, model summary
 - `figures/` - PNG figure files
 - `temp/` - Temporary R handoff files (cleaned at start)
 
+## Workflow
+- Python: Data cleaning, filtering, orchestrating R
+- R: Reshaping to long format, near-normal filtering, mixed model, GAM models, predictions
+- Python: Reading R outputs, creating final figure, generating README
+
 ## MAIN Q1 Results (near-normal SPEI-1 only)
 
-### Panel A: Summary Statistics (3 rows)
-Mean WUE_ET - WUE_T by ecosystem (Upland, Freshwater, Saline).
+### Panel A: Summary Statistics
+- Mean WUE metric differences by ecosystem under near-normal conditions
 
-### Panel B: Near-Normal Mixed Model
-`WUE_difference ~ water_class * Trans_ratio_z_NN + (1 | site_name) + (1 | month_f)`
-Reduced model: `WUE_difference ~ water_class + Trans_ratio_z_NN + (1 | site_name) + (1 | month_f)`
+### Panel B: Near-Normal Mixed Model (Main Panel B)
+`WUE_difference ~ difference_type * water_class * Trans_ratio_z_NN + (1 | site_name) + (1 | month_f)`
 
-### Panel C: Smooth GAM
-`WUE_difference ~ water_class + s(Trans_ratio, by = diff_ecosystem, k = 6) + s(site_name, bs = "re") + s(month_f, bs = "re")`
+- Uses standardized Trans_ratio_z_NN internally
+- Plotted against raw Trans_ratio on x-axis
+- Fixed-effect predictions with site and month random effects excluded
+
+### Panel C: Smooth GAM (Main Panel C)
+`WUE_difference ~ difference_type * water_class + s(Trans_ratio, by = diff_ecosystem, k = 6) + s(site_name, bs = "re") + s(month_f, bs = "re")`
+
+- Uses raw Trans_ratio
+- Near-normal SPEI-1 subset only
 
 ### Panel D: Model Comparison
-`WUE_difference ~ water_class * Trans_ratio + s(site_name, bs = "re") + s(month_f, bs = "re")`
+- Linear GAM vs Smooth GAM
+- Deviance explained and AIC comparison
+- Linear GAM retained for comparison only (not shown as response-curve panel)
 
 ## Key Tables (in outputs folder)
 ### Panel A
-- `Q1_final_near_normal_summary_by_difference_type.csv` (now 3 rows)
+- `Q1_final_near_normal_summary_by_difference_type.csv`
 
 ### Panel B (Mixed Model)
 - `Q1_final_near_normal_mixed_difference_TET_model.rds`
@@ -982,7 +1018,7 @@ Reduced model: `WUE_difference ~ water_class + Trans_ratio_z_NN + (1 | site_name
 - `Q1_final_smooth_gam_smooth_terms.csv`
 
 ### Panel D (Model Comparison)
-- `Q1_final_linear_gam_predictions_TET.csv` (diagnostic)
+- `Q1_final_linear_gam_predictions_TET.csv` (diagnostic only)
 - `Q1_final_gam_model_comparison.csv`
 
 ### Summary
@@ -990,13 +1026,14 @@ Reduced model: `WUE_difference ~ water_class + Trans_ratio_z_NN + (1 | site_name
 
 ## Figure
 - `Q1_final_plot_07_manuscript_multipanel.png`
-- Simplified internal 2x2 figure (A: summary, B: mixed, C: smooth, D: comparison).
+- 4-panel figure with panels A-D as described above
 
 ## Notes
-- Near-normal SPEI-1 filter applied before all analyses.
-- Mixed model uses standardized `Trans_ratio_z_NN` internally; predictions plotted on raw Trans_ratio.
-- GAMs use raw Trans_ratio.
-- No WUE_E-based response enters any fitted model.
+- Near-normal SPEI-1 filter applied before all analyses
+- Mixed model uses standardized Trans_ratio_z_NN internally
+- GAMs use raw Trans_ratio
+- Linear GAM retained only for Panel D model comparison
+- Panel B and C both use raw Trans_ratio on x-axis for consistency
 """
 
 with open(os.path.join(output_dir, "README.md"), 'w') as f:
@@ -1012,124 +1049,75 @@ print("\n" + "="*60)
 print("FINAL VALIDATION CHECKS")
 print("="*60)
 
-# 1. Same source-row filtering applied (WUE_eva still required)
-print(f"\n1. Original model_base rows (WUE_eva nonmissing kept): {len(model_base)}")
-assert 'WUE_eva' in required_cols, "WUE_eva must remain in required columns"
+# Check original data
+print(f"\n1. Original model_base rows: {len(model_base)}")
 
-# 2. Load R summary to extract key counts
+# Load R summary to get diff_data and q1_data counts
 summary_file = os.path.join(output_dir, "Q1_final_model_summary.txt")
-summary_text = ""
 if os.path.exists(summary_file):
     with open(summary_file, 'r') as f:
         summary_text = f.read()
+    
+    # Extract counts from summary
+    import re
+    diff_data_match = re.search(r"Full data rows \(after cleaning\):\s*(\d+)", summary_text)
+    q1_data_match = re.search(r"Near-normal SPEI-1 rows \(q1_data\):\s*(\d+)", summary_text)
+    sites_match = re.search(r"Sites in q1_data:\s*(\d+)", summary_text)
+    
+    if diff_data_match:
+        print(f"2. diff_data rows: {diff_data_match.group(1)}")
+    if q1_data_match:
+        print(f"3. q1_data rows (near-normal): {q1_data_match.group(1)}")
+    if sites_match:
+        print(f"4. Sites in q1_data: {sites_match.group(1)}")
 
-import re
-diff_data_match = re.search(r"Full data rows \(after cleaning\):\s*(\d+)", summary_text)
-q1_data_match   = re.search(r"Near-normal SPEI-1 rows \(q1_data\):\s*(\d+)", summary_text)
-sites_match     = re.search(r"Sites in q1_data:\s*(\d+)", summary_text)
+# Check main final CSVs exist
+print("\n5. Checking final CSV outputs:")
+main_csvs = [
+    "Q1_final_near_normal_summary_by_difference_type.csv",
+    "Q1_final_near_normal_mixed_predictions_TET.csv",
+    "Q1_final_smooth_gam_predictions_TET.csv",
+    "Q1_final_smooth_gam_smooth_terms.csv",
+    "Q1_final_gam_model_comparison.csv",
+    "Q1_final_linear_gam_predictions_TET.csv",
+    "Q1_final_near_normal_mixed_likelihood_ratio_tests.csv",
+    "Q1_final_near_normal_mixed_model_comparison_lrt.csv",
+]
+for csv_file in main_csvs:
+    exists = os.path.exists(os.path.join(output_dir, csv_file))
+    print(f"   {csv_file}: {'✓' if exists else '✗'}")
 
-if diff_data_match:
-    print(f"2. diff_data rows: {diff_data_match.group(1)}")
-if q1_data_match:
-    print(f"3. q1_data rows (near-normal): {q1_data_match.group(1)}")
-if sites_match:
-    print(f"4. Sites in q1_data (from R summary): {sites_match.group(1)}")
+# Check main figure exists
+print(f"\n6. Q1_final_plot_07_manuscript_multipanel.png: {'✓' if os.path.exists(os.path.join(figure_dir, 'Q1_final_plot_07_manuscript_multipanel.png')) else '✗'}")
 
-# 5. Only one unique difference_label present
-print("\n5. Checking unique difference_label in summary CSV:")
-unique_labels = summary_df['difference_label'].unique()
-print(f"   Unique labels: {list(unique_labels)}")
-assert len(unique_labels) == 1 and unique_labels[0] == "WUE_ET - WUE_T", \
-    f"Expected single label 'WUE_ET - WUE_T', got {list(unique_labels)}"
-print("   ✓ Only one difference_label: WUE_ET - WUE_T")
-
-# 6. All expected ecosystem classes present (3 rows)
-print("\n6. Checking ecosystem classes in summary CSV:")
-summary_ecosystems = set(summary_df['water_class'].unique())
-print(f"   Ecosystems: {sorted(summary_ecosystems)}")
-assert summary_ecosystems == set(ecosystem_classes), \
-    f"Expected {ecosystem_classes}, got {sorted(summary_ecosystems)}"
-assert len(summary_df) == 3, f"Summary should have 3 rows, got {len(summary_df)}"
-print("   ✓ All 3 ecosystem classes present, 3 summary rows")
-
-# 7. Site count and site-month count
-#    FIX: use the authoritative site count from the R summary (Total sites in q1_data),
-#    not max(n_sites) across ecosystem rows (which is only the largest ecosystem group).
-#    Fall back to sum across ecosystems only if R summary parsing failed.
-total_site_months = int(summary_df['n_months'].sum())
-
-if sites_match:
-    total_sites = int(sites_match.group(1))
-    sites_source = "R summary (authoritative)"
-else:
-    total_sites = int(summary_df['n_sites'].sum())
-    sites_source = "sum of ecosystem rows (fallback)"
-
-print(f"\n7. Summary counts:")
-print(f"   Total site-months (sum across ecosystems): {total_site_months}")
-print(f"   Total sites in q1_data ({sites_source}): {total_sites}")
-
-# 8. Smooth GAM contains exactly 3 ecosystem-specific T:ET smooths
-print("\n8. Checking smooth GAM terms for exactly 3 ecosystem-specific T:ET smooths:")
-term_col = smooth_terms['term'].astype(str)
-eco_smooths = term_col[term_col.str.contains(r"s\(Trans_ratio\):diff_ecosystem", regex=True)]
-print(f"   Ecosystem-specific smooths found: {len(eco_smooths)}")
-for t in eco_smooths.tolist():
-    print(f"     - {t}")
-assert len(eco_smooths) == 3, \
-    f"Expected exactly 3 ecosystem-specific T:ET smooths, got {len(eco_smooths)}"
-print("   ✓ Exactly 3 ecosystem-specific T:ET smooths present")
-
-# 9. Confirm no WUE_E-based response used in newly fitted models
-print("\n9. Verifying no WUE_E-based response in fitted models:")
-for forbidden in ["WUE_ET_minus_WUE_E", "WUE_E_minus_WUE_T", "WUE_eva -", "WUE - WUE_eva"]:
-    assert forbidden not in summary_text, \
-        f"Forbidden WUE_E response found: {forbidden}"
-print("   ✓ No WUE_E-based response in fitted models")
-
-# 10. Check all expected output filenames regenerated
-print("\n10. Checking all expected output filenames regenerated:")
-all_present = True
-for f in expected_r_outputs:
-    exists = os.path.exists(os.path.join(output_dir, f))
-    if not exists:
-        all_present = False
-    print(f"   {f}: {'✓' if exists else '✗'}")
-assert all_present, "Some expected R outputs are missing"
-print("   ✓ All expected output filenames present")
-
-# 11. Check main figure exists
-print(f"\n11. Q1_final_plot_07_manuscript_multipanel.png: "
-      f"{'✓' if os.path.exists(os.path.join(figure_dir, 'Q1_final_plot_07_manuscript_multipanel.png')) else '✗'}")
-
-# 12. Model comparison summary
-print("\n12. Model Comparison:")
+# Print model comparison
+print("\n7. Model Comparison:")
 print(gam_comp.to_string(index=False))
-smooth_lower = gam_comp.loc[1, 'AIC'] < gam_comp.loc[0, 'AIC']
-print(f"\n13. Smooth GAM has lower AIC than linear GAM: "
-      f"{'✓' if smooth_lower else '✗'}")
 
-# 14. Print mixed LRT and comparison tables
+# Check if smooth GAM has lower AIC
+smooth_lower = gam_comp.loc[1, 'AIC'] < gam_comp.loc[0, 'AIC']
+print(f"\n8. Smooth GAM has lower AIC than linear GAM: {'✓' if smooth_lower else '✗'}")
+
+# Load and print mixed LRT if exists
 lrt_file = os.path.join(output_dir, "Q1_final_near_normal_mixed_likelihood_ratio_tests.csv")
 if os.path.exists(lrt_file):
-    print("\n14. Mixed Model Drop1 LRT:")
-    print(pd.read_csv(lrt_file).to_string(index=False))
+    print("\n9. Mixed Model Drop1 LRT:")
+    lrt_df = pd.read_csv(lrt_file)
+    print(lrt_df.to_string(index=False))
 
+# Load and print mixed comparison if exists
 comp_file = os.path.join(output_dir, "Q1_final_near_normal_mixed_model_comparison_lrt.csv")
 if os.path.exists(comp_file):
-    print("\n15. Mixed Additive vs Interaction Comparison:")
-    print(pd.read_csv(comp_file).to_string(index=False))
-
-# 16. Print summary CSV
-print("\n16. Summary CSV contents (should be 3 rows):")
-print(summary_df.to_string(index=False))
+    print("\n10. Mixed Additive vs Interaction Comparison:")
+    comp_df = pd.read_csv(comp_file)
+    print(comp_df.to_string(index=False))
 
 # ============================================================================
 # FINAL SUMMARY
 # ============================================================================
 
 print("\n" + "="*60)
-print("COMPLETE! Final Q1 Workflow Finished (WUE_ET - WUE_T only)")
+print("COMPLETE! Final Q1 Workflow Finished")
 print("="*60)
 
 print(f"\nOutputs saved to:")
@@ -1137,12 +1125,14 @@ print(f"  Outputs (CSV/README): {output_dir}")
 print(f"  Figures (PNG):        {figure_dir}")
 print(f"  Temp files:           {temp_dir}")
 
+# List output files
 output_files = sorted([f for f in os.listdir(output_dir) if os.path.isfile(os.path.join(output_dir, f))])
 print(f"\nOutput files ({len(output_files)} files):")
 for f in output_files:
     size = os.path.getsize(os.path.join(output_dir, f))
     print(f"  {f} ({size:,} bytes)")
 
+# List figure files
 figure_files = sorted([f for f in os.listdir(figure_dir) if os.path.isfile(os.path.join(figure_dir, f))])
 print(f"\nFigure files ({len(figure_files)} files):")
 for f in figure_files:
@@ -1150,12 +1140,11 @@ for f in figure_files:
     print(f"  {f} ({size:,} bytes)")
 
 print("\n" + "="*60)
-print("✓ Final Q1 workflow complete (WUE_ET - WUE_T only)")
-print("  - Data filtering UNCHANGED (WUE_eva still required nonmissing)")
-print("  - Only one response modeled: WUE_difference = WUE - WUE_tra")
-print("  - difference_type / difference_label kept as constant metadata")
-print("  - All output filenames preserved exactly")
-print("  - Summary CSV: 3 rows (one per ecosystem)")
-print("  - Smooth GAM: exactly 3 ecosystem-specific T:ET smooths")
-print("  - No WUE_E-based response in any fitted model")
+print("✓ Final Q1 workflow complete")
+print("  - Panel order: A=Summary, B=Near-normal mixed model, C=Smooth GAM, D=Linear vs Smooth GAM comparison")
+print("  - Mixed model uses standardized Trans_ratio_z_NN internally")
+print("  - Linear and smooth GAMs use raw Trans_ratio")
+print("  - All main panels use near-normal SPEI-1 (>= -1 & <= 1)")
+print("  - Linear GAM retained only for Panel D model comparison")
+print("  - All outputs in Q1_updated_results (separate from old outputs)")
 print("="*60)
