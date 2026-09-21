@@ -12,6 +12,7 @@ Panel B: Site sensitivity grouped by coastline.
 - Diagnostic print for data check.
 - Coast name font size reduced to 22 (only y‑tick labels on left panel).
 - Added vertical dotted reference lines at 5%, 10%, and 20%.
+- Coast order changed to: AK Coast, Pacific Coast, Gulf Coast, Atlantic Coast.
 """
 
 import os
@@ -42,7 +43,8 @@ COAST_COLORS = {
 }
 
 
-COAST_REGION_LEVELS = ["Atlantic Coast", "Pacific Coast", "Gulf Coast", "AK Coast"]
+# CHANGED: new coast order (top-to-bottom): AK, Pacific, Gulf, Atlantic
+COAST_REGION_LEVELS = ["AK Coast", "Pacific Coast", "Gulf Coast", "Atlantic Coast"]
 SELECTED_TIMESCALES = ["SPEI_1", "SPEI_3", "SPEI_48"]
 
 GRAY_POINT = "#595959"
@@ -165,7 +167,7 @@ for idx, timescale in enumerate(SELECTED_TIMESCALES):
                     zorder=3
                 )
 
-        # Y‑axis: manual ticks and limits (Atlantic at top)
+        # Y‑axis: manual ticks and limits (position 0 at top; order = AK, Pacific, Gulf, Atlantic)
         ax.set_yticks(list(positions))
         ax.set_ylim(len(COAST_REGION_LEVELS) - 0.5, -0.5)
 

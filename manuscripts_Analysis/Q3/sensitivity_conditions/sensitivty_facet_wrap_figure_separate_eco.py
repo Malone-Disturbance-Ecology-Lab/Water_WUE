@@ -173,10 +173,10 @@ def fill_ecosystem_block(fig, outer_spec, ecosystem, panel_title):
     axes = np.empty((4, 4), dtype=object)
 
     # MASSIVELY SCALED UP FONT SIZES
-    spei_title_fontsize = 34
+    spei_title_fontsize = 38
     tick_fontsize = 44       # big enough to read easily
-    row_label_fontsize = 38
-    section_fontsize = 38
+    row_label_fontsize = 40
+    section_fontsize = 40
     line_width = 5.0
     ribbon_alpha = 0.10
 
@@ -357,7 +357,7 @@ fig.text(
     0.50, 0.035,
     "SPEI",
     ha="center",
-    fontsize=40
+    fontsize=45
 )
 
 fig.text(
@@ -365,7 +365,7 @@ fig.text(
     r"WUE$_{T}$ change from near-normal (%)",
     va="center",
     rotation=90,
-    fontsize=40
+    fontsize=45
 )
 
 # -----------------------------------------------------------------------------
@@ -398,8 +398,8 @@ if not threshold_markers.empty:
         loc="center",
         bbox_to_anchor=(0.88, 0.30),
         frameon=True,
-        fontsize=36,
-        title_fontsize=36
+        fontsize=38,
+        title_fontsize=38
     )
 
 # -----------------------------------------------------------------------------
